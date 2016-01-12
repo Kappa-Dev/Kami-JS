@@ -1,0 +1,19 @@
+#### Signatures
+
+%agent: EGFR(fl_P~uphos~phos,k_fl_1068.P1~uphos~phos,ei_0_EGFR)
+%agent: Grb2(r_Sh2)
+%agent: Shc(k_fl_427.P2~uphos~phos,ei_2_Shc)
+
+#### Rules 
+#bnd2_0_0
+EGFR(ei_0_EGFR,fl_P~phos,k_fl_1068.P1~phos),Grb2(r_Sh2) -> EGFR(ei_0_EGFR!76,fl_P~phos,k_fl_1068.P1~phos),Grb2(r_Sh2!76) @ 
+#bnd2_0_1
+EGFR(ei_0_EGFR,fl_P~phos,k_fl_1068.P1~phos),Shc(ei_2_Shc) -> EGFR(ei_0_EGFR!9,fl_P~phos,k_fl_1068.P1~phos),Shc(ei_2_Shc!9) @ 
+
+
+#### Variables
+
+
+#### Initial conditions
+
+
