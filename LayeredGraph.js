@@ -1,8 +1,9 @@
 //graph.js
 function Node(classes,id,label,x,x,lock){
 	this.classes=classes;
-	this.id=id;
-	this.linkedEdges=[];
+	this.id="n_"+id;
+	this.linkedlinks=[];
+	this.context=[];
 	if(typeof(label)!='undefined') this.label=label;
 	if(typeof(x)!='undefined') this.x=x;
 	if(typeof(y)!='undefined') this.y=y;
@@ -11,29 +12,38 @@ function Node(classes,id,label,x,x,lock){
 function Edge(node1,node2){
 	this.source=node1;
 	this.target=node2;
-	this.id="e"+node1+"_"+node2;
+	this.id="e_"+node1["id"]+"_"+node2["id"];
 };
 
 
 function LayeredGraph(svg){
 	var svg=svg;
 	var nodesHash={};
-	var edgesHash={};
+	var linksHash={};
 	this.nodes=[];
-	this.edges=[];
+	this.links=[];
 	var merge = function(nodes_l,node,replace){
-				nodes_l.push(node);
-		nodesHash[node["id"]]=nodes_l.length-1;
+		if(typeof(nodesHash[node.id])=='undefined'){
+			nodes_l.push(node);
+			nodesHash[node.id]=nodes_l.length-1;
+		}else if(typeof(nodesHash[node.id])!='undefined' && !replace){
+			console.log("node already defined : "+node.id);
+		}else{
+			var tmp_node = new Node(union(node.classes,nodes_l[nodesHash[node.id]].classes),node.id,node.nodeLabel,node.x,node.y,node.lock);
+			if(nodes_l[nodesHash[node.id]].classes[0]=="action")
+				tmp_node["context"]=union(nodes_l[nodesHash[node.id]].context,node.context);
+			
+		}
 	};
 	this.addNode = function addNode(nodeClasses,nodeID,nodeLabel,nodeX,nodeY,nodeLock){
 		var tmp_node=new Node(nodeClasses,nodeID,nodeLabel,nodeX,nodeY,nodeLock);
 		merge(this.nodes,tmp_node,true);		
 	};
 	this.removeNodeByID = function removeNodeByID(nodeID){
-		for(var i=0;i<this.nodes[nodesHash[nodeID]].linkedEdges.length;i++){
-			var tmp_edge_id=this.edges[this.nodes[nodesHash[nodeID]].linkedEdges[i]].id;
-			delete edgesHash[tmp_edge_id];
-			this.edges.splice(this.nodes[nodesHash[nodeID]].linkedEdges[i],1);
+		for(var i=0;i<this.nodes[nodesHash[nodeID]].linkedlinks.length;i++){
+			var tmp_edge_id=this.links[this.nodes[nodesHash[nodeID]].linkedlinks[i]].id;
+			delete linksHash[tmp_edge_id];
+			this.links.splice(this.nodes[nodesHash[nodeID]].linkedlinks[i],1);
 		}	
 		this.nodes.splice(nodesHash[nodeID],1);
 		delete nodesHash[nodeID];
