@@ -36,17 +36,26 @@
 																{"el_cl":["node","flag"],"el_path":["EGFR","P"],"el_value":["phos"]},
 																{"el_cl":["node","agent"],"el_path":["EGFR"]},
 																{"el_cl":["node","agent"],"el_path":["Shc"]}
-															]}
+															]},
+	{"class":["node","action","mod"],"name":"phos1","context":[{"el_cl":["node","flag"],"el_path":["EGFR","P"],"el_value":["uphos"]},
+																{"el_cl":["node","agent"],"el_path":["EGFR"]}],"mods":"incr"
+															},
+	{"class":["node","action","mod"],"name":"phos2","context":[{"el_cl":["node","flag"],"el_path":["EGFR","1068","P1"],"el_value":["uphos"]},
+																{"el_cl":["node","key_r"],"el_path":["EGFR","1068"]},
+																{"el_cl":["node","agent"],"el_path":["EGFR"]}],"mods":"incr"
+															}
 ],
 "actions_binder":[
 	{"class":["node","binder"],"name":"left","act_name":"bnd1"},
 	{"class":["node","binder"],"name":"right","act_name":"bnd1"},
-	{"class":["node","binder"],"name":"left","act_name":"bnd2"},
-	{"class":["node","binder"],"name":"right","act_name":"bnd2"}
+	{"class":["node","binder"],"name":"right","act_name":"phos1"},
+	{"class":["node","binder"],"name":"right","act_name":"phos2"}
 ],
 "edges":[
 	{"class":["edge"],"in_class":["node","agent"],"in_path":["EGFR"],"out_class":["node","binder"],"out_path":["bnd1","left"]},
 	{"class":["edge"],"in_class":["node","region"],"in_path":["Grb2","Sh2"],"out_class":["node","binder"],"out_path":["bnd1","right"]},
 	{"class":["edge"],"in_class":["node","agent"],"in_path":["EGFR"],"out_class":["node","binder"],"out_path":["bnd2","left"]},
-	{"class":["edge"],"in_class":["node","agent"],"in_path":["Shc"],"out_class":["node","binder"],"out_path":["bnd2","right"]}
+	{"class":["edge"],"in_class":["node","agent"],"in_path":["Shc"],"out_class":["node","binder"],"out_path":["bnd2","right"]},
+	{"class":["edge"],"in_class":["node","binder"],"in_path":["phos1","right"],"out_class":["node","flag"],"out_path":["EGFR","P"]},
+	{"class":["edge"],"in_class":["node","binder"],"in_path":["phos2","right"],"out_class":["node","flag"],"out_path":["EGFR","1068","P1"]}
 ]}

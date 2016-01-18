@@ -126,6 +126,7 @@ var width = 960;
 var height = 500;
 var cpt=0;
 var node_type=null;
+var animate=false;
 function merge(id1,id2){
 	for(var i=0;i<edges.length;i++){
 		if(edges[i].in_class[1]=="binder" && edges[i].in_path[0]==id2)
@@ -282,6 +283,7 @@ function addNode(id,type,position,father,values,path){
 		actions_binder.push({"class":["node","binder"],"name":"right","act_name":id});
 		break;
 	}
+	animate=true;
 	update();
 }
 
@@ -292,6 +294,7 @@ addLink = function (sourceId, targetId) {
         if((sourceNode !== undefined) && (targetNode !== undefined)) {
             links.push({"source": sourceNode, "target": targetNode});
 			edges.push({"class":["edge"],"in_class":["node",sourceNode.type],"in_path":sourceNode.path,"out_class":["node",targetNode.type],"out_path":targetNode.path});
+			animate=true;
             update();
         }
 }
@@ -303,6 +306,7 @@ addLink2 = function (sourceId, targetId,pol) {
 			if(pol)
 			edges.push({"class":["edge"],"in_class":["node",sourceNode.type],"in_path":sourceNode.path,"out_class":["node","binder"],"out_path":targetNode.path.push("left")});
 			else edges.push({"class":["edge"],"in_class":["node",sourceNode.type],"in_path":sourceNode.path,"out_class":["node","binder"],"out_path":targetNode.path.push("right")});
+			animate=true;
             update();
         }
 }
@@ -503,6 +507,7 @@ function svgMenu(){
 function dragstart(d) {
 	if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
 		d3.select(this).classed("fixed", d.fixed = true);
+		animate=true;
 }
 
 
@@ -1410,21 +1415,53 @@ var to_kappa_rules=function(){//génére les regles en fonction des actions !
 			if(j<rules[i].right.length-1)
 				ret+=",";
 		}
-		ret+=" @ \n";
+		ret+=" @ 1 \n";
 	}
 	ret+="\n\n";
 	return ret;
 }
 var to_kappa_var=function(){// generation des variables Kappa : à définir par l'utilisateur !
 	var ret ="#### Variables\n";
+	for(var i=0;i<lcg_agents.length;i++){//les quantités
+		ret+=("%var: 'qtt_"+(lcg_agents[i].name)+"' 1000\n");
+	}
+	for(var i=0;i<lcg_agents.length;i++){//observr les agents vides
+		ret+=("%obs: '"+(lcg_agents[i].name)+"' |"+(lcg_agents[i].name)+"(");
+		for(var j=0;j<lcg_agents[i].sites.length;j++){
+			ret+=lcg_agents[i].sites[j].name;
+			if(j<lcg_agents[i].sites.length-1) ret+=",";
+		}
+		ret+=")|\n"
+	}
+	for(var i=0;i<rules.length;i++){
+		ret+="%obs: ";
+		ret+="'"+rules[i].name.join("_")+"' |";
+		for(var j=0;j<rules[i].right.length;j++){
+			ret+=(rules[i].right[j].name+"(");
+			for(var k=0;k<rules[i].right[j].sites.length;k++){
+				ret+=(rules[i].right[j].sites[k].name);
+				if(rules[i].right[j].sites[k].values!=null && rules[i].right[j].sites[k].values.length==1)
+					ret+=("~"+rules[i].right[j].sites[k].values[0]);
+				if(rules[i].right[j].sites[k].values!=null && rules[i].right[j].sites[k].values.length>1)
+					console.log("no multistate agents");
+				if(rules[i].right[j].sites[k].bindval!=null)
+					ret+=("!"+rules[i].right[j].sites[k].bindval);
+				if(k<rules[i].right[j].sites.length-1)
+					ret+=",";
+			}
+			ret+=")";
+			if(j<rules[i].right.length-1)
+				ret+=",";
+		}
+		ret+="|\n";
+	}
 	ret+="\n\n";
 	return ret;
 }
 var to_kappa_init=function(){//generation des conditions initiales : à définir par l'utilsateur :::::::::::::::::::::::::::::: utiliser les attributs pour simplifier !
 	var ret ="#### Initial conditions\n";
 	for(var i=0;i<lcg_agents.length;i++){
-		ret+=("%init: '"+(lcg_agents[i].name)+"' "+(lcg_agents[i].name)+"(");
-		ret+=") 1000\n"
+		ret+=("%init: 'qtt_"+(lcg_agents[i].name)+"' "+(lcg_agents[i].name)+"()\n");
 	}
 	ret+="\n\n";
 	return ret;
@@ -1434,6 +1471,9 @@ var kappaTranslate = function(){//propose un fichier kappa correspondant au LCG
 	ret+=to_kappa_rules();
 	ret+=to_kappa_var();
 	ret+=to_kappa_init();
+	console.log(ret);
+	ret=ret.replace(/\./g,'_');
+	console.log(ret);	
 	//var url = 'data:text;charset=utf8,' + encodeURIComponent(ret);
 	var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(ret);
 	window.open(url, '_blank');
