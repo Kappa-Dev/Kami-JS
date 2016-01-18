@@ -1410,21 +1410,23 @@ var to_kappa_rules=function(){//génére les regles en fonction des actions !
 			if(j<rules[i].right.length-1)
 				ret+=",";
 		}
-		ret+=" @ \n";
+		ret+=" @ 1 \n";
 	}
 	ret+="\n\n";
 	return ret;
 }
 var to_kappa_var=function(){// generation des variables Kappa : à définir par l'utilisateur !
 	var ret ="#### Variables\n";
+	for(var i=0;i<lcg_agents.length;i++){
+		ret+=("%var: '"+(lcg_agents[i].name)+"' 1000\n");
+	}
 	ret+="\n\n";
 	return ret;
 }
 var to_kappa_init=function(){//generation des conditions initiales : à définir par l'utilsateur :::::::::::::::::::::::::::::: utiliser les attributs pour simplifier !
 	var ret ="#### Initial conditions\n";
 	for(var i=0;i<lcg_agents.length;i++){
-		ret+=("%init: '"+(lcg_agents[i].name)+"' "+(lcg_agents[i].name)+"(");
-		ret+=") 1000\n"
+		ret+=("%init: '"+(lcg_agents[i].name)+"' "+(lcg_agents[i].name)+"()\n");
 	}
 	ret+="\n\n";
 	return ret;
@@ -1434,6 +1436,9 @@ var kappaTranslate = function(){//propose un fichier kappa correspondant au LCG
 	ret+=to_kappa_rules();
 	ret+=to_kappa_var();
 	ret+=to_kappa_init();
+	console.log(ret);
+	ret=ret.replace(/\./g,'_');
+	console.log(ret);	
 	//var url = 'data:text;charset=utf8,' + encodeURIComponent(ret);
 	var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(ret);
 	window.open(url, '_blank');
