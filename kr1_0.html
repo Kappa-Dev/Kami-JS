@@ -517,8 +517,8 @@ var lcg_agents=[];// ecrasement des agents en LCG
 var lcg_actions=[];//action du LCG : regle avec membre droit/gauche/context.
 //rules informations
 var rules=[];//kappa rules : left, right (avec redondance)
-var importJson = function(){//importe un fichier Json au format Kr
-	d3.json("graph2.json",function(error, graph) {
+var importJson = function(url){//importe un fichier Json au format Kr
+	d3.json(url,function(error, graph) {
 		if (error) throw error;
 		//console.log(graph);
 		infos = graph.infos;
@@ -1505,16 +1505,15 @@ var lcgView = function(){//passe la kr en mode LCG :::::::::::::::::::::::::::::
 	console.log(rules);
 	rules=lcgActToRules();
 	concatrules();
-	aggrorules();
-
+        aggrorules();
 }
-</script>
+    </script>
   </head>
   <body>
     <div id="main-container">
       <div id="menu">
 	<Form name="menu_f">
-	  <input type="button" name="import" value="Import Data" onclick="importJson()">
+	  <input type="button" name="import" value="Import Data" onclick="importJson(&quot;graph2.json&quot;)">
 	  <input type="button" name="export" value="Export Data" onclick="exportJson()">
 	  <input type="button" name="nugget" value="Add Nugget" onclick="nuggetView()">
 	  <input type="button" name="update" value="Update" onclick="viewUpdate()">
@@ -1525,5 +1524,28 @@ var lcgView = function(){//passe la kr en mode LCG :::::::::::::::::::::::::::::
       <div id="graph">
       </div>
     </div>
+    <script>
+      var handleFileSelect = function(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+
+      var files = evt.dataTransfer.files;
+      var ka = new FileReader();
+      ka.readAsDataURL(files[0]);
+
+      ka.onloadend = function(e){
+      importJson(e.target.result);
+      }
+      }
+      function handleDragOver(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+      }
+
+      var dropZone = document.getElementById('graph');
+      dropZone.addEventListener('dragover', handleDragOver, false);
+      dropZone.addEventListener('drop', handleFileSelect, false);
+    </script>
   </body>
 </html>
