@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<head>
-<title>
-knowledge representation model
-</title>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>knowledge representation model</title>
 <style>
 .d3-context-menu {
 	position: absolute;
@@ -1510,20 +1509,21 @@ var lcgView = function(){//passe la kr en mode LCG :::::::::::::::::::::::::::::
 
 }
 </script>
-</head>
-<body>
-<div id="main-container">
-<div id="menu">
-<Form name="menu_f">
-<input type="button" name="import" value="Import Data" onclick="importJson()">
-<input type="button" name="export" value="Export Data" onclick="exportJson()">
-<input type="button" name="nugget" value="Add Nugget" onclick="nuggetView()">
-<input type="button" name="update" value="Update" onclick="viewUpdate()">
-<input type="button" name="lcg" value="LCG" onclick="lcgView()">
-<input type="button" name="kappa" value="To Kappa" onclick="kappaTranslate()">
-</form>
-</div>
-<div id="graph">
-</div>
--</div>
-</body>
+  </head>
+  <body>
+    <div id="main-container">
+      <div id="menu">
+	<Form name="menu_f">
+	  <input type="button" name="import" value="Import Data" onclick="importJson()">
+	  <input type="button" name="export" value="Export Data" onclick="exportJson()">
+	  <input type="button" name="nugget" value="Add Nugget" onclick="nuggetView()">
+	  <input type="button" name="update" value="Update" onclick="viewUpdate()">
+	  <input type="button" name="lcg" value="LCG" onclick="lcgView()">
+	  <input type="button" name="kappa" value="To Kappa" onclick="kappaTranslate()">
+	</form>
+      </div>
+      <div id="graph">
+      </div>
+    </div>
+  </body>
+</html>
