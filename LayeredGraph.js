@@ -1,4 +1,5 @@
 //graph.js
+//node definition
 function Node(classes,id,label,x,x,lock){
 	this.classes=classes;
 	this.id="n_"+id;
@@ -9,19 +10,20 @@ function Node(classes,id,label,x,x,lock){
 	if(typeof(y)!='undefined') this.y=y;
 	if(typeof(lock)!='undefined') this.lock=lock;
 };
+//edge definition
 function Edge(node1,node2){
 	this.source=node1;
 	this.target=node2;
 	this.id="e_"+node1["id"]+"_"+node2["id"];
 };
 
-
+//layered graph definition
 function LayeredGraph(svg){
-	var svg=svg;
-	var nodesHash={};
-	var linksHash={};
-	this.nodes=[];
-	this.links=[];
+	var svg=svg; // the svg used to show the graph
+	var nodesHash={};// the hashtable in order to get a node by his name
+	var linksHash={};//the hashtable for links 
+	this.nodes=[];//liste des noeud
+	this.links=[];//liste des arcs
 	var merge = function(nodes_l,node,replace){
 		if(typeof(nodesHash[node.id])=='undefined'){
 			nodes_l.push(node);
