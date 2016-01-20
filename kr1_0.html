@@ -221,7 +221,7 @@ var tmpp;
 }
 for(var i=0;i<actions.length;i++){
 	if(actions[i].name==act){
-		arrayUnique(actions[i].context.concat(ctx));
+		actions[i].context=arrayUnique(actions[i].context.concat(ctx));
 	}
 }
 
