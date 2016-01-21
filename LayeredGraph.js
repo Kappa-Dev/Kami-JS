@@ -11,9 +11,10 @@ function Node(classes,id,x,y,lock){
 	if(typeof(lock)!='undefined') this.lock=lock;//node position locked
 };
 //edge definition
-function Edge(node1,node2){
+function Edge(node1,node2,e_class){//node1 ande node2 are indexes
 	this.source=node1;
 	this.target=node2;
+	this.e_class=e_class;
 };
 //layered graph definition
 function LayeredGraph(){
@@ -32,7 +33,7 @@ function LayeredGraph(){
 		}
 		return tmp;
 	};
-	var remove = function(l_el,list){
+	var remove = function(l_el,list){//remove an element from a list
 		for(var i=0;i<list.length;i++){
 			if(list[i]==l_el)
 				list.splice(i,1);
@@ -70,24 +71,25 @@ function LayeredGraph(){
 	};
 	this.setFather = function setFather(son,fath){//define a node as the father of an other one : son, father: id
 		if(typeof(this.nodesHash[fath])!='undefined' && typeof(this.nodesHash[son])!='undefined'){
-			this.nodes[this.nodesHash[son]].father=fath;
-			this.nodes[this.nodesHash[fath]].sons.push(son);
+			if(this.nodes[this.nodesHash[son]].father==null){
+				this.nodes[this.nodesHash[son]].father=fath;
+				this.nodes[this.nodesHash[fath]].sons=union([son],this.nodes[this.nodesHash[fath]].sons);
+				this.links.push(new Edge(fath,son,"parent"));//link is from the father to the son !
+			}
+			else
+				console.log("error : this node : "+son+" already have a father");
 		}
 		else 
 			console.log("error : son or father ins't defined : son :"+typeof(this.nodesHash[son])+" father : "+typeof(this.nodesHash[fath]));
 	};
 	this.setSon = function setSon(son,fath){//define a node as the son of an other one, trigger a warning if this is already defined : son, father : id
-		if(typeof(this.nodesHash[fath])!='undefined' && typeof(this.nodesHash[son])!='undefined'){
-			this.nodes[this.nodesHash[fath]].sons.push(son);
-			this.nodes[this.nodesHash[son]].father=fath;
-		}
-		else 
-			console.log("error : son or father ins't defined : son :"+typeof(this.nodesHash[son])+" father : "+typeof(this.nodesHash[fath]));
+		this.setFather(son,fath);
 	};
 	this.removeNode = function removeNode(nodeID){//remove a specific node giving its id : doesn't remove its sons
 		for(var i=0;i<this.links.length;i++){
-			if(this.links[i].source.id == nodeID || this.links[i].target.id == nodeID )
-				this.links.splice(i,1);
+			if(this.links[i].source == nodeID || this.links[i].target == nodeID ){
+				this.links.splice(i--,1);
+			}
 		}
 		if(this.nodes[this.nodesHash[nodeID]].father!=null)
 			this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].father]].sons=remove(nodeID,this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].father]].sons);//retire le noeud de la liste des fils de son pere.
@@ -98,6 +100,48 @@ function LayeredGraph(){
 		for(var i=this.nodesHash[nodeID];i<this.nodes.length;i++)
 			this.nodesHash[this.nodes[i].id]--;
 		delete this.nodesHash[nodeID];
+	};
+	this.addEdge = function addEdge(id1,id2){//add an edge between two node based on there id
+		if(typeof(this.nodesHash[id1])=='undefined')
+			console.log(id1+" is undefined");
+		else if(typeof(this.nodesHash[id2])=='undefined')
+			console.log(id2+" is undefined");
+		else{
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class=="link" && ((this.links[i].source==id1 && this.links[i].target==id2) || (this.links[i].source==id2 && this.links[i].target==id1))){
+					console.log("this link between "+id1+" "+id2+" already exist !");
+					return;
+				}
+			}
+			this.links.push(new Edge(id1,id2,"link"));
+		}
+	};
+	this.removeEdge = function removeEdge(sid,tid){//remove an edge between two nodes based on there id
+		if(typeof(this.nodesHash[sid])=='undefined')
+			console.log(sid+" is undefined");
+		else if(typeof(this.nodesHash[tid])=='undefined')
+			console.log(tid+" is undefined");
+		else{
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class=="link" && ((this.links[i].source==sid && this.links[i].target==tid) || (this.links[i].source==tid && this.links[i].target==sid)))
+					this.links.splice(i--,1);				
+			}
+		}		
+	};
+	this.removeParenting = function removeParenting(son){//remove the parent link between a son and its father
+		if(typeof(this.nodesHash[son])=='undefined')
+			console.log(son+" is undefined");
+		else if(this.nodes[this.nodesHash[son]].father==null)
+			console.log("father is undefined");
+		else{
+			var fath=this.nodes[this.nodesHash[son]].father;
+			this.nodes[this.nodesHash[fath]].sons=remove(son,this.nodes[this.nodesHash[fath]].sons);
+			this.nodes[this.nodesHash[son]].father=null;
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class=="parent" && this.links[i].source==fath && this.links[i].target==son)
+					this.links.splice(i--,1);				
+			}
+		}
 	};
 	this.log = function log(){
 		console.log("nodehash : \n");
@@ -118,23 +162,47 @@ function LayeredGraph(){
 	};
 };
 var layer=new LayeredGraph();
-console.log(" ====================== step 0 : ==========================\n");
+console.log(" ====================== gen graph : ==========================\n");
 layer.log();
 layer.addNode(["bla"],"n1");
-console.log(" ====================== step 1 : ==========================\n");
+console.log(" ====================== add node1 : ==========================\n");
 layer.log();
 layer.addNode(["bla"],"n2");
-console.log(" ====================== step 2 : ==========================\n");
+console.log(" ====================== add node2 : ==========================\n");
 layer.log();
 layer.addNode(["bla"],"n3");
-console.log(" ====================== step 3 : ==========================\n");
+console.log(" ====================== add node3 : ==========================\n");
 layer.log();
 layer.setSon("n1","n2");
-console.log(" ====================== step 4 : ==========================\n");
+console.log(" ====================== n1 son of n2 : ==========================\n");
 layer.log();
 layer.setSon("n3","n2");
-console.log(" ====================== step 5 : ==========================\n");
+console.log(" ====================== n3 son of n2 : ==========================\n");
 layer.log();
-layer.removeNode("n2");
-console.log(" ====================== step 6 : ==========================\n");
+layer.addEdge("n1","n3");
+console.log(" ====================== edge n1-n3 : ==========================\n");
+layer.log();
+layer.addEdge("n1","n2");
+console.log(" ====================== edge n1-n2 : ==========================\n");
+layer.log();
+layer.addEdge("n2","n3");
+console.log(" ====================== edge n2-n3 : ==========================\n");
+layer.log();
+layer.addNode(["bla"],"n2");
+console.log(" ====================== add n2 : ==========================\n");
+layer.log();
+layer.addEdge("n1","n2");
+console.log(" =================:===== edge n1-n2  ==========================\n");
+layer.log();
+layer.addEdge("n2","n3");
+console.log(" ====================== edge n2-n3 : ==========================\n");
+layer.log();
+layer.removeEdge("n3","n1");
+console.log(" ====================== rm edge n3-n1 : ==========================\n");
+layer.log();
+layer.addEdge("n1","n3");
+console.log(" ====================== edge n1-n3 : ==========================\n");
+layer.log();
+layer.removeParenting("n1");
+console.log(" ====================== rm n1 parent : ==========================\n");
 layer.log();
