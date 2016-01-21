@@ -1,11 +1,10 @@
 //graph.js
 //node definition
-function Node(classes,id,label,x,x,lock){
+function Node(classes,id,x,y,lock){
 	this.classes=classes;
 	this.id="n_"+id;
 	this.linkedlinks=[];
-	this.context=[];
-	if(typeof(label)!='undefined') this.label=label;
+	this.context=[];//alternatively a context for an action or a value list for a flag or an attribute
 	if(typeof(x)!='undefined') this.x=x;
 	if(typeof(y)!='undefined') this.y=y;
 	if(typeof(lock)!='undefined') this.lock=lock;
@@ -14,32 +13,36 @@ function Node(classes,id,label,x,x,lock){
 function Edge(node1,node2){
 	this.source=node1;
 	this.target=node2;
-	this.id="e_"+node1["id"]+"_"+node2["id"];
 };
 
 //layered graph definition
-function LayeredGraph(svg){
-	var svg=svg; // the svg used to show the graph
-	var nodesHash={};// the hashtable in order to get a node by his name
-	var linksHash={};//the hashtable for links 
+function LayeredGraph(){
+	this.nodesHash={};// the hashtable in order to get a node by his name
 	this.nodes=[];//liste des noeud
 	this.links=[];//liste des arcs
-	var merge = function(nodes_l,node,replace){
-		if(typeof(nodesHash[node.id])=='undefined'){
-			nodes_l.push(node);
-			nodesHash[node.id]=nodes_l.length-1;
-		}else if(typeof(nodesHash[node.id])!='undefined' && !replace){
-			console.log("node already defined : "+node.id);
+	this.merge = function(node,replace){// merges two nodes of the same name : if replace is defined, the new one replace the old, else they are merged
+		if(typeof(this.nodesHash[node.id])=='undefined'){
+			this.nodes.push(node);
+			this.nodesHash[node.id]=this.nodes.length-1;
+		}else if(typeof(this.nodesHash[node.id])!='undefined' && replace){
+			this.nodes[this.nodesHash[node.id]]=node;
 		}else{
-			var tmp_node = new Node(union(node.classes,nodes_l[nodesHash[node.id]].classes),node.id,node.nodeLabel,node.x,node.y,node.lock);
-			if(nodes_l[nodesHash[node.id]].classes[0]=="action")
-				tmp_node["context"]=union(nodes_l[nodesHash[node.id]].context,node.context);
-			
+			var tmp_node = new Node(union(node.classes,this.nodes[this.nodesHash[node.id]].classes),node.id);
+			if(this.nodes[this.nodesHash[node.id]].classes[0]=="action")
+				tmp_node["context"]=union(this.nodes[this.nodesHash[node.id]].context,node.context);
 		}
 	};
-	this.addNode = function addNode(nodeClasses,nodeID,nodeLabel,nodeX,nodeY,nodeLock){
-		var tmp_node=new Node(nodeClasses,nodeID,nodeLabel,nodeX,nodeY,nodeLock);
-		merge(this.nodes,tmp_node,true);		
+	this.addNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//add a new node not existing yet
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+		if(typeof(this.nodesHash[tmp_node.id])!='undefined')
+			console.log("node already existing, use merge(false) or update instead");
+		else merge(tmp_node,false);		
+	};
+	this.replaceNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//replace an existing node with a new one. if the node doesn't exist, show a warning
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+		if(typeof(this.nodesHash[tmp_node.id])=='undefined')
+			console.log("node not existing, use merge or addnode instead");
+		merge(tmp_node,true);		
 	};
 	this.removeNodeByID = function removeNodeByID(nodeID){
 		for(var i=0;i<this.nodes[nodesHash[nodeID]].linkedlinks.length;i++){
@@ -48,10 +51,24 @@ function LayeredGraph(svg){
 			this.links.splice(this.nodes[nodesHash[nodeID]].linkedlinks[i],1);
 		}	
 		this.nodes.splice(nodesHash[nodeID],1);
+		for(var i=nodesHash[nodeID],i<this.nodes.length,i++)
+			nodesHash[this.nodes[i].id]--
 		delete nodesHash[nodeID];
 	};
+	this.log = function log(){
+		console.log("nodehash : \n"+nodesHash+"\n");
+		console.log("nodes : \n"+this.nodes+"\n");
+		console.log("linkshash : \n"+linksHash+"\n");
+		console.log("links : \n"+this.links+"\n");
+	}
+	this.joinNodes = function joinNodes(){
+		return this.nodes;
+	}
+	this.joinEdges = function joinEdges(){
+		return this.links;
+	}
 };
-var layer=new LayeredGraph(null);
+var layer=new LayeredGraph();
 console.log(layer.nodes);
 layer.addNode(["bla"],"n1","toto");
 console.log(layer.nodes);
