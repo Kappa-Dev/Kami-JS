@@ -6,6 +6,7 @@ function Node(classes,id,x,y,lock){
 	this.sons=[];// the node sons
 	this.father=null;//the node father
 	this.context=[];//alternatively a context for an action or a value list for a flag or an attribute
+	this.label=[];
 	if(typeof(x)!='undefined') this.x=x;//node coordinate
 	if(typeof(y)!='undefined') this.y=y;
 	if(typeof(lock)!='undefined') this.lock=lock;//node position locked
@@ -41,7 +42,51 @@ function LayeredGraph(){
 				list.splice(i,1);
 		}
 	}
-	this.merge = function(node,replace){// merges two nodes of the same name : if replace is defined, the new one replace the old, else they are merged
+	this.mergeDiff = function mergeDiff(s_node,t_node){//merge two existing nodes : a source node to a specific target node (by ID) : source become the target
+		if(typeof(this.nodesHash[s_node])=='undefined')
+			console.log(s_node+" doesn't exist !");
+		else if(typeof(this.nodesHash[t_node])=='undefined')
+			console.log(t_node+" doesn't exist !");
+		else{
+			var tmp_node=this.nodes[this.nodesHash[s_node]];
+			var tmp_edges=[];
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class == "link" && this.links[i].sourceID==s_node && this.links[i].targetID==s_node){//if the source point itself, generate an edge from target to target
+					tmp_edges.push(new Edge(this.nodes[this.nodesHash[t_node]],this.nodes[this.nodesHash[t_node]],"link"));
+					this.links.splice(i--,1);
+				}else if(this.links[i].e_class == "link" && this.links[i].sourceID==s_node){//if source is the source, replace with the target
+					tmp_edges.push(new Edge(this.nodes[this.nodesHash[t_node]],this.nodes[this.nodesHash[this.links[i].targetID]],"link"));
+					this.links.splice(i--,1);
+				}else if(this.links[i].e_class == "link" && this.links[i].targetID==s_node){//idem if target
+					tmp_edges.push(new Edge(this.nodes[this.nodesHash[this.links[i].sourceID]],this.nodes[this.nodesHash[t_node]],"link"));
+					this.links.splice(i--,1);
+				}else if(this.links[i].e_class == "link" && (this.links[i].sourceID==t_node || this.links[i].targetID==t_node)){//add also all the edges from and to target node
+					var spres=this.links.splice(i--,1);
+					tmp_edges.push(spres[0]);	
+				}				
+			}
+			for(var i=0;i<tmp_edges.length;i++){
+				if(tmp_edges[i].sourceID == tmp_edges[i].targetID){
+					tmp_edges.splice(i--,1);
+				}else{
+					for(var j=i+1;j<tmp_edges.length;j++){
+						if((tmp_edges[j].sourceID == tmp_edges[i].sourceID && tmp_edges[j].targetID == tmp_edges[i].targetID) || (tmp_edges[j].targetID == tmp_edges[i].sourceID && tmp_edges[j].sourceID == tmp_edges[i].targetID)){
+							tmp_edges.splice(j--,1);
+						}
+					}
+				}
+			}
+			this.links=this.links.concat(tmp_edges);
+			for(var i=0;i<tmp_node.sons.length;i++){
+				this.removeParenting(tmp_node.sons[i]);
+				this.setFather(tmp_node.sons[i],t_node);
+			}
+			this.nodes[this.nodesHash[t_node]].context=union(tmp_node.context,this.nodes[this.nodesHash[t_node]].context);
+			this.nodes[this.nodesHash[t_node]].label=union(tmp_node.label,this.nodes[this.nodesHash[t_node]].label);
+			this.removeNode(s_node);
+		}			
+	};
+	this.merge = function merge(node,replace){// merges two nodes of the same id : if replace is defined, the new one replace the old, else they are merged
 		if(typeof(this.nodesHash[node.id])=='undefined'){
 			this.nodes.push(node);
 			this.nodesHash[node.id]=this.nodes.length-1;
@@ -57,6 +102,7 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[node.id]].classes=union(node.classes,this.nodes[this.nodesHash[node.id]].classes);
 			this.nodes[this.nodesHash[node.id]].sons=union(node.sons,this.nodes[this.nodesHash[node.id]].sons);
 			this.nodes[this.nodesHash[node.id]].context=union(node.context,this.nodes[this.nodesHash[node.id]].context);
+			this.nodes[this.nodesHash[node.id]].label=union(node.label,this.nodes[this.nodesHash[node.id]].label);
 		}
 	};
 	this.addNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//add a new node not existing yet, else do nothing
@@ -64,6 +110,12 @@ function LayeredGraph(){
 		if(typeof(this.nodesHash[tmp_node.id])!='undefined')
 			console.log("node already existing, use merge(false) or update instead");
 		else this.merge(tmp_node,false);		
+	};
+	this.updateNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//update an existing node (if not existing, create it and trigger a warning)
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+		if(typeof(this.nodesHash[tmp_node.id])=='undefined')
+			console.log("node not already existing, use addNode instead");
+		this.merge(tmp_node,false);		
 	};
 	this.replaceNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//replace an existing node with a new one. if the node doesn't exist, show a warning
 		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
@@ -143,6 +195,22 @@ function LayeredGraph(){
 				if(this.links[i].e_class=="parent" && this.links[i].sourceID==fath && this.links[i].targetID==son)
 					this.links.splice(i--,1);				
 			}
+		}
+	};
+	this.addCtx = function addCtx(nodeID,ctx_el_l){//add a list of elements to a context
+		this.nodes[this.nodesHash[nodeID]].context=union(this.nodes[this.nodesHash[nodeID]].context,ctx_el_l);	
+	};
+	this.rmCtx = function rmCtx(nodeID,ctx_el_l){//remove a list of elements from a context
+		for(var i=0;i<ctx_el_l.length;i++){
+			remove(ctx_el_l[i],this.nodes[this.nodesHash[nodeID]].context);
+		}
+	};
+	this.addLabel = function addLabel(nodeID,lbl_el_l){//add a list of elements to a context
+		this.nodes[this.nodesHash[nodeID]].label=union(this.nodes[this.nodesHash[nodeID]].label,lbl_el_l);	
+	};
+	this.rmLabel = function rmLabel(nodeID,lbl_el_l){//remove a list of elements from a context
+		for(var i=0;i<lbl_el_l.length;i++){
+			remove(lbl_el_l[i],this.nodes[this.nodesHash[nodeID]].label);
 		}
 	};
 	this.log = function log(){
