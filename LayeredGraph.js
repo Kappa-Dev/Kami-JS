@@ -11,9 +11,11 @@ function Node(classes,id,x,y,lock){
 	if(typeof(lock)!='undefined') this.lock=lock;//node position locked
 };
 //edge definition
-function Edge(node1,node2,e_class){//node1 ande node2 are indexes
-	this.sourceID=node1;
-	this.targetID=node2;
+function Edge(node1,node2,e_class){//node1 and node2 are objects
+	this.source=node1;
+	this.target=node2;
+	this.sourceID=node1.id;
+	this.targetID=node2.id;
 	this.e_class=e_class;
 };
 //layered graph definition
@@ -74,7 +76,7 @@ function LayeredGraph(){
 			if(this.nodes[this.nodesHash[son]].father==null){
 				this.nodes[this.nodesHash[son]].father=fath;
 				this.nodes[this.nodesHash[fath]].sons=union([son],this.nodes[this.nodesHash[fath]].sons);
-				this.links.push(new Edge(fath,son,"parent"));//link is from the father to the son !
+				this.links.push(new Edge(this.nodes[this.nodesHash[fath]],this.nodes[this.nodesHash[son]],"parent"));//link is from the father to the son !
 			}
 			else
 				console.log("error : this node : "+son+" already have a father");
@@ -113,7 +115,7 @@ function LayeredGraph(){
 					return;
 				}
 			}
-			this.links.push(new Edge(id1,id2,"link"));
+			this.links.push(new Edge(this.nodes[this.nodesHash[id1]],this.nodes[this.nodesHash[id2]],"link"));
 		}
 	};
 	this.removeEdge = function removeEdge(sid,tid){//remove an edge between two nodes based on there id
@@ -135,7 +137,7 @@ function LayeredGraph(){
 			console.log("father is undefined");
 		else{
 			var fath=this.nodes[this.nodesHash[son]].father;
-			this.nodes[this.nodesHash[fath]].sons=remove(son,this.nodes[this.nodesHash[fath]].sons);
+			remove(son,this.nodes[this.nodesHash[fath]].sons);
 			this.nodes[this.nodesHash[son]].father=null;
 			for(var i=0;i<this.links.length;i++){
 				if(this.links[i].e_class=="parent" && this.links[i].sourceID==fath && this.links[i].targetID==son)
@@ -161,48 +163,3 @@ function LayeredGraph(){
 		return this.links;
 	};
 };
-/*var layer=new LayeredGraph(); // example
-console.log(" ====================== gen graph : ==========================\n");
-layer.log();
-layer.addNode(["bla"],"n1");
-console.log(" ====================== add node1 : ==========================\n");
-layer.log();
-layer.addNode(["bla"],"n2");
-console.log(" ====================== add node2 : ==========================\n");
-layer.log();
-layer.addNode(["bla"],"n3");
-console.log(" ====================== add node3 : ==========================\n");
-layer.log();
-layer.setSon("n1","n2");
-console.log(" ====================== n1 son of n2 : ==========================\n");
-layer.log();
-layer.setSon("n3","n2");
-console.log(" ====================== n3 son of n2 : ==========================\n");
-layer.log();
-layer.addEdge("n1","n3");
-console.log(" ====================== edge n1-n3 : ==========================\n");
-layer.log();
-layer.addEdge("n1","n2");
-console.log(" ====================== edge n1-n2 : ==========================\n");
-layer.log();
-layer.addEdge("n2","n3");
-console.log(" ====================== edge n2-n3 : ==========================\n");
-layer.log();
-layer.addNode(["bla"],"n2");
-console.log(" ====================== add n2 : ==========================\n");
-layer.log();
-layer.addEdge("n1","n2");
-console.log(" =================:===== edge n1-n2  ==========================\n");
-layer.log();
-layer.addEdge("n2","n3");
-console.log(" ====================== edge n2-n3 : ==========================\n");
-layer.log();
-layer.removeEdge("n3","n1");
-console.log(" ====================== rm edge n3-n1 : ==========================\n");
-layer.log();
-layer.addEdge("n1","n3");
-console.log(" ====================== edge n1-n3 : ==========================\n");
-layer.log();
-layer.removeParenting("n1");
-console.log(" ====================== rm n1 parent : ==========================\n");
-layer.log();*/
