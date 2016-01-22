@@ -1,4 +1,4 @@
-//graph.js
+//layered_graph.js
 //node definition
 function Node(classes,id,x,y,lock){
 	this.classes=classes;//the node class
@@ -12,8 +12,8 @@ function Node(classes,id,x,y,lock){
 };
 //edge definition
 function Edge(node1,node2,e_class){//node1 ande node2 are indexes
-	this.source=node1;
-	this.target=node2;
+	this.sourceID=node1;
+	this.targetID=node2;
 	this.e_class=e_class;
 };
 //layered graph definition
@@ -87,7 +87,7 @@ function LayeredGraph(){
 	};
 	this.removeNode = function removeNode(nodeID){//remove a specific node giving its id : doesn't remove its sons
 		for(var i=0;i<this.links.length;i++){
-			if(this.links[i].source == nodeID || this.links[i].target == nodeID ){
+			if(this.links[i].sourceID == nodeID || this.links[i].targetID == nodeID ){
 				this.links.splice(i--,1);
 			}
 		}
@@ -108,7 +108,7 @@ function LayeredGraph(){
 			console.log(id2+" is undefined");
 		else{
 			for(var i=0;i<this.links.length;i++){
-				if(this.links[i].e_class=="link" && ((this.links[i].source==id1 && this.links[i].target==id2) || (this.links[i].source==id2 && this.links[i].target==id1))){
+				if(this.links[i].e_class=="link" && ((this.links[i].sourceID==id1 && this.links[i].targetID==id2) || (this.links[i].sourceID==id2 && this.links[i].targetID==id1))){
 					console.log("this link between "+id1+" "+id2+" already exist !");
 					return;
 				}
@@ -123,7 +123,7 @@ function LayeredGraph(){
 			console.log(tid+" is undefined");
 		else{
 			for(var i=0;i<this.links.length;i++){
-				if(this.links[i].e_class=="link" && ((this.links[i].source==sid && this.links[i].target==tid) || (this.links[i].source==tid && this.links[i].target==sid)))
+				if(this.links[i].e_class=="link" && ((this.links[i].sourceID==sid && this.links[i].targetID==tid) || (this.links[i].sourceID==tid && this.links[i].targetID==sid)))
 					this.links.splice(i--,1);				
 			}
 		}		
@@ -138,7 +138,7 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[fath]].sons=remove(son,this.nodes[this.nodesHash[fath]].sons);
 			this.nodes[this.nodesHash[son]].father=null;
 			for(var i=0;i<this.links.length;i++){
-				if(this.links[i].e_class=="parent" && this.links[i].source==fath && this.links[i].target==son)
+				if(this.links[i].e_class=="parent" && this.links[i].sourceID==fath && this.links[i].targetID==son)
 					this.links.splice(i--,1);				
 			}
 		}
@@ -161,7 +161,7 @@ function LayeredGraph(){
 		return this.links;
 	};
 };
-var layer=new LayeredGraph();
+/*var layer=new LayeredGraph(); // example
 console.log(" ====================== gen graph : ==========================\n");
 layer.log();
 layer.addNode(["bla"],"n1");
@@ -205,4 +205,4 @@ console.log(" ====================== edge n1-n3 : ==========================\n")
 layer.log();
 layer.removeParenting("n1");
 console.log(" ====================== rm n1 parent : ==========================\n");
-layer.log();
+layer.log();*/

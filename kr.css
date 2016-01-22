@@ -1,0 +1,31 @@
+.nodeLabel{
+  fill: #000;
+  font-family: sans-serif;
+}
+.link {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node {
+  cursor: move;
+  stroke:#000;
+  stroke-width: 1.5px;
+  stroke-dasharray:none;
+}
+.node.fixed {
+  stroke-dasharray:10 3;
+}
+.node.selected {
+  stroke:#f00;
+}
+.action{fill: #aaa;}
+	
+.agent{fill: #aaa;}
+	
+.region{fill: #bbb;}
+.key_res{fill: #ccc;}
+.attribute{fill: #ddd;}
+.flag{fill: #eee;}
+  
+}
