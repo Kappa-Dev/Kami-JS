@@ -2,11 +2,7 @@
 function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can be of differents classes : "action", "agent" "key_rs", "region", "flag", "attribute", action should have a second subclass : "mod", "bnd","brk","syn", "deg", other can have a subclass : "abstract", "set"
 	var layerG=layerG;
 	var force=d3.layout.force()
-				.size([width, height])
-				.on("tick", function(){
-					if(force.alpha()<=0.00501) layerG.log();
-					else console.log(force.alpha());
-				});
+				.size([width, height]);
 	this.init = function init(){
 		force
 		.nodes(layerG.nodes)
@@ -26,6 +22,9 @@ function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can 
 			case "attribute" : return 10;
 		}
 	};
+	this.getForce = function getForce(){
+		return force;
+	}
 };
 var layer=new LayeredGraph(); // example
 console.log(" ====================== gen graph : ==========================\n");
@@ -73,4 +72,6 @@ layer.removeParenting("n1");
 console.log(" ====================== rm n1 parent : ==========================\n");
 layer.log();
 var dgraph = new DynamicGraph(layer,1200,800);
+dgraph.getForce().on("tick",function(){if(dgraph.getForce().alpha()<=0.00501 ) layer.log();
+									  else console.log(dgraph.getForce().alpha())});
 dgraph.init();
