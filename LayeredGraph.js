@@ -1,6 +1,6 @@
 //layered_graph.js
 //node definition
-function Node(classes,id,x,y,lock){
+function Node(classes,id,x,y,fixed){
 	this.classes=classes;//the node class
 	this.id=id;//the node id
 	this.sons=[];// the node sons
@@ -9,7 +9,7 @@ function Node(classes,id,x,y,lock){
 	this.label=[];
 	if(typeof(x)!='undefined') this.x=x;//node coordinate
 	if(typeof(y)!='undefined') this.y=y;
-	if(typeof(lock)!='undefined') this.lock=lock;//node position locked
+	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixeded
 };
 //edge definition
 function Edge(node1,node2,e_class){//node1 and node2 are objects
@@ -97,7 +97,7 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[node.id]].context=node.context;
 			this.nodes[this.nodesHash[node.id]].x=node.x;
 			this.nodes[this.nodesHash[node.id]].y=node.y;
-			this.nodes[this.nodesHash[node.id]].lock=node.lock;
+			this.nodes[this.nodesHash[node.id]].fixed=node.fixed;
 		}else{
 			this.nodes[this.nodesHash[node.id]].classes=union(node.classes,this.nodes[this.nodesHash[node.id]].classes);
 			this.nodes[this.nodesHash[node.id]].sons=union(node.sons,this.nodes[this.nodesHash[node.id]].sons);
@@ -105,20 +105,20 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[node.id]].label=union(node.label,this.nodes[this.nodesHash[node.id]].label);
 		}
 	};
-	this.addNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//add a new node not existing yet, else do nothing
-		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+	this.addNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodefixed){//add a new node not existing yet, else do nothing
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodefixed);
 		if(typeof(this.nodesHash[tmp_node.id])!='undefined')
 			console.log("node already existing, use merge(false) or update instead");
 		else this.merge(tmp_node,false);		
 	};
-	this.updateNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//update an existing node (if not existing, create it and trigger a warning)
-		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+	this.updateNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodefixed){//update an existing node (if not existing, create it and trigger a warning)
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodefixed);
 		if(typeof(this.nodesHash[tmp_node.id])=='undefined')
 			console.log("node not already existing, use addNode instead");
 		this.merge(tmp_node,false);		
 	};
-	this.replaceNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodeLock){//replace an existing node with a new one. if the node doesn't exist, show a warning
-		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodeLock);
+	this.replaceNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodefixed){//replace an existing node with a new one. if the node doesn't exist, show a warning
+		var tmp_node=new Node(nodeClasses,nodeID,nodeX,nodeY,nodefixed);
 		if(typeof(this.nodesHash[tmp_node.id])=='undefined')
 			console.log("node not existing, prefere using merge or addnode instead");
 		this.merge(tmp_node,true);		
@@ -198,21 +198,45 @@ function LayeredGraph(){
 		}
 	};
 	this.addCtx = function addCtx(nodeID,ctx_el_l){//add a list of elements to a context
+		if(typeof(this.nodesHash[nodeID])=='undefined'){
+			console.log("addCtx : the node "+nodeID+"doesn't exist");
+			return;
+		}
 		this.nodes[this.nodesHash[nodeID]].context=union(this.nodes[this.nodesHash[nodeID]].context,ctx_el_l);	
 	};
 	this.rmCtx = function rmCtx(nodeID,ctx_el_l){//remove a list of elements from a context
+		if(typeof(this.nodesHash[nodeID])=='undefined'){
+			console.log("rmCtx : the node "+nodeID+" doesn't exist");
+			return;
+		}
 		for(var i=0;i<ctx_el_l.length;i++){
 			remove(ctx_el_l[i],this.nodes[this.nodesHash[nodeID]].context);
 		}
 	};
-	this.addLabel = function addLabel(nodeID,lbl_el_l){//add a list of elements to a context
+	this.addLabel = function addLabel(nodeID,lbl_el_l){//add a list of elements to a label
+		if(typeof(this.nodesHash[nodeID])=='undefined'){
+			console.log("addLabel : the node "+nodeID+" doesn't exist");
+			return;
+		}
 		this.nodes[this.nodesHash[nodeID]].label=union(this.nodes[this.nodesHash[nodeID]].label,lbl_el_l);	
 	};
 	this.rmLabel = function rmLabel(nodeID,lbl_el_l){//remove a list of elements from a context
+		if(typeof(this.nodesHash[nodeID])=='undefined'){
+			console.log("rmLabel : the node "+nodeID+" doesn't exist");
+			return;
+		}
 		for(var i=0;i<lbl_el_l.length;i++){
 			remove(lbl_el_l[i],this.nodes[this.nodesHash[nodeID]].label);
 		}
 	};
+	this.getPath = function getPath(nodeID){//for a specific node id, get its path : A->a->a1 path is : [a,A] for a1 and [A] for a
+		var res=[];
+		var tmp_id=nodeID;
+		while(this.nodes[this.nodesHash[tmp_id]].father!=null){
+			res.push(this.nodes[this.nodesHash[tmp_id]].father);
+			tmp_id=this.nodes[this.nodesHash[tmp_id]].father;
+		}return res;
+	}
 	this.log = function log(){
 		console.log("nodehash : \n");
 		console.log(this.nodesHash);

@@ -29,6 +29,11 @@ function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can 
 /*var layer=new LayeredGraph(); // example
 console.log(" ====================== gen graph : ==========================\n");
 layer.log();
+var dgraph = new DynamicGraph(layer,1200,800);
+dgraph.getForce().on("tick",function(){if(dgraph.getForce().alpha()<=0.00501 ) layer.log();
+									  else console.log(dgraph.getForce().alpha())});
+dgraph.init();
+
 layer.addNode(["agent"],"n1");
 console.log(" ====================== add node1 : ==========================\n");
 layer.log();
