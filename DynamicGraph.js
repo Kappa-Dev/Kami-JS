@@ -7,10 +7,9 @@ function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can 
 		force
 		.nodes(layerG.nodes)
 		.links(layerG.links)
-		.linkDistance(function(d){return toInt(layerG.nodes[layerG.nodesHash[d.sourceID]].classes[0])+toInt(layerG.nodes[layerG.nodesHash[d.targetID]].classes[0])})
+		.linkDistance(function(d){return (toInt(layerG.nodes[layerG.nodesHash[d.sourceID]].classes[0])+toInt(layerG.nodes[layerG.nodesHash[d.targetID]].classes[0]))/2})
 		.linkStrength(function(d){if(layerG.nodes[layerG.nodesHash[d.sourceID]].classes[0]=="action" || layerG.nodes[layerG.nodesHash[d.targetID]].classes[0]=="action") return 0.7; else return 5})
 		.charge(function(d){if(d.classes[0]=="action")return -300; else return -600})
-		.start();
 	};
 	var toInt = function(class_t){
 		switch(class_t){
