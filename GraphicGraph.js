@@ -58,7 +58,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.attr("text-anchor", "middle")
 			.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
 		s_node.exit().remove();
-		};
+		dynG.getForce().on("tick",tick)
+						.start();
+	};
 	var tick = function(){//show up new svg element only if there position datas have been computed
 		//if(dynG.getForce().alpha()<=0.00501){
 			//dynG.getForce().stop();
