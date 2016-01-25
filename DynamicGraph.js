@@ -11,7 +11,7 @@ function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can 
 		.linkStrength(function(d){if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder")) return 0.7; else return 5})
 		.charge(function(d){if(d.classes[0]=="action" && d.classes[1]=="binder")return -300; else return -600})
 	};
-	
+	 
 	this.getForce = function getForce(){
 		return force;
 	}

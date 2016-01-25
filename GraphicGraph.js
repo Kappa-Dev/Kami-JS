@@ -4,7 +4,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var layerG;//the layered graph data structure
 	var width;
 	var	height;//menu is 30px heigth
-	var svg;
+	var svg; 
 	var drag;
 	var dynG;//the force layout graph for this graphical graph
 	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link

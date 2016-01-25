@@ -20,7 +20,7 @@ function Node(classes,id,x,y,fixed){
 			case "attribute" : return 10;
 		}
 	};
-};
+}; 
 //edge definition
 function Edge(node1,node2,e_class){//node1 and node2 are objects
 	this.source=node1;

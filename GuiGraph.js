@@ -4,7 +4,7 @@ function clickHandler(d) {
 	}if(d3.event.shiftKey){
 		if(d3.select(this).classed("selected"))
 			d3.select(this).classed("selected", d.selected = false);
-		else
+		else 
 			d3.select(this).classed("selected", d.selected = true);
 	}	
 };
