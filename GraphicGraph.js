@@ -211,6 +211,14 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
 			d3.select(this).classed("fixed", d.fixed = true);
 	};
+	this.getCoord = function getCoord(){
+		layerG.log();
+		var ret=[];
+		for(var i=0;i<layerG.nodes.length;i++){
+			ret.push({x:layerG.nodes[i].x,y:layerG.nodes[i].y});
+		}
+		return ret;	
+	}
 };
 
 //example
@@ -241,4 +249,5 @@ window.onload = function () {
 	gGraph.addEdge("n2","n17");
 	gGraph.addEdge("n4","n18");
 	gGraph.wakeUp();
+	console.log(gGraph.getCoord());
 };
