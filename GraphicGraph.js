@@ -1,3 +1,7 @@
+//GraphicGraph.js
+//author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
+//this file is under Gnu LGPL licence
+//this file is part of the Executable Knowledge project
 //graphical graph version
 function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var containerID=containerid;
@@ -7,10 +11,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var svg; 
 	var drag;
 	var dynG;//the force layout graph for this graphical graph
-	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link
+	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link and binders
 	var node_count=0;
 	var first_init;
-	this.wakeUp = function wakeUp(){
+	this.wakeUp = function wakeUp(){//speed up tick function
 		//first_init=true;
 		for(var i=0;i<300;i++){
 			dynG.getForce().tick();
@@ -196,6 +200,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.rmCtx(id,ctx);
 		update();	
 	};
+	this.getCtx = function getCtx(id){//get a specific node label
+		return layerG.nodes[layerG.nodeHash[id]].context.concat();
+	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
 		layerG.addLabel(id,lbl);
@@ -206,7 +213,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.rmLabel(id,lbl);
 		update();	
 	};
-
+	this.getLabel = function getLabel(id){//get a specific node label
+		return layerG.nodes[layerG.nodeHash[id]].label.concat();
+	};
 	var dragstart = function(d) {//allow only to move agents and actions.
 		if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
 			d3.select(this).classed("fixed", d.fixed = true);
@@ -218,10 +227,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			ret.push({x:layerG.nodes[i].x,y:layerG.nodes[i].y});
 		}
 		return ret;	
-	}
+	};
 };
 
 //example
+/*
 var gGraph = new GraphicGraph('graph');
 window.onload = function () { 
 	gGraph.init();
@@ -250,4 +260,4 @@ window.onload = function () {
 	gGraph.addEdge("n4","n18");
 	gGraph.wakeUp();
 	console.log(gGraph.getCoord());
-};
+};*/
