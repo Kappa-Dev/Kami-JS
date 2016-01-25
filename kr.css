@@ -103,3 +103,18 @@ html, body {
   right:0;
   background: #fff;
 }
+.n_tooltip{
+  padding: 1px;
+  border-radius: 25px;	
+  vertical-align: top;	
+  text-align: center;
+  z-index: 10;
+  background: #1496bb;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  display: block;
+  position: absolute;
+  width: 150px;
+  overflow : hidden;
+}
