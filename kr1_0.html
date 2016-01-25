@@ -236,7 +236,7 @@ function toGraph(){
 	for(var i=0;i<agents.length;i++){
 		nodes.push({"id":agents[i].name,"type":agents[i].class[1],"x":agents[i].cx,"y":agents[i].cy,"path":[],"father":null,"values":[],"label":agents[i].label});
 	}for(var i=0;i<regions.length;i++){
-		nodes.push({"id":regions[i].name,"type":regions[i].class[1],"x":0,"y":0,"path":[regions[i].ag_name],"father":regions[i].ag_name,"values":[],"label":region[i].label});
+		nodes.push({"id":regions[i].name,"type":regions[i].class[1],"x":0,"y":0,"path":[regions[i].ag_name],"father":regions[i].ag_name,"values":[],"label":regions[i].label});
 		links.push({"source": findNode(regions[i].ag_name), "target": findNode(regions[i].name)});
 	}for(var i=0;i<key_rs.length;i++){
 		nodes.push({"id":key_rs[i].name,"type":key_rs[i].class[1],"x":0,"y":0,"path":[key_rs[i].ag_name],"father":key_rs[i].ag_name,"values":[],"label":key_rs[i].label});
@@ -245,7 +245,7 @@ function toGraph(){
 		nodes.push({"id":attributes[i].name,"type":attributes[i].class[1],"x":0,"y":0,"path":truncate(attributes[i].dest_path,1),"father":attributes[i].dest_path[attributes[i].dest_path.length-1],"values":attributes[i].values,"label":attributes[i].label});
 		links.push({"source": findNode(attributes[i].dest_path[attributes[i].dest_path.length-1]), "target": findNode(attributes[i].name)});
 	}for(var i=0;i<flags.length;i++){
-		nodes.push({"id":flags[i].name,"type":flags[i].class[1],"x":0,"y":0,"path":truncate(flags[i].dest_path,1),"father":flags[i].dest_path[flags[i].dest_path.length-1],"values":flags[i].values,,"label":flags[i].label});
+		nodes.push({"id":flags[i].name,"type":flags[i].class[1],"x":0,"y":0,"path":truncate(flags[i].dest_path,1),"father":flags[i].dest_path[flags[i].dest_path.length-1],"values":flags[i].values,"label":flags[i].label});
 		links.push({"source": findNode(flags[i].dest_path[flags[i].dest_path.length-1]), "target": findNode(flags[i].name)});
 	}for(var i=0;i<actions.length;i++){
 		nodes.push({"id":actions[i].name,"type":actions[i].class[1],"x":0,"y":0,"path":[],"father":null,"values":[],"label":actions[i].label});
@@ -259,7 +259,7 @@ function toGraph(){
 		links.push({"source": findNode(tmp_src), "target": findNode(tmp_tar)});
 	}
 	console.log(nodes);
-	console.log(links);
+	console.log(links); 
 	update();
 }
 function addNode(id,type,position,father,values,path){
