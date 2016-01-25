@@ -1,5 +1,5 @@
 //dynamic_graph.js
-function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can be of differents classes : "action", "agent" "key_rs", "region", "flag", "attribute", action should have a second subclass : "mod", "bnd","brk","syn", "deg", other can have a subclass : "abstract", "set"
+function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can be of differents classes : "action", "agent" "key_rs", "region", "flag", "attribute", action should have a second subclass : "mod", "bnd","brk","syn", "deg","r_link","l_link" other can have a subclass : "abstract", "set"
 	var layerG=layerG;
 	var force=d3.layout.force()
 				.size([width, height]);
@@ -7,20 +7,11 @@ function DynamicGraph(layerG,width,height){//define a dynamic graph : nodes can 
 		force
 		.nodes(layerG.nodes)
 		.links(layerG.links)
-		.linkDistance(function(d){return (toInt(layerG.nodes[layerG.nodesHash[d.sourceID]].classes[0])+toInt(layerG.nodes[layerG.nodesHash[d.targetID]].classes[0]))/2})
-		.linkStrength(function(d){if(layerG.nodes[layerG.nodesHash[d.sourceID]].classes[0]=="action" || layerG.nodes[layerG.nodesHash[d.targetID]].classes[0]=="action") return 0.7; else return 5})
-		.charge(function(d){if(d.classes[0]=="action")return -300; else return -600})
+		.linkDistance(function(d){if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder")) return 100; else return (d.source.toInt()+d.target.toInt())/2})
+		.linkStrength(function(d){if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder")) return 0.7; else return 5})
+		.charge(function(d){if(d.classes[0]=="action" && d.classes[1]=="binder")return -300; else return -600})
 	};
-	var toInt = function(class_t){
-		switch(class_t){
-			case "action" : return 100;
-			case "key_rs" : return 20;
-			case "region" : return 30;
-			case "agent" : return 50;
-			case "flag" : return 12;
-			case "attribute" : return 10;
-		}
-	};
+	
 	this.getForce = function getForce(){
 		return force;
 	}

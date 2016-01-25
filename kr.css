@@ -30,7 +30,11 @@
   stroke: #000;
   stroke-width: 1.5px;
 }
-.node {
+.parent {
+  stroke: #009933;
+  stroke-width: 2px;
+}
+circle.node {
   cursor: move;
   stroke:#000;
   stroke-width: 1.5px;
@@ -42,15 +46,30 @@
 .node.selected {
   stroke:#f00;
 }
-.action{fill: #aaf;}
-	
+rect.action{
+  cursor: move;
+  stroke:#000;
+  stroke-width: 1.5px;
+  stroke-dasharray:none;
+}
+rect.action.fixed {
+  stroke-dasharray:10 3;
+}
+.action.selected{stroke:#f00;}
+.bnd{fill: #aaf;}
+.brk{fill: #aae;}
+.mod{fill:#aad;}
+.syn{fill:#aac;}
+.deg{fill:#aab;}	
 .agent{fill: #aaa;}
-	
 .region{fill: #bbb;}
 .key_res{fill: #ccc;}
 .attribute{fill: #ddd;}
 .flag{fill: #eee;}
-  
+.binder{
+	fill: #fff;
+	stroke:#003366;
+	stroke-width: 1px;
 }
 svg {
   height: 100%;

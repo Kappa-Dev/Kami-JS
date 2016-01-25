@@ -10,6 +10,16 @@ function Node(classes,id,x,y,fixed){
 	if(typeof(x)!='undefined') this.x=x;//node coordinate
 	if(typeof(y)!='undefined') this.y=y;
 	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixeded
+	this.toInt = function(){
+		switch(classes[0]){
+			case "action" : if(classes[1]!="binder")return 80; else return 4;
+			case "key_res" : return 20;
+			case "region" : return 30;
+			case "agent" : return 40;
+			case "flag" : return 12;
+			case "attribute" : return 10;
+		}
+	};
 };
 //edge definition
 function Edge(node1,node2,e_class){//node1 and node2 are objects
@@ -223,6 +233,10 @@ function LayeredGraph(){
 	this.rmLabel = function rmLabel(nodeID,lbl_el_l){//remove a list of elements from a context
 		if(typeof(this.nodesHash[nodeID])=='undefined'){
 			console.log("rmLabel : the node "+nodeID+" doesn't exist");
+			return;
+		}
+		if(lbl_el_l.length==0){
+			this.nodes[this.nodesHash[nodeID]].label=[];
 			return;
 		}
 		for(var i=0;i<lbl_el_l.length;i++){
