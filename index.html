@@ -8,9 +8,11 @@
 <meta name="author" content="Adrien Basso-Blandin">
 <link rel="stylesheet" type="text/css" href="kr.css">
 <script src="d3/d3.min.js"></script>
+<script src="d3/d3-context-menu.js"></script>
 <script src="LayeredGraph.js"></script>
 <script src="DynamicGraph.js"></script>
 <script src="GraphicGraph.js"></script>
+
 
 </head> 
 <body>
@@ -20,13 +22,15 @@
 	  <input type="file" id="import_f" value="data.json">
 	  <input type="button" name="import" value="Import Data">
 	  <input type="button" name="export" value="Export Data">
-	  <input type="button" name="kr" value="wiew Kr">
-	  <input type="button" name="edit" value="Edit Kr">
-	  <input type="button" name="nugget" value="Add Nugget">
+	  <input type="button" name="kr" value="view Kr"  onclick="gGraph.setState('kr_view')">
+	  <input type="button" name="edit" value="Edit Kr" onclick="gGraph.setState('kr_edit')">
+	  <input type="button" name="nugget" value="Add Nugget" onclick="gGraph.setState('nugget_view')">
 	  <input type="button" name="update" value="Update">
 	  <input type="button" name="lcg" value="LCG">
 	  <input type="button" name="kappa" value="To Kappa">
 	  <input type="button" name="s_kappa" value="Save Kappa">
+	  <input type="button" name="undo" value="Undo" onclick="gGraph.unStack()">
+	  	
 	</form>
       </div>
       <div id="graph">
