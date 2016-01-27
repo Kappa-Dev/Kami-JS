@@ -72,6 +72,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
             .call(drag)
 			.on("mouseover",mouseOver)
 			.on("mouseout",mouseOut)
+			.on("click",clickHandler)
 		nodeEnter.insert("circle")
 			.attr("r", function(d){return d.toInt()});
 		nodeEnter.insert("text")
@@ -93,7 +94,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("brk",function(d){return d.classes[1]=="brk"})
 			.classed("syn",function(d){return d.classes[1]=="syn"})
 			.classed("deg",function(d){return d.classes[1]=="deg"})
-            .call(drag);
+            .call(drag)
+			.on("mouseover",mouseOver)
+			.on("mouseout",mouseOut)
+			.on("click",clickHandler)
 		actionEnter.insert("rect")
 			.attr("width", function(d){return d.toInt()})
 			.attr("height", function(d){return d.toInt()/2});
@@ -365,13 +369,22 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			div_ct+="</p>";
 			d3.select(".n_tooltip").style("visibility","visible")
 								.html(div_ct);
+		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
+			for(var i=0;i<d.context.length;i++){
+				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
+			}
 		}
 	};
 	var mouseOut = function(d){//handling mouse out of nodes/actions
-		d3.select(".n_tooltip").style("visibility","hidden")
+		if(d3.select(this).classed("node")){
+			d3.select(".n_tooltip").style("visibility","hidden")
 								.text("");
+		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
+			for(var i=0;i<d.context.length;i++)
+				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=false);	
+		}
 	};
-	var ctMenu = function(d){//handling right click on nodes/actions/links
+	var ctMenu = function(){//handling right click on nodes/actions/links
 		if(edition){
 			
 		}else if(nugget_add){
@@ -420,28 +433,75 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					var mousepos=d3.mouse(svg[0][0]);
 					var lbl=window.prompt("define your label","");
 					if(lbl=="")self.addNode(["agent"],[],[],mousepos[0],mousepos[1]);
-					else self.addNode(["agent"],[lbl.split(",")],[],mousepos[0],mousepos[1]);
-				}
-					
+					else self.addNode(["agent"],lbl.split(","),[],mousepos[0],mousepos[1]);
+				}	
 			},{
 				title: "Add Action",
-				action: function(elm,d,i){
+				child:[{
+					title:"Bind",
+					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					var act_t="bnd";
-					self.addNode(["action",act_t],[],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
 					//console.log(layerG.nodes[layerG.nodes.length-1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
+					}
+				},
+				{
+					title:"Break",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","brk"],["break"],[],mousepos[0],mousepos[1]);
+					//console.log(layerG.nodes[layerG.nodes.length-1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);
+					}
+				},
+				{
+					title:"Modify",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","mod"],["mod"],[],mousepos[0],mousepos[1]);
+					//console.log(layerG.nodes[layerG.nodes.length-1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);
+					}
+				},
+				{
+					title:"Synthesis",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","syn"],["synth"],[],mousepos[0],mousepos[1]);
+					//console.log(layerG.nodes[layerG.nodes.length-1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);
+					}
+				},
+				{
+					title:"Degradation",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","deg"],["deg"],[],mousepos[0],mousepos[1]);
+					//console.log(layerG.nodes[layerG.nodes.length-1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);
+					}
 				}
+				]
 			}
 		];
+
 		}
 		return menu;
 	};
-	var dblClick = function(d){//handling double clik on nodes/action : edition
+	/*var dblClick = function(d){//handling double clik on nodes/action : edition
 		d3.event.stopPropagation();
-	};
+	};*/
 	var clickHandler = function(d) {//handling click on on a node or an action 
 		d3.event.stopPropagation();
 		if(d3.event.ctrlKey){
@@ -517,7 +577,7 @@ window.onload = function () {
 	gGraph.addNode(["flag"],["fl3"],["n1"]);
 	gGraph.addNode(["flag"],["fl4"],["n2"]);
 	gGraph.addNode(["action","bnd"],["bind1"],[]);
-	gGraph.addNode(["action","brk"],["bind2"],[]);
+	gGraph.addNode(["action","brk"],["brk1"],[]);
 	gGraph.addNode(["action","binder","left"],[],["n13"]);
 	gGraph.addNode(["action","binder","right"],[],["n13"]);
 	gGraph.addNode(["action","binder","left"],[],["n14"]);
@@ -527,6 +587,8 @@ window.onload = function () {
 	gGraph.addEdge("n2","n17");
 	gGraph.addEdge("n4","n18");
 	gGraph.addCtx("n3",["n1","n4"]);
+	gGraph.addCtx("n13",["n3","n4"]);
+	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
 	//gGraph.log();
 	//console.log(gGraph.getCoord());
