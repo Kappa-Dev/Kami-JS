@@ -77,8 +77,14 @@ this.jsToLGraph = function jsToLGraph(){
 				lgraph.addLabel("n"+n_cpt-1,json.actions[i].labels);
 			if(json.actions[i].context.length>0){
 				lgraph.addCtx("n"+n_cpt-1,json.actions[i].context);
+				//gen node context + merge !
 			}
-			
+			if(json.actions[i].left.length>0){
+				//gen link left + gen node left + gen bind left
+			}
+			if(json.actions[i].right.length>0){
+				//gen link right + gen node right + gen bind right
+			}
 		}
 	}
 	
