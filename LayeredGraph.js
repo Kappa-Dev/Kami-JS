@@ -12,7 +12,8 @@ function Node(classes,id,x,y,fixed){
 	this.label=[];
 	if(typeof(x)!='undefined') this.x=x;//node coordinate
 	if(typeof(y)!='undefined') this.y=y;
-	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixeded
+	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixed
+	this.selected=false;
 	this.toInt = function(){
 		switch(classes[0]){
 			case "action" : if(classes[1]!="binder")return 80; else return 4;
@@ -159,7 +160,7 @@ function LayeredGraph(){
 			}
 		}
 		if(this.nodes[this.nodesHash[nodeID]].father!=null)
-			this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].father]].sons=remove(nodeID,this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].father]].sons);//retire le noeud de la liste des fils de son pere.
+			remove(nodeID,this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].father]].sons);//retire le noeud de la liste des fils de son pere.
 		for(var i=0;i<this.nodes[this.nodesHash[nodeID]].sons.length;i++){//remove the node from all it children as a father
 			this.nodes[this.nodesHash[this.nodes[this.nodesHash[nodeID]].sons[i]]].father=null;
 		}

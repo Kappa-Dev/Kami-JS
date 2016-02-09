@@ -14,7 +14,6 @@ d3.contextMenu = function (menu, openCallback) {
 	// this gets executed when a contextmenu event occurs
 	return function(data, index) {	
 		var elm = this;
-
 		d3.selectAll('.d3-context-menu').html('');
 		var list = d3.selectAll('.d3-context-menu').append('ul');
 		list.selectAll('li').data(menu).enter()
@@ -30,7 +29,6 @@ d3.contextMenu = function (menu, openCallback) {
 			})
 			.on('mouseenter',function(d,i){
 				if(typeof(d.child)!='undefined' && d.child.length>0){
-					console.log(this);
 					d3.select(this).append('ul').selectAll('li').data(d.child).enter()
 						.append('li')
 						.html(function(d){ return d.title;})
@@ -55,5 +53,6 @@ d3.contextMenu = function (menu, openCallback) {
 			.style('display', 'block');
 
 		d3.event.preventDefault();
+		d3.event.stopPropagation();
 	};
 };
