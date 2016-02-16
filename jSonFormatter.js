@@ -2,31 +2,37 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
-function jSonFormatter(filename){
-	var name=filename;
+function jSonFormatter(gGraph){
+	var name=null;
 	var json=null;
-	var n_cpt;
-this.init = function init(count){
-	d3.json(name,function(error, graph) {
-		if (error) throw error;
-		json={
-		version:graph.version,
-		agents:graph.agents,
-		regions:graph.regions,
-		key_rs:graph.key_rs,
-		attributes:graph.attributes,
-		flags:graph.flags,
-		actions:graph.actions,
-		actions_binder:graph.actions_binder,
-		edges:graph.edges
-	});
-	n_cpt=count;
-}
+	this.gGraph=gGraph;
+	var force=false;
+	this.init = function init(filename){
+		this.name=filename;
+		d3.json(name,function(error, graph) {
+			if (error) throw error;
+			json={
+				version:graph.version,
+				agents:graph.agents,
+				regions:graph.regions,
+				key_rs:graph.key_rs,
+				attributes:graph.attributes,
+				flags:graph.flags,
+				actions:graph.actions,
+				actions_binder:graph.actions_binder,
+				edges:graph.edges
+			}
+		});
+	}
 this.jsToLGraph = function jsToLGraph(){
 	if(typeof(json.version)=='undefined' || json.version==null || json.version[0].number<1.1)
-		return old_trs();
-	var lgraph=new LayeredGraph();
-	if(typeof(json.agents)!='undefined' && json.agents!=null && json.agents.length>0){
+		force=true;
+	if(typeof(json.agents)!='undefined' && json.agents!=null && json.agents.length>0)
+		this.genAgent();
+	else if(force){
+		console.log("Unable to find Agents !");
+		return;
+	}
 		for(var i=0;i<json.agents.length;i++){
 			lgraph.addNode(json.agents[i].classes,"n"+n_cpt++);
 			if(json.agents[i].labels.length>0)

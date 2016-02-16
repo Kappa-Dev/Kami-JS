@@ -4,7 +4,7 @@
 //this file is part of the Executable Knowledge project
 //graphical graph version
 function GraphicGraph(containerid){//define a graphical graph with svg objects
-	var rewriter=[];
+	var rewriter;
 	var containerID=containerid;
 	var layerG;//the layered graph data structure
 	var width;
@@ -29,13 +29,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
 		first_init=true;
 	};
-	this.log = function log(){
+	this.log = function log(){//output layerGraph data
 		layerG.log();
 	};
 	this.init = function init(){//init the graphic graph
+		lcgG=new LayeredGraph();//layered graph for lcg
+		lcgS=[];//stack for LCG transformation
+		nuggG=new LayeredGraph();//layered grap for nuggets
+		nuggS=[];//stack for nugget transformation
 		this.setState("kr_view");
 		first_init=false;
-		layerG=new LayeredGraph();//the layered graph data structure
 		width=document.getElementById(containerID).getBoundingClientRect().width;
 		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth
 		svg=d3.select("#"+containerID).append("svg:svg")
@@ -52,7 +55,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("n_tooltip",true)
 			.style("visibility","hidden")
 	};
-	var update = function(){//update all the LCG elements
+	var update = function(){//update all the SVG elements
 		//links svg representation
 		s_link = svg.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
@@ -209,7 +212,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			layerG.mergeDiff(new_nodeID,old_nodeID);		
 		}
 		else{
-			console.log("unable to merge too different nodes : ");
+			console.log("unable to merge : too different nodes : ");
 			console.log(layerG.nodes[layerG.nodesHash[new_nodeID]]);
 			console.log(layerG.nodes[layerG.nodesHash[old_nodeID]]);
 		}
@@ -384,6 +387,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				d3.select("#replay").property("disabled",false)
 					.style("display","initial");
 				this.clearStack();
+				if(layerG===lcgG){
+					layerG=nuggG;
+					rewriter=nuggS;
+					svg.selectAll("*").remove();
+					update();
+				}
 				break;
 			case "kr_edit":
 				d3.select("#menu_f").selectAll("input").property("disabled",true)
@@ -420,8 +429,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kr_show=false;
 				lcg_view=true;
 				kappa_view=false;
+				//this.clearStack();
+				if(layerG===nuggG){
+					layerG=lcgG;
+					rewriter=lcgS;
+					svg.selectAll("*").remove();
+					update();
+					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+				}
 				break;
-			case "kappa_view":
+			case "kappa_view"://nobody care : open jasim !
 				d3.select("#menu_f").selectAll("input").property("disabled",true)
 					.style("display","none");
 				d3.select("#kr").property("disabled",false)
@@ -681,9 +698,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		return menu;
 	};
-	/*var dblClick = function(d){//handling double clik on nodes/action : edition
-		d3.event.stopPropagation();
-	};*/
 	var clickHandler = function(d) {//handling click on on a node or an action 
 		d3.event.stopPropagation();
 		if(d3.event.ctrlKey){
@@ -735,9 +749,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
                             }
                         });
 	}
-	var nodeStaticMenu = function(){
-		
-	}
+	
 };
 
 //example
