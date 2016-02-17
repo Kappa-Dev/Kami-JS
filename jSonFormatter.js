@@ -25,74 +25,31 @@ function jSonFormatter(gGraph){
 		});
 	}
 this.jsToLGraph = function jsToLGraph(){
-	if(typeof(json.version)=='undefined' || json.version==null || json.version[0].number<1.1)
+	var force=false;
+	if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
 		force=true;
-	if(typeof(json.agents)!='undefined' && json.agents!=null && json.agents.length>0)
-		this.genAgent();
-	else if(force){
-		console.log("Unable to find Agents !");
-		return;
-	}
-		for(var i=0;i<json.agents.length;i++){
-			lgraph.addNode(json.agents[i].classes,"n"+n_cpt++);
-			if(json.agents[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.agents[i].labels);
-		}
-	}if(typeof(json.regions)!='undefined' && json.regions!=null && json.regions.length>0){
-		for(var i=0;i<json.regions.length;i++){
-			lgraph.addNode(json.regions[i].classes,"n"+n_cpt++);
-			if(json.regions[i].path.length>1)
-				lgraph.setFather("n"+n_cpt-1,findNode(lgraph,json.regions[i].path.splice(1)));
-			if(json.regions[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.regions[i].labels);
-		}
-	}if(typeof(json.key_rs)!='undefined' && json.key_rs!=null && json.key_rs.length>0){
-		for(var i=0;i<json.key_rs.length;i++){
-			lgraph.addNode(json.key_rs[i].classes,"n"+n_cpt++);
-			if(json.key_rs[i].path.length>1)
-				lgraph.setFather("n"+n_cpt-1,findNode(lgraph,json.key_rs[i].path.splice(1)));
-			if(json.key_rs[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.key_rs[i].labels);
-		}
-	}if(typeof(json.attributes)!='undefined' && json.attributes!=null && json.attributes.length>0){
-		for(var i=0;i<json.attributes.length;i++){
-			lgraph.addNode(json.attributes[i].classes,"n"+n_cpt++);
-			if(json.attributes[i].path.length>1)
-				lgraph.setFather("n"+n_cpt-1,findNode(lgraph,json.attributes[i].path.splice(1)));
-			if(json.attributes[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.attributes[i].labels);
-			if(json.attributes[i].values.length>0)
-				lgraph.addCtx("n"+n_cpt-1,json.attributes[i].values);
-			
-		}
-	}if(typeof(json.flags)!='undefined' && json.flags!=null && json.flags.length>0){
-		for(var i=0;i<json.flags.length;i++){
-			lgraph.addNode(json.flags[i].classes,"n"+n_cpt++);
-			if(json.flags[i].path.length>1)
-				lgraph.setFather("n"+n_cpt-1,findNode(lgraph,json.flags[i].path.splice(1)));
-			if(json.flags[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.flags[i].labels);
-			if(json.flags[i].values.length>0)
-				lgraph.addCtx("n"+n_cpt-1,json.flags[i].values);
-			
-		}
-	}if(typeof(json.actions)!='undefined' && json.actions!=null && json.actions.length>0){
-		for(var i=0;i<json.actions.length;i++){
-			lgraph.addNode(json.actions[i].classes,"n"+n_cpt++);
-			if(json.actions[i].labels.length>0)
-				lgraph.addLabel("n"+n_cpt-1,json.actions[i].labels);
-			if(json.actions[i].context.length>0){
-				lgraph.addCtx("n"+n_cpt-1,json.actions[i].context);
-				//gen node context + merge !
-			}
-			if(json.actions[i].left.length>0){
-				//gen link left + gen node left + gen bind left
-			}
-			if(json.actions[i].right.length>0){
-				//gen link right + gen node right + gen bind right
-			}
+	if(typeof(json.version)!='undefined')
+		delete json.version;
+	var keys = Object.keys(json);
+	for(var i=0;i<keys.length;i++){
+		if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
+			if(json[keys[i]]!="edges")
+				this.genNode(json[keys[i]]);
+			else
+				this.genEdges();
+		}else if(force){
+			console.log("Unable to find"+json[keys[i]]+" !");
+			return;
 		}
 	}
+}
+
+this.genNode = function genNode(key){
+	for(var i=0;i<key.length;i++){
+		gGraph.addNode(key[i].classes,json.regions[i].labels,findByName(key[i].path,key[i].path_cl),key[i].x,key[i].y);
+	}
+}
+this.findByName = function findByName(path,class_path){//take a node path and a class path and find the correct path in the layered graph. return an ID path if correct, else, raise an error. if no path : return []
 	
 }
 var checkpath = function(lgraph,path){

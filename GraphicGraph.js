@@ -4,9 +4,9 @@
 //this file is part of the Executable Knowledge project
 //graphical graph version
 function GraphicGraph(containerid){//define a graphical graph with svg objects
-	var rewriter;
+	var rewriter;//the current modification stack
 	var containerID=containerid;
-	var layerG;//the layered graph data structure
+	var layerG;//the current layered graph data structure
 	var width;
 	var	height;//menu is 30px heigth
 	var svg; 
@@ -18,8 +18,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var nugget_add,edition,kr_show,lcg_view,kappa_view;
 	var self=this;
 	var nuggets=[];
+	var lcgG,nuggG;//layered graph for lcg and nuggets
+	var lcgS,nuggS;//stack for lcg and nuggets
 	this.wakeUp = function wakeUp(){//speed up tick function
-		//first_init=true;
 		dynG.getForce().start();
 			d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
 		for(var i=0;i<300;i++){
@@ -37,8 +38,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		lcgS=[];//stack for LCG transformation
 		nuggG=new LayeredGraph();//layered grap for nuggets
 		nuggS=[];//stack for nugget transformation
-		this.setState("kr_view");
 		first_init=false;
+		this.setState("kr_view");
 		width=document.getElementById(containerID).getBoundingClientRect().width;
 		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth
 		svg=d3.select("#"+containerID).append("svg:svg")
@@ -360,6 +361,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kappa_view=false;
 				break;
 			case "kr_view":
+				if(!first_init){
+					rewriter=nuggS;
+					layerG=nuggG;
+				}
 				if(rewriter.length>0 && !confirm('Are you sure you want to quit without saving your nuggets ?'))//if in nugget view, check if changes have been saved
 					return;
 				else if(rewriter.length >0 && (nugget_add || edition))
@@ -579,10 +584,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		return menu;
 	};
-	var svgMenu = function(){//show 
+	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
 		var menu;
-		if(!(edition || nugget_add)){
-			menu = [
+		menu = [
 			{
 				title: "Unlock all",
 				action: function(elm,d,i){
@@ -602,28 +606,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					update();
 				}
 			}];
-		}else{
-		menu =[
+		if(edition || nugget_add){
+			menu.push(
 			{
-				title: "Unlock all",
-				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
-					
-					update();
-				}
-			},{
-				title: "Select all",
-				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=true;});
-					update();
-				}
-			},{
-				title: "Unselect all",
-				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
-					update();
-				}
-			},{
 				title: "Add Agent",
 				action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
@@ -631,7 +616,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					if(lbl=="")self.addNode(["agent"],[],[],mousepos[0],mousepos[1]);
 					else self.addNode(["agent"],lbl.split(","),[],mousepos[0],mousepos[1]);
 				}	
-			},{
+			});
+		}if(nugget_add){	
+			menu.push(
+			{
 				title: "Add Action",
 				child:[{
 					title:"Bind",
@@ -692,9 +680,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				}
 				]
-			}
-		];
-
+			});
 		}
 		return menu;
 	};
