@@ -20,6 +20,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var nuggets=[];
 	var lcgG,nuggG;//layered graph for lcg and nuggets
 	var lcgS,nuggS;//stack for lcg and nuggets
+	this.lastNode = function lastNode(){//return the last node ID
+		return node_count-1;
+	}
+	this.getLG = function getLG(){//return a pointer to the current layered graph
+		return layerG;
+	}
 	this.wakeUp = function wakeUp(){//speed up tick function
 		dynG.getForce().start();
 			d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});

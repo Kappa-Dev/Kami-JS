@@ -47,6 +47,10 @@ this.jsToLGraph = function jsToLGraph(){
 this.genNode = function genNode(key){
 	for(var i=0;i<key.length;i++){
 		gGraph.addNode(key[i].classes,json.regions[i].labels,findByName(key[i].path,key[i].path_cl),key[i].x,key[i].y);
+		if(typeof(key[i].values)!='undefined' && key[i].values!=null && key[i].values.length>0)
+			gGraph.addCtx(gGraph.lastNode(),key[i].values);
+		if(typeof(key[i].context)!='undefined' && key[i].context!=null && key[i].context.length>0)
+			gGraph.addCtx(gGraph.lastNode(),key[i].context);
 	}
 }
 this.findByName = function findByName(path,class_path){//take a node path and a class path and find the correct path in the layered graph. return an ID path if correct, else, raise an error. if no path : return []
