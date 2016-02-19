@@ -45,13 +45,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		
 		lcgG=new LayeredGraph();//layered graph for lcg
 		lcgS=[];//stack for LCG transformation
-		//lcgDynG=new DynamicGraph(lcgG,height,width);
-		//lcgDynG.getForce().on("tick",tick);
-		//lcgDrag=lcgDynG.getForce().drag().on("dragstart", dragstart);
+		lcgDynG=new DynamicGraph(lcgG,height,width);
+		lcgDynG.init();
+		lcgDynG.getForce().on("tick",tick);
+		lcgDrag=lcgDynG.getForce().drag().on("dragstart", dragstart);
 		
 		nuggG=new LayeredGraph();//layered grap for nuggets
 		nuggS=[];//stack for nugget transformation
 		nuggDynG=new DynamicGraph(nuggG,height,width);
+		nuggDynG.init();
 		nuggDynG.getForce().on("tick",tick).start();
 		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
 		first_init=false;
