@@ -18,8 +18,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var nugget_add,edition,kr_show,lcg_view,kappa_view;
 	var self=this;
 	var nuggets=[];
-	var lcgG,nuggG;//layered graph for lcg and nuggets
-	var lcgS,nuggS;//stack for lcg and nuggets
+	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
+	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
 	this.lastNode = function lastNode(){//return the last node ID
 		return "n"+(node_count-1);
 	}
@@ -40,30 +40,35 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.log();
 	};
 	this.init = function init(){//init the graphic graph
-		lcgG=new LayeredGraph();//layered graph for lcg
-		lcgS=[];//stack for LCG transformation
-		nuggG=new LayeredGraph();//layered grap for nuggets
-		nuggS=[];//stack for nugget transformation
-		first_init=false;
-		this.setState("kr_view");
 		width=document.getElementById(containerID).getBoundingClientRect().width;
 		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth
+		
+		lcgG=new LayeredGraph();//layered graph for lcg
+		lcgS=[];//stack for LCG transformation
+		lcgDynG=new DynamicGraph(lcgG,height,width);
+		lcgDynG.init();
+		lcgDynG.getForce().on("tick",tick);
+		lcgDrag=lcgDynG.getForce().drag().on("dragstart", dragstart);
+		
+		nuggG=new LayeredGraph();//layered grap for nuggets
+		nuggS=[];//stack for nugget transformation
+		nuggDynG=new DynamicGraph(nuggG,height,width);
+		nuggDynG.init();
+		nuggDynG.getForce().on("tick",tick).start();
+		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
+		first_init=false;
+		this.setState("kr_view");
 		svg=d3.select("#"+containerID).append("svg:svg")
 			.attr("width",width)
 			.attr("height",height)
 			.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
-		dynG=new DynamicGraph(layerG,height,width);
-		dynG.init();
-		drag=dynG.getForce().drag()
-						.on("dragstart", dragstart);
-		dynG.getForce().on("tick",tick)
-						.start();
 		d3.select("#"+containerID).append("div")
 			.classed("n_tooltip",true)
 			.style("visibility","hidden");
 		d3.select("#"+containerID).append("div")
 			.classed("s_tooltip",true)
 			.style("visibility","hidden");
+		//dynG.getForce().start();
 	};
 	var update = function(){//update all the SVG elements
 		//links svg representation
@@ -381,6 +386,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(!first_init){
 					rewriter=nuggS;
 					layerG=nuggG;
+					dynG=nuggDynG;
+					drag=nuggDrag;
 				}
 				if(rewriter.length>0 && !confirm('Are you sure you want to quit without saving your nuggets ?'))//if in nugget view, check if changes have been saved
 					return;
@@ -412,6 +419,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(layerG===lcgG){
 					layerG=nuggG;
 					rewriter=nuggS;
+					dynG.getForce().stop();
+					dynG=nuggDynG;
+					drag=nuggDrag;
 					svg.selectAll("*").remove();
 					update();
 				}
@@ -455,8 +465,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(layerG===nuggG){
 					layerG=lcgG;
 					rewriter=lcgS;
+					dynG.getForce().stop();
+					dynG=lcgDynG;
+					drag=lcgDrag;
 					svg.selectAll("*").remove();
 					update();
+					self.addNode(["agent"],["ag1","othername","thirdname"],[]);
 					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				break;
