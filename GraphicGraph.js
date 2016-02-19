@@ -493,8 +493,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					.style("display","initial");
 				d3.select("#lcg").property("disabled",false)
 					.style("display","initial");
-				d3.select("#s_kappa").property("disabled",false)
-					.style("display","initial");
 				nugget_add=false;
 				edition=false;
 				kr_show=false;
