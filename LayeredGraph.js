@@ -50,7 +50,7 @@ function LayeredGraph(){
 		}
 		return tmp;
 	};
-	var remove = function(l_el,list){//remove an element from a list
+	var remove = function(l_el,list){//remove an element from a list : if the element doesn't exist, do nothing !
 		for(var i=0;i<list.length;i++){
 			if(list[i]==l_el)
 				list.splice(i,1);
@@ -226,6 +226,8 @@ function LayeredGraph(){
 		for(var i=0;i<ctx_el_l.length;i++){
 			remove(ctx_el_l[i],this.nodes[this.nodesHash[nodeID]].context);
 		}
+		if(ctx_el_l.length==0)
+			this.nodes[this.nodesHash[nodeID]].context=[];
 	};
 	this.addLabel = function addLabel(nodeID,lbl_el_l){//add a list of elements to a label
 		if(typeof(this.nodesHash[nodeID])=='undefined'){

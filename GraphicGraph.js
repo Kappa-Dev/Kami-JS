@@ -21,7 +21,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var lcgG,nuggG;//layered graph for lcg and nuggets
 	var lcgS,nuggS;//stack for lcg and nuggets
 	this.lastNode = function lastNode(){//return the last node ID
-		return node_count-1;
+		return "n"+(node_count-1);
 	}
 	this.getLG = function getLG(){//return a pointer to the current layered graph
 		return layerG;
@@ -60,7 +60,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						.start();
 		d3.select("#"+containerID).append("div")
 			.classed("n_tooltip",true)
-			.style("visibility","hidden")
+			.style("visibility","hidden");
+		d3.select("#"+containerID).append("div")
+			.classed("s_tooltip",true)
+			.style("visibility","hidden");
 	};
 	var update = function(){//update all the SVG elements
 		//links svg representation
@@ -247,8 +250,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	this.addEdge = function addEdge(id1,id2){//add a LINK edge between two nodes in the svg AND in the graph structure
 		dynG.getForce().stop();
+		var tmp_l=layerG.links.length;
 		layerG.addEdge(id1,id2);
-		stack(layerG,layerG.removeEdge,[id1,id2]);
+		if(layerG.links.length>tmp_l)
+			stack(layerG,layerG.removeEdge,[id1,id2]);
 		update();	
 	};
 	this.removeEdge = function removeEdge(id1,id2){//remove a LINK edge between two nodes in the svg AND in the graph structure
@@ -259,9 +264,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.addParent = function addParent(son,fath){//add a PARENT edge between two node in the graph structure and un the svg and update graph structure
 		dynG.getForce().stop();
-		stack(layerG,layerG.removeParenting,[son]);
-		layerG.setFather(son,fath);
-		update();	
+		if(layerG.nodes[layerG.nodesHash[son]].father != fath){
+			stack(layerG,layerG.removeParenting,[son]);
+			layerG.setFather(son,fath);
+			update();
+		}
 	};
 	this.rmParent = function rmParent(son){//idem for removing parenting
 		dynG.getForce().stop();
@@ -271,13 +278,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.addCtx = function addCtx(id,ctx){//add a context to a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.rmCtx,[id,ctx]);
+		var tmp_l=layerG.nodes[layerG.nodesHash[id]].context.length;
 		layerG.addCtx(id,ctx);
+		if(layerG.nodes[layerG.nodesHash[id]].context.length > tmp_l)
+				stack(layerG,layerG.rmCtx,[id,ctx]);
 		update();	
 	};
 	this.rmCtx = function rmCtx(id,ctx){//remove a context from a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.addCtx,[id,layerG.nodes[id].context.concat()]);
+		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat()]);
 		layerG.rmCtx(id,ctx);
 		update();	
 	};
@@ -286,13 +295,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.rmLabel,[id,lbl]);
+		var tmp_l=layerG.nodes[layerG.nodesHash[id]].label.length;
 		layerG.addLabel(id,lbl);
+		if(layerG.nodes[layerG.nodesHash[id]].label.length>tmp_l)
+			stack(layerG,layerG.rmLabel,[id,lbl]);
 		update();
 	};
 	this.rmLabel = function rmLabel(id,lbl){//remove a label from a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.addLabel,[id,layerG.nodes[id].label.concat()]);
+		stack(layerG,layerG.addLabel,[id,layerG.nodes[layerG.nodesHash[id]].label.concat()]);
 		layerG.rmLabel(id,lbl);
 		update();	
 	};
@@ -485,9 +496,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								.html(div_ct);
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			for(var i=0;i<d.context.length;i++){
-				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
+				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
 			}
 		}
+		//console.log(d);
+		var divs_ct="<h5><b><center>class: "+d.classes.join("/")+"</center></b></h5>";
+		d3.select(".s_tooltip").style("visibility","visible")
+								.html(divs_ct);
 	};
 	var mouseOut = function(d){//handling mouse out of nodes/actions
 		if(d3.select(this).classed("node")){
@@ -495,22 +510,124 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								.text("");
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			for(var i=0;i<d.context.length;i++)
-				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=false);	
+				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false);	
 		}
+		d3.select(".s_tooltip").style("visibility","hidden")
+								.text("");
 	};
 	var edgeCtMenu = function(){
 		var menu;
-		console.log("edge");
-		menu=[];
+		menu=[{
+			title: "Select Source-target",
+			action: function(elm,d,i){
+				d3.selectAll("g").filter(function(e){return (e.id==d.sourceID || e.id==d.targetID || (d.source.classes[0]=="action" && d.source.father!=null && d.source.father==e.id) || (d.target.classes[0]=="action" && d.target.father!=null && d.target.father==e.id));})
+					.classed("selected",function(d){ return layerG.nodes[layerG.nodesHash[d.id]].selected=true;});
+			}
+		}];
+		if(edition || nugget_add){
+			menu.push({
+				title: "remove",
+				action: function(elm,d,i){
+					if(confirm('Are you sure you want to delete this Edge ? The linked element wont be removed from the context'))
+						self.removeEdge(d.sourceID,d.targetID);
+				}
+			});
+		}
 		return menu;
 	}
 	var nodeCtMenu = function(){
+	//console.log(d3.event);
+	//console.log(d3.event.target);
+	var evt_trg=d3.select(d3.event.target.parentNode);
+	//console.log(evt_trg);
 		var menu;
-		console.log("node");
-		menu=[];
+		menu=[{
+			title: "Unlock",
+			action: function(elm,d,i){
+				d3.select(elm).classed("fixed",function(d){return d.fixed=false;});
+				update();
+			}
+		}];
+		if(edition || nugget_add){
+			if(!evt_trg.classed("attribute") && !evt_trg.classed("flag")){
+				menu.push({
+					title: "Add Attribute",
+					child:[
+					{
+						title:"list",
+						action: function(elm,d,i){
+							var lbl=window.prompt("define attribute labels","");
+							var values=window.prompt("define attribute values","true,false");
+							if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
+							else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
+							if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
+							else self.addCtx(layerG.nodes[layerG.nodes.length-1].id,values.split(","));
+						}
+					},{
+						title:"interval",
+						action: function(elm,d,i){
+							var lbl=window.prompt("define attribute labels","");
+							var values=window.prompt("define attribute values","0,INF");
+							if(values.split(",").length>2){
+								console.log("This attribute is not an interval !");
+								return;
+							}
+							if(lbl=="")self.addNode(["attribute","interval"],[],[d.id]);
+							else self.addNode(["attribute","interval"],lbl.split(","),[d.id]);
+							if(values=="")	self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["0","INF"]);
+							else self.addCtx(layerG.nodes[layerG.nodes.length-1].id,values.split(","));
+						}
+					}]
+				},{
+					title: "Add Flag",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define flag labels","");
+						var values=window.prompt("define flag values","true,false");
+						if(lbl=="")self.addNode(["flag"],[],[d.id]);
+						else self.addNode(["flag"],lbl.split(","),[d.id]);
+						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
+						else self.addCtx(layerG.nodes[layerG.nodes.length-1].id,values.split(","));
+					}
+				});
+			}if(evt_trg.classed("agent") || evt_trg.classed("region")){
+				menu.push({
+					title: "Add Key Residue",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define key residue labels","");
+						if(lbl=="")self.addNode(["key_res"],[],[d.id]);
+						else self.addNode(["key_res"],lbl.split(","),[d.id]);
+					}
+				});
+			}if(evt_trg.classed("agent")){
+				menu.push({
+					title: "Add Region",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define region labels","");
+						if(lbl=="")self.addNode(["region"],[],[d.id]);
+						else self.addNode(["region"],lbl.split(","),[d.id]);
+					}
+				});
+			}if(evt_trg.classed("attribute") || evt_trg.classed("flag")){
+				menu.push({
+					title: "Edit Values",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define Attributes",d.context.join(","));
+						self.rmCtx(d.id,[]);
+						if(lbl!="") self.addCtx(d.id,lbl.split(","));
+					}
+				});
+			}			
+			menu.push({
+				title: "Remove",
+				action: function(elm,d,i){
+					if(confirm('Are you sure you want to delete this Node ? All its sons will be removed'))
+						self.removeNodeR(d.id);
+				}
+			});
+		}
 		return menu;
 	}
-	var binderCtMenu = function(){
+	var binderCtMenu = function(){//handling right click on action binders
 		var menu;
 		if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
 			menu=[
@@ -527,58 +644,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}else menu=[];
 		return menu;
 	}
-	var actCtMenu = function(){//handling right click on nodes/actions/links
+	var actCtMenu = function(){//handling right click on actions
 		var menu;
-		if(edition){
-			menu = [
-			{
-				title: "Add Attribute",
-				action: function(elm,d,i){
-					//console.log("action att");
-				}
-			},{
-				title: "Remove",
-				action: function(elm,d,i){
-					self.removeNodeR(d.id);
-				}
-			}];
-			if(!d3.selectAll("g.selected").empty()){
-				menu.push({
-					title: "link to all selected",
-					child:[
-					{
-						title: "link left",
-						action:function(elm,d,i){
-							var mousepos=d3.mouse(svg[0][0]);
-							var selected=d3.selectAll("g.selected");
-							d3.event.stopPropagation();
-							for(var i=0;i<d.sons.length;i++){
-								if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="left"){
-									selected.each(function(d2){self.addEdge(d.sons[i],d2.id); self.addCtx(d.id,[d2.id])});
-									selected.classed("selected",function(d){return d.selected=false;});
-								}
-							}
-						}
-					},{
-						title: "link right",
-						action:function(elm,d,i){
-							var mousepos=d3.mouse(svg[0][0]);
-							var selected=d3.selectAll("g.selected");
-							d3.event.stopPropagation();
-							for(var i=0;i<d.sons.length;i++){
-								if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
-									selected.each(function(d2){self.addEdge(d.sons[i],d2.id); self.addCtx(d.id,[d2.id])});
-									selected.classed("selected",function(d){return d.selected=false;});
-								}
-							}
-						}
-					}]
-				});
-			}
-		}else if(nugget_add){
-			
-		}else{
-			menu = [
+		menu = [
 			{
 				title: "Unlock",
 				action: function(elm,d,i){
@@ -586,8 +654,118 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					update();
 				}
 			}
-			];
+		];
+		if(edition || nugget_add){
+			menu.push(
+			{
+				title: "Add Attribute",
+				child:[
+				{
+					title:"list",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define attribute labels","");
+						var values=window.prompt("define attribute values","true,false");
+						if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
+						else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
+						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
+						else self.addCtx(layerG.nodes[layerG.nodes.length-1].id,values.split(","));
+					}
+				},{
+					title:"interval",
+					action: function(elm,d,i){
+						var lbl=window.prompt("define attribute labels","");
+						var values=window.prompt("define attribute values","0,INF");
+						if(values.split(",").length>2){
+							console.log("This attribute is not an interval !");
+							return;
+						}
+						if(lbl=="")self.addNode(["attribute","interval"],[],[d.id]);
+						else self.addNode(["attribute","interval"],lbl.split(","),[d.id]);
+						if(values=="")	self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["0","INF"]);
+						else self.addCtx(layerG.nodes[layerG.nodes.length-1].id,values.split(","));
+					}
+				}]
+			},{
+				title: "Remove",
+				action: function(elm,d,i){
+					if(confirm('Are you sure you want to delete this Action ?'))
+						self.removeNodeR(d.id);
+				}
+			},{
+				title: "Select context",
+				action: function(elm,d,i){
+					for(var i=0;i<d.context.length;i++)
+						d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
+				}
+			});
+		}if(nugget_add && !d3.selectAll("g.selected").empty()){
+			menu.push({
+				title: "link to all selected",
+				child:[
+				{
+					title: "link left",
+					action:function(elm,d,i){
+						var mousepos=d3.mouse(svg[0][0]);
+						var selected=d3.selectAll("g.selected");
+						d3.event.stopPropagation();
+						for(var i=0;i<d.sons.length;i++){
+							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="left"){
+								selected.each(function(d2){
+									if(d2.classes[0]!="action"){
+										self.addEdge(d.sons[i],d2.id);
+										self.addCtx(d.id,[d2.id])
+									}else console.log("can't link two action : put it in context instead");
+								});
+								selected.classed("selected",function(d){return d.selected=false;});
+							}
+						}
+					}
+				},{
+					title: "link right",
+					action:function(elm,d,i){
+						var mousepos=d3.mouse(svg[0][0]);
+						var selected=d3.selectAll("g.selected");
+						d3.event.stopPropagation();
+						for(var i=0;i<d.sons.length;i++){
+							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
+								selected.each(function(d2){self.addEdge(d.sons[i],d2.id); self.addCtx(d.id,[d2.id])});
+								selected.classed("selected",function(d){return d.selected=false;});
+							}
+						}
+					}
+				}]
+			},{
+				title: "Add Selection to context",
+				action:function(elm,d,i){
+					var selected=d3.selectAll("g.selected");
+					d3.event.stopPropagation();
+					selected.each(function(d2){self.addCtx(d.id,[d2.id])});
+					selected.classed("selected",function(d){return d.selected=false;});
+				}
+			},{
+				title: "remove Selection from context",
+				action:function(elm,d,i){
+					var selected=d3.selectAll("g.selected");
+					d3.event.stopPropagation();
+					selected.each(function(d2){
+						var from_to=d3.selectAll(".link").filter(function(fd){
+							if(fd.sourceID == d2.id)
+								return fd.target.classes[0]=="action" && fd.target.father!=null && fd.target.father==d.id;
+							else if(fd.targetID == d2.id)
+								return fd.source.classes[0]=="action" && fd.source.father!=null && fd.source.father==d.id;
+							else return false;
+						});
+						//console.log(from_to);
+						if(from_to.empty())
+							self.rmCtx(d.id,[d2.id]);
+						else
+							console.log("can't remove a linked element from the context")
+					});
+					selected.classed("selected",function(d){return d.selected=false;});
+				}
+			});
 		}
+			
 		return menu;
 	};
 	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
@@ -623,6 +801,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					else self.addNode(["agent"],lbl.split(","),[],mousepos[0],mousepos[1]);
 				}	
 			});
+		}if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
+				menu.push(
+				{
+					title: "Remove selected",
+					action: function(elm,d,i){
+						var select=d3.selectAll("g.selected");
+						if(confirm('Are you sure you want to delete '+select[0].length+' nodes ?'))
+							select.each(function(d2){self.removeNodeR(d2.id);});
+					}
+				});
 		}if(nugget_add){	
 			menu.push(
 			{
@@ -631,17 +819,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Bind",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
+					if(confirm("Create default Break action ?"))
+						self.addNode(["action","bnd","brk"],["bindBreak"],[],mousepos[0],mousepos[1]);
+					else
+						self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
-					self.addNode(["action","binder","right"],[],[last_node]);
-					if(confirm("Create default Break action ?")){
-						self.addNode(["action","brk"],["break"],[],mousepos[0],mousepos[1]);
-						last_node=layerG.nodes[layerG.nodes.length-1].id
-						self.addNode(["action","binder","left"],[],[last_node]);
-						self.addNode(["action","binder","right"],[],[last_node]);
-					}
-						
+					self.addNode(["action","binder","right"],[],[last_node]);						
 					}
 				},
 				{
@@ -695,7 +879,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(d3.event.ctrlKey){
 			d3.select(this).classed("fixed", d.fixed = false);
 		}
-		if(d3.event.shiftKey && (edition || nugget_add)){
+		if(d3.event.shiftKey && (edition || nugget_add || kr_show)){
 			if(d3.select(this).classed("selected"))
 				d3.select(this).classed("selected", d.selected = false);
 			else 
@@ -703,7 +887,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}	
 	};
 	var clickText = function(d){//click on labels
-		if(!edition) return;
+		if(!edition && !nugget_add) return;
         var el = d3.select(this);
         var frm = svg.append("foreignObject");
         var inp = frm

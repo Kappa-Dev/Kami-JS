@@ -48,7 +48,7 @@
 }
 .links {
   stroke: #000;
-  stroke-width: 1.5px;
+  stroke-width: 2.5px;
 }
 .parent {
   stroke: #009933;
@@ -68,6 +68,9 @@ circle.node {
 }
 .node.selected_overlay{
 	stroke:#1496bb;
+}
+.action.selected_overlay{
+	stroke:#9933ff;
 }
 rect.action{
   cursor: move;
@@ -141,4 +144,10 @@ html, body {
   position: absolute;
   width: 150px;
   overflow : hidden;
+}
+.s_tooltip{
+  bottom: 10px;
+  left: 10px;
+  position: absolute;
+  height: 25px;
 }
