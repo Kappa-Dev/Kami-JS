@@ -40,22 +40,24 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.log();
 	};
 	this.init = function init(){//init the graphic graph
+		//defining graph representation size
 		width=document.getElementById(containerID).getBoundingClientRect().width;
-		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth
-		
+		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth	
+		//LCG View
 		lcgG=new LayeredGraph();//layered graph for lcg
 		lcgS=[];//stack for LCG transformation
 		lcgDynG=new DynamicGraph(lcgG,height,width);
 		lcgDynG.init();
 		lcgDynG.getForce().on("tick",tick);
 		lcgDrag=lcgDynG.getForce().drag().on("dragstart", dragstart);
-		
+		//KR View
 		nuggG=new LayeredGraph();//layered grap for nuggets
 		nuggS=[];//stack for nugget transformation
 		nuggDynG=new DynamicGraph(nuggG,height,width);
 		nuggDynG.init();
 		nuggDynG.getForce().on("tick",tick).start();
 		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
+		//initialize
 		first_init=false;
 		this.setState("kr_view");
 		svg=d3.select("#"+containerID).append("svg:svg")
