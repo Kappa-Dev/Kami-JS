@@ -20,6 +20,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var nuggets=[];
 	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
 	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
+	var modified=true;
 	this.lastNode = function lastNode(){//return the last node ID
 		return "n"+(node_count-1);
 	}
@@ -363,6 +364,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
 	};
+	this.save = function save(){
+		this.clearStack();
+		modified=true;
+	}
 	this.setState = function setState(state){//set the graphical interface state : "nugget_view", "kr_view", "kr_edit", "lcg_view", "kappa_view"
 		switch(state){
 			case "nugget_view":
@@ -385,16 +390,19 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kappa_view=false;
 				break;
 			case "kr_view":
+				//console.log(modified);
 				if(!first_init){
 					rewriter=nuggS;
 					layerG=nuggG;
 					dynG=nuggDynG;
 					drag=nuggDrag;
 				}
-				if(rewriter.length>0 && !confirm('Are you sure you want to quit without saving your nuggets ?'))//if in nugget view, check if changes have been saved
+				if(!lcg_view && rewriter.length>0 && !confirm('Are you sure you want to quit without saving your nuggets ?'))//if in nugget view, check if changes have been saved
 					return;
-				else if(rewriter.length >0 && (nugget_add || edition))
+				else if(rewriter.length >0 && (nugget_add || edition)){
 					this.unStackAll();
+					modified=false;
+				}
 				nugget_add=false;
 				edition=false;
 				kr_show=true;
@@ -426,6 +434,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					drag=nuggDrag;
 					svg.selectAll("*").remove();
 					update();
+					//console.log("here'");
+					modified=false;
 				}
 				break;
 			case "kr_edit":
@@ -472,7 +482,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					drag=lcgDrag;
 					svg.selectAll("*").remove();
 					update();
-					self.addNode(["agent"],["ag1","othername","thirdname"],[]);
+					if(modified || confirm("Generate a new LCG ?"))self.addNode(["agent"],["ag1","othername","thirdname"],[]);
 					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				break;
