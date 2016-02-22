@@ -80,10 +80,10 @@ function LayeredGraph(){
 				}				
 			}
 			for(var i=0;i<tmp_edges.length;i++){
-				if(tmp_edges[i].sourceID == tmp_edges[i].targetID){
+				if(tmp_edges[i].sourceID == tmp_edges[i].targetID){//remove every cycle created
 					tmp_edges.splice(i--,1);
 				}else{
-					for(var j=i+1;j<tmp_edges.length;j++){
+					for(var j=i+1;j<tmp_edges.length;j++){//remove every doublon
 						if((tmp_edges[j].sourceID == tmp_edges[i].sourceID && tmp_edges[j].targetID == tmp_edges[i].targetID) || (tmp_edges[j].targetID == tmp_edges[i].sourceID && tmp_edges[j].sourceID == tmp_edges[i].targetID)){
 							tmp_edges.splice(j--,1);
 						}
@@ -92,11 +92,13 @@ function LayeredGraph(){
 			}
 			this.links=this.links.concat(tmp_edges);
 			for(var i=0;i<tmp_node.sons.length;i++){
-				this.removeParenting(tmp_node.sons[i]);
-				this.setFather(tmp_node.sons[i],t_node);
+				var tmp_son=tmp_node.sons[i--];
+				this.removeParenting(tmp_son);
+				this.setFather(tmp_son,t_node);
 			}
 			this.nodes[this.nodesHash[t_node]].context=union(tmp_node.context,this.nodes[this.nodesHash[t_node]].context);
 			this.nodes[this.nodesHash[t_node]].label=union(tmp_node.label,this.nodes[this.nodesHash[t_node]].label);
+			this.nodes[this.nodesHash[t_node]].classes=union(tmp_node.classes,this.nodes[this.nodesHash[t_node]].classes);
 			this.removeNode(s_node);
 		}			
 	};
@@ -147,8 +149,10 @@ function LayeredGraph(){
 			else
 				console.log("error : this node : "+son+" already have a father");
 		}
-		else 
-			console.log("error : son or father ins't defined : son :"+typeof(this.nodesHash[son])+" father : "+typeof(this.nodesHash[fath]));
+		else{
+			console.log("error : son or father ins't defined : son : "+son+" "+typeof(this.nodesHash[son])+" father : "+fath+" "+typeof(this.nodesHash[fath]));
+			
+		}
 	};
 	this.setSon = function setSon(son,fath){//define a node as the son of an other one, trigger a warning if this is already defined : son, father : id
 		this.setFather(son,fath);

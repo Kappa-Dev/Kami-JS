@@ -75,6 +75,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var update = function(){//update all the SVG elements
 		//links svg representation
+		dynG.init();
 		s_link = svg.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
         s_link.enter().insert("line","g")
@@ -209,22 +210,37 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.mergeNode = function mergeNode(new_nodeID,old_nodeID){//mergeDIFF both 
 		dynG.getForce().stop();
 		if(layerG.nodes[layerG.nodesHash[new_nodeID]].classes.join('_') == layerG.nodes[layerG.nodesHash[old_nodeID]].classes.join('_') /*&& layerG.getPath(new_nodeID).join('_') == layerG.getPath(old_nodeID).join('_')*/){
+			/* if action : call merge on both binders and then on action!*/
+			if(layerG.nodes[layerG.nodesHash[new_nodeID]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[new_nodeID]].classes[1]!="binder"){
+				for(var i=0;i<layerG.nodes[layerG.nodesHash[new_nodeID]].sons.length;i++){
+					var tmp_nd=layerG.nodes[layerG.nodesHash[layerG.nodes[layerG.nodesHash[new_nodeID]].sons[i]]];
+					if(tmp_nd.classes[0]=="action" && tmp_nd.classes[1]=="binder"){
+						for(var j=0;j<layerG.nodes[layerG.nodesHash[old_nodeID]].sons.length;j++){
+							var tmp_nd2=layerG.nodes[layerG.nodesHash[layerG.nodes[layerG.nodesHash[old_nodeID]].sons[j]]];
+							if(tmp_nd2.classes[0]=="action" && tmp_nd2.classes[1]=="binder" && tmp_nd2.classes[2]==tmp_nd.classes[2]){
+								i--;//carefull !!!! the node is removed from the sons of the "new_node" ! i need to be decremented !
+								this.mergeNode(tmp_nd.id,tmp_nd2.id);
+							}
+						}
+					}
+				}
+			}	
 			/*stacking modifications */
 			for(var i=0;i<layerG.links.length;i++){
-				if(links[i].sourceID==new_nodeID || links[i].sourceID==old_nodeID || links[i].targetID==new_nodeID || links[i].targetID==old_nodeID)
-					stack(layerG,layerG.addEdge,[links[i].sourceID,links[i].targetID]);//add all the links
-			}for(var i=0;i<layerG.nodes[new_nodeID].sons.length;i++)
-				stack(layerG,layerG.setFather,[layerG.nodes[new_nodeID].sons[i],new_nodeID]);//add all the sons
-			for(var i=0;i<layerG.nodes[old_nodeID].sons.length;i++)
-				stack(layerG,layerG.setFather,[layerG.nodes[old_nodeID].sons[i],old_nodeID]);
-			stack(layerG,layerG.setFather,[new_nodeID,layerG.nodes[new_nodeID].father]);//put fathers
-			stack(layerG,layerG.setFather,[old_nodeID,layerG.nodes[old_nodeID].father]);
-			stack(layerG,layerG.addLabel,[old_nodeID,layerG.nodes[old_nodeID].label.concat()]);//put label and context
-			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[old_nodeID].context.concat()]);
-			stack(layerG,layerG.addLabel,[new_nodeID,layerG.nodes[new_nodeID].label.concat()]);
-			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[new_nodeID].context.concat()]);
-			stack(layerG,layerG.addNode,[layerG.nodes[new_nodeID].classes,new_nodeID]);//add the old and new nodes
-			stack(layerG,layerG.addNode,[layerG.nodes[old_nodeID].classes,old_nodeID]);
+				if(layerG.links[i].sourceID==new_nodeID || layerG.links[i].sourceID==old_nodeID || layerG.links[i].targetID==new_nodeID || layerG.links[i].targetID==old_nodeID)
+					stack(layerG,layerG.addEdge,[layerG.links[i].sourceID,layerG.links[i].targetID]);//add all the links
+			}for(var i=0;i<layerG.nodes[layerG.nodesHash[new_nodeID]].sons.length;i++)
+				stack(layerG,layerG.setFather,[layerG.nodes[layerG.nodesHash[new_nodeID]].sons[i],new_nodeID]);//add all the sons
+			for(var i=0;i<layerG.nodes[layerG.nodesHash[old_nodeID]].sons.length;i++)
+				stack(layerG,layerG.setFather,[layerG.nodes[layerG.nodesHash[old_nodeID]].sons[i],old_nodeID]);
+			stack(layerG,layerG.setFather,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].father]);//put fathers
+			stack(layerG,layerG.setFather,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].father]);
+			stack(layerG,layerG.addLabel,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].label.concat()]);//put label and context
+			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat()]);
+			stack(layerG,layerG.addLabel,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].label.concat()]);
+			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat()]);
+			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[new_nodeID]].classes,new_nodeID]);//add the old and new nodes
+			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[old_nodeID]].classes,old_nodeID]);
 			stack(layerG,layerG.removeNode,[old_nodeID]);//remove the merged node
 			/* end stack -> modification */
 			layerG.mergeDiff(new_nodeID,old_nodeID);		
@@ -560,10 +576,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return menu;
 	}
 	var nodeCtMenu = function(){
-	//console.log(d3.event);
-	//console.log(d3.event.target);
 	var evt_trg=d3.select(d3.event.target.parentNode);
-	//console.log(evt_trg);
 		var menu;
 		menu=[{
 			title: "Unlock",
@@ -648,6 +661,28 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						self.removeNodeR(d.id);
 				}
 			});
+		}if(edition){
+			var tmp_select = d3.selectAll("g.selected").filter(function(d){
+														for(var i=0;i<d.classes.length;i++){
+															if(!evt_trg.classed(d.classes[i]))
+																return false;
+														}return true;
+													});
+			if(!tmp_select.empty()){
+				menu.push(
+				{
+					title: "Merge with selected nodes",
+					action:function(elm,d,i){
+						var tmp_select = d3.selectAll("g.selected").filter(function(d){
+														for(var i=0;i<d.classes.length;i++){
+															if(!evt_trg.classed(d.classes[i]))
+																return false;
+														}return true;
+													});
+						tmp_select.each(function(d2){self.mergeNode(d.id,d2.id);});
+					}
+				});
+			}
 		}
 		return menu;
 	}
@@ -789,7 +824,27 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			});
 		}
-			
+		var tmp_select = d3.selectAll("g.selected").filter(function(d){
+														for(var i=0;i<d.classes.length;i++){
+															var evt_load=d3.select(d3.event.target.parentNode);
+															if(!evt_load.classed(d.classes[i])){
+																return false;
+															}
+														}
+														return true;
+													});
+		if(nugget_add && !tmp_select.empty()){
+			menu.push(
+			{
+				title: "Merge with selected Actions",
+				action:function(elm,d,i){
+					var selected=d3.selectAll("g.selected").filter(function(d){return d.classes[0]=="action"});
+					selected.each(function(d2){
+						self.mergeNode(d.id,d2.id);
+					});
+				}
+			});
+		}
 		return menu;
 	};
 	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
@@ -984,4 +1039,5 @@ window.onload = function () {
 	gGraph.addCtx("n13",["n3","n4"]);
 	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
+	gGraph.mergeNode("n0","n1");
 };
