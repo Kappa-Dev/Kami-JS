@@ -33,27 +33,93 @@ this.jsToLGraph = function jsToLGraph(){
 	var keys = Object.keys(json);
 	for(var i=0;i<keys.length;i++){
 		if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
-			if(json[keys[i]]!="edges")
-				this.genNode(json[keys[i]]);
-			else
+			if(json[keys[i]]=="agents" || json[keys[i]]=="regions" || json[keys[i]]=="key_rs" || json[keys[i]]=="attributes" || json[keys[i]]=="flags" || json[keys[i]]=="actions" || json[keys[i]]=="actions_binder")
+				this.genNode_Rec(json[keys[i]],keys[i]);
+			else if(json[keys[i]]=="edges")
 				this.genEdges();
+			else console.log("unknown key : "+keys[i]);
 		}else if(force){
 			console.log("Unable to find"+json[keys[i]]+" !");
 			return;
 		}
 	}
 }
-
-this.genNode = function genNode(key){
+this.classCast = function classCast(cls){
+	switch(cls){
+		case "key_r":
+		case "key_rs":
+		return "key_res";
+		case "bind":
+		return "bnd";
+		case "mod":
+		return "mod";
+		case "attr":
+		return "attribute";
+		default
+		return cls;
+	}
+}
+this.setMod = function setMod(val){
+	if(val=="incr") return "pos";
+	else return "neg";
+}
+this.oldCast = function oldCast(elt,elt_class){
+	switch(elt_class){
+		case "agent":
+			return {classes:["agent"],labels:[elt.name],path:[],path_cl:null,values:null,x:elt.cx,y:elt.cy};
+		case "regions":
+			return {classes:["region"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};
+		case "key_rs":
+			if(elt.region_name!=null)
+				return {classes:["key_res"],labels:[elt.name],path:[elt.region_name,elt.ag_name],path_cl:"region",values:null};
+			else
+				return {classes:["key_res"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};
+		case "attributes":
+				return {classes:["attribute","list"],labels:[elt.name],path:elt.dest_path,path_cl:this.classCast(elt.dest_class[1]),values:elt.values};
+		case "flags":
+			return {classes:["flag"],labels:[elt.name],path:elt.dest_path,path_cl:this.classCast(elt.dest_class[1]),values:elt.values};
+		case "actions":
+			if(elt.classes[2]=="mod")
+				return {classes:["action",this.classCast(elt.classes[2]),this.setMod(elt.mods)],labels:[elt.name],path:[],path_cl:null,context:this.castCtx(elt.context)};
+			else
+				return {classes:["action",this.classCast(elt.classes[2])],labels:[elt.name],path:[],path_cl:null,context:this.castCtx(elt.context)};
+		case "actions_binder":
+			return {classes:["action","binder",elt.name],labels:[],path:[elt.act_name],path_cl:"action",values:null};
+		case "edges":
+			return {in_class:this.classCast(elt.in_class[1]),in_path:elt.in_path,out_class:this.classCast(elt.out_class[1]),out_path:elt.out_path};
+		default:
+			console.log("unknown key class : "+elt_class);
+			return null;
+	}
+}
+this.genNode_Rec = function genNode_Rec(key,elt_class){
 	for(var i=0;i<key.length;i++){
-		var n_id=findByName(key[i].path.push(key[i].labels),key[i].path_cl);
-		var fath_id=findByName(key[i].path,key[i].path_cl);
+		var tmp_el=key[i];
+		if(force) tmp_el=this.oldCast(tmp_el,elt_class);
+	//for agent : create node + merge if needed.
+		if
+	//for region : create father if needed + merge if needed + create node region + merge if needed.
+	//for key residus : create all element needed on the path + merge them if needed + create key residus +merge if needed.
+	//for flags : create all element needed on the path + merge them if needed + create flag +merge if needed.
+	//for attributes : create all element needed on the path + merge them if needed + create attribute + merge if needed.
+	//for action : create node + merge if needed + create all element of context needed + merge them.
+	}
+}
+this.genNode = function genNode(key_el){
+	for(var i=0;i<key_el.length;i++){
+		tmp_el=key_el[i];
+		if(force){
+			tmp_el=this.oldCast(tmp_el);
+		}
+		var n_id=findByName(tmp_el.path.push(tmp_el.labels),tmp_el.path_cl);
+		var fath_id=findByName(tmp_el.path,tmp_el.path_cl);
 		gGraph.addNode(key[i].classes,key[i].labels,fath_id,key[i].x,key[i].y);
 		if(typeof(key[i].values)!='undefined' && key[i].values!=null && key[i].values.length>0)
 			gGraph.addCtx(gGraph.lastNode(),key[i].values);
 		if(typeof(key[i].context)!='undefined' && key[i].context!=null && key[i].context.length>0){
-			for(var j=0;j<key[i].context.length;j++)
+			for(var j=0;j<key[i].context.length;j++){
 				this.genNode(key[i].context)
+			}
 			gGraph.addCtx(gGraph.lastNode(),key[i].context);
 		}
 		if(n_id!=null)

@@ -898,10 +898,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Bind",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					if(confirm("Create default Break action ?"))
-						self.addNode(["action","bnd","brk"],["bindBreak"],[],mousepos[0],mousepos[1]);
-					else
-						self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);						
