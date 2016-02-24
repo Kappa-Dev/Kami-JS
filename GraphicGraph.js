@@ -21,6 +21,29 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
 	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
 	var modified=true;
+	this.findByName = function findByName(label,cls,path){//find a node by its name+path+class
+		var cl_ok=false,lb_ok=false,p_ok=true;
+		for(var i=0;i<layerG.nodes.length;i++){
+			var tmp_node=layerG.nodes[i];
+			cl_ok=(tmp_node.classes.indexOf(cls)!=-1);
+			if(cl_ok) lb_ok=(tmp_node.label.indexOf(label)!=-1);
+			if(cl_ok && lb_ok){
+				for(var j=path.length-1;j>=0;j--){
+					if(tmp_node.father!=null){
+						tmp_node=layerG.nodes[layerG.nodesHash[tmp_node.father]];
+						p_ok=tmp_node.label.indexOf(path[j])!=-1 && p_ok;
+					}
+					else if(j!=0) p_ok = false;
+				}
+			}
+			if(cl_ok && lb_ok && p_ok) return layerG.nodes[i];
+			else{
+				cl_ok=false;
+				lb_ok=false;
+				p_ok=true;
+			}
+		}return null;
+	}
 	this.lastNode = function lastNode(){//return the last node ID
 		return "n"+(node_count-1);
 	}
@@ -1016,7 +1039,7 @@ window.onload = function () {
 	gGraph.addNode(["region"],["reg2"],["n1"]);
 	gGraph.addNode(["key_res"],["kr1"],["n0"]);
 	gGraph.addNode(["key_res"],["kr2"],["n1"]);
-	gGraph.addNode(["attribute"],["att1"],["n0"]);
+	gGraph.addNode(["attribute"],["att2"],["n0"]);
 	gGraph.addNode(["attribute"],["att2"],["n1","n4"]);
 	gGraph.addNode(["flag"],["fl1"],["n0"]);
 	gGraph.addNode(["flag"],["fl2"],["n1","n6"]);
@@ -1037,4 +1060,6 @@ window.onload = function () {
 	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
 	gGraph.mergeNode("n0","n1");
+	console.log(gGraph.findByName("brk1","agent",[]));
+	
 };

@@ -25,7 +25,7 @@ function jSonFormatter(gGraph){
 		});
 	}
 this.jsToLGraph = function jsToLGraph(){
-	var force=false;
+		force=false;
 	if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
 		force=true;
 	if(typeof(json.version)!='undefined')
@@ -133,9 +133,7 @@ this.genNode = function genNode(key_el){
 			gGraph.mergeNode(gGraph.lastNode(),n_id);
 	}
 }
-this.findByName = function findByName(path,class_path){//take a node path and a class path and find the correct path in the layered graph. return an ID path if correct, else, raise an error. if no path : return []
-	
-}
+
 var checkpath = function(lgraph,path){
 	for(var i=0;i<lgraph.nodes.length;i++){
 		if(includeIn(path[0].classes,lgraph.nodes[i].classes) && includeIn(path[0].name,lgraph.nodes[i].label)){
@@ -179,7 +177,4 @@ var includeIn = function(elm_l,list){
 		}res=res && t_res;
 	}
 	return res;
-}
-var old_trs = function(){
-
 }
