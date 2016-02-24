@@ -63,6 +63,13 @@ this.setMod = function setMod(val){
 	if(val=="incr") return "pos";
 	else return "neg";
 }
+this.castCtx = function castCtx(ctx){
+	var ret=[];
+	for(var i=0;i<ctx.length;i++){
+		ret.push({labels:[ctx[i].el_path[ctx[i].el_path.length-1]],path:ctx[i].el_path.splice(ctx[i].el_path.length-1,1),path_cl:ctx[i].el_cl[1],values:ctx[i].el_value});
+	}
+	return ret;
+}
 this.oldCast = function oldCast(elt,elt_class){
 	switch(elt_class){
 		case "agent":
