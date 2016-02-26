@@ -25,8 +25,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		var cl_ok=false,lb_ok=false,p_ok=true;
 		for(var i=0;i<layerG.nodes.length;i++){
 			var tmp_node=layerG.nodes[i];
-			cl_ok=(tmp_node.classes.indexOf(cls)!=-1);
-			if(cl_ok) lb_ok=(tmp_node.label.indexOf(label)!=-1);
+			cl_ok=(tmp_node.classes.length==cls.length);
+			for(var j=0;j<cls.length;j++)
+				cl_ok=cl_ok && (tmp_node.classes[j]==cls[j]);
+			if(cl_ok) {
+				for(var j=0;j<label.length;j++)
+					lb_ok=lb_ok || (tmp_node.label.indexOf(label[j])!=-1);
+			}
 			if(cl_ok && lb_ok){
 				for(var j=path.length-1;j>=0;j--){
 					if(tmp_node.father!=null){
@@ -1045,7 +1050,7 @@ window.onload = function () {
 	gGraph.addNode(["flag"],["fl2"],["n1","n6"]);
 	gGraph.addNode(["flag"],["fl3"],["n1"]);
 	gGraph.addNode(["flag"],["fl4"],["n2"]);
-	gGraph.addNode(["action","bnd"],["bind1"],[]);
+	gGraph.addNode(["action","bnd"],["brk1"],[]);
 	gGraph.addNode(["action","brk"],["brk1"],[]);
 	gGraph.addNode(["action","binder","left"],[],["n13"]);
 	gGraph.addNode(["action","binder","right"],[],["n13"]);
@@ -1060,6 +1065,6 @@ window.onload = function () {
 	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
 	gGraph.mergeNode("n0","n1");
-	console.log(gGraph.findByName("brk1","agent",[]));
+	console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
 	
 };

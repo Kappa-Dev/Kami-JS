@@ -5,10 +5,12 @@
 function jSonFormatter(gGraph){
 	var name=null;
 	var json=null;
-	this.gGraph=gGraph;
+	var gGraph=gGraph;
 	var force=false;
+	var count=-1;
 	this.init = function init(filename){
-		this.name=filename;
+		name=filename;
+		count=gGraph.lastNode();
 		d3.json(name,function(error, graph) {
 			if (error) throw error;
 			json={
@@ -103,8 +105,23 @@ this.genNode_Rec = function genNode_Rec(key,elt_class){
 	for(var i=0;i<key.length;i++){
 		var tmp_el=key[i];
 		if(force) tmp_el=this.oldCast(tmp_el,elt_class);
-	//for agent : create node + merge if needed.
-		if
+		if(elt_class=="actions"){
+			genAction(tmp_el);
+		}else{
+			if(typeOf(tmp_el.path)!='undefined' && tmp_el.path!=null && tmp_el.path>0){
+				for(var j=tmp_el.path.length-1;j>=0;j--){
+					var cls=findClass(tmp_el.path.length,path_cl,elt_class,j);
+					var label=[tmp_el.path[j]];
+					var pth=tmp_el.path.concat().splice(0,j);
+					var path_cls=findClass(tmp_el.path.length,path_cl,elt_class,j-1);
+					var val=null;
+					this.genNode({classes:cls,labels:label,path:pth,path_cl:path_cls,values:val});
+			}
+		}
+		this.genNode(tmp_el);
+		var ex_nd=this.findByName(tmp_el.labels,tmp_el.classes,tmp_el.path);
+		if(ex_nd!=null)
+			gGraph.mergeDiff(gGraph.lastNode(),ex_nd.id);
 	//for region : create father if needed + merge if needed + create node region + merge if needed.
 	//for key residus : create all element needed on the path + merge them if needed + create key residus +merge if needed.
 	//for flags : create all element needed on the path + merge them if needed + create flag +merge if needed.

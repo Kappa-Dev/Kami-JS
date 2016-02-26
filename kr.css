@@ -9,24 +9,19 @@
 	border: 1px solid #d4d4d4;
 	z-index:1200;
 }
-
 .d3-context-menu ul {
 	list-style-type: none;
 	margin: 4px 0px;
 	padding: 0px;
 	cursor: default;
 }
-
 .d3-context-menu ul li {
 	padding: 4px 16px;
 }
-
 .d3-context-menu ul li:hover {
 	background-color: #4677f8;
 	color: #fefefe;
 }
-
-
 .d3-context-menu ul li > ul {
 	list-style-type: none;
 	margin: 4px 0px;
@@ -36,9 +31,7 @@
 .d3-context-menu ul li > ul li {
 	padding: 4px 16px;
 }
-
-.d3-context-menu ul li > ul li:hover 
-{ 
+.d3-context-menu ul li > ul li:hover { 
     background-color: #4677f8;
 	color: #fefefe;
 }
@@ -81,8 +74,12 @@ rect.action{
 rect.action.fixed {
   stroke-dasharray:10 3;
 }
-.action.selected{stroke:#f00;}
-.bnd{fill: #aaf;}
+.action.selected{
+	stroke:#f00;
+}
+.bnd{
+	fill: #aaf;
+}
 .brk{fill: #aae;}
 .mod{fill:#aad;}
 .syn{fill:#aac;}
