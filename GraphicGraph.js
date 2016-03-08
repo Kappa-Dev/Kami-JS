@@ -601,11 +601,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var i=0;i<d.context.length;i++){
 				var ctx_el=d3.selectAll("g").filter(function(e){return e.id==d.context[i];});
 				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
-				if(d3.event.shiftKey){
-					d3.selectAll(ctx_el).filter(function(e){return e.classes[0]=="attribute" || e.classes[0]=="flag"}).each(function(e){
-						//var dt_div=""
-						//div gestion : flag + attributes values !
-					});
+				if(d3.event.shiftKey && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
+					var tmp_node=ctx_el.datum();
+					//d3.select("#"+containerID).append("div")
+					//.classed("att_tooltip",true)
+					//.style("visibility","hidden");
 				}
 			}
 		}
@@ -888,7 +888,17 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				action:function(elm,d,i){
 					var selected=d3.selectAll("g.selected");
 					d3.event.stopPropagation();
-					selected.each(function(d2){if(d.id!=d2.id) self.addCtx(d.id,[d2.id])});
+					selected.each(function(d2){
+						if(d.id!=d2.id){
+							if(d2.classes[0]!="flag" && d2.classes[0]!="attribute")
+								self.addCtx(d.id,[d2.id],null);
+							else{
+								d3.select(this).classed("hilighted",true);
+								console.log(d3.select(this).datum());
+								var values=window.prompt("define values for the hillighted "+d2.classes[0]+" ("+d2.id+":"+d2.label.join(',')+")",d2.context.join(','));
+								d3.select(this).classed("hilighted",false);
+							}
+					} });// to modify !!!!!!
 					selected.classed("selected",function(d){return d.selected=false;});
 				}
 			},{
