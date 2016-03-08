@@ -43,6 +43,16 @@
   stroke: #000;
   stroke-width: 2.5px;
 }
+.influence{
+  stroke-width: 2.5px;
+}
+.influence.positive{
+	stroke:#ff0000;
+}
+.influence.negative{
+	stroke:#00cc00;
+}
+
 .parent {
   stroke: #009933;
   stroke-width: 2px;

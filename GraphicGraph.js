@@ -264,9 +264,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			stack(layerG,layerG.setFather,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].father]);//put fathers
 			stack(layerG,layerG.setFather,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].father]);
 			stack(layerG,layerG.addLabel,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].label.concat()]);//put label and context
-			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat()]);
+			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[old_nodeID]].valued_context)]);
 			stack(layerG,layerG.addLabel,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].label.concat()]);
-			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat()]);
+			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[new_nodeID]].valued_context)]);
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[new_nodeID]].classes,new_nodeID]);//add the old and new nodes
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[old_nodeID]].classes,old_nodeID]);
 			stack(layerG,layerG.removeNode,[old_nodeID]);//remove the merged node
@@ -290,7 +290,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(layerG.nodes[layerG.nodesHash[nID]].father!=null)
 			stack(layerG,layerG.setFather,[nID,layerG.nodes[layerG.nodesHash[nID]].father]);
 		stack(layerG,layerG.addLabel,[nID,layerG.nodes[layerG.nodesHash[nID]].label.concat()]);
-		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat()]);
+		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[nID]].valued_context)]);
 		stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[nID]].classes.concat(),nID]);
 		layerG.removeNode(nID);
 		update();			
@@ -328,23 +328,26 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.removeParenting(son);
 		update();	
 	};
-	this.addCtx = function addCtx(id,ctx){//add a context to a specific node
+	this.addCtx = function addCtx(id,ctx,vctx){//add a context to a specific node
 		dynG.getForce().stop();
 		var tmp_l=layerG.nodes[layerG.nodesHash[id]].context.length;
-		layerG.addCtx(id,ctx);
+		layerG.addCtx(id,ctx,vctx);
 		if(layerG.nodes[layerG.nodesHash[id]].context.length > tmp_l)
 				stack(layerG,layerG.rmCtx,[id,ctx]);
 		update();	
 	};
 	this.rmCtx = function rmCtx(id,ctx){//remove a context from a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat()]);
+		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context)]);
 		layerG.rmCtx(id,ctx);
 		update();	
 	};
-	this.getCtx = function getCtx(id){//get a specific node label
+	this.getCtx = function getCtx(id){//get a specific node context
 		return layerG.nodes[layerG.nodeHash[id]].context.concat();
 	};
+	this.getCtxV = function getCtxV(id){//get a specific node context values
+		return layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
+	}
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
 		var tmp_l=layerG.nodes[layerG.nodesHash[id]].label.length;
@@ -374,12 +377,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		return ret;	
 	};
-	var stack = function(obj,fun,param){
+	var stack = function(obj,fun,param){//add an element to the undo stack
 		rewriter.push({f:fun,o:obj,p:param});
 		d3.select("#undo").property("disabled",false)
 							.style("display","initial");
 	}
-	this.unStack = function unStack(){
+	this.unStack = function unStack(){//remove element from the undo stack and apply it !
 		if(rewriter.length==0){
 			console.log("stack empty");
 			d3.select("#undo").property("disabled",true)
@@ -397,18 +400,18 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		update();
 	};
-	this.unStackAll = function unStackAll(){
+	this.unStackAll = function unStackAll(){//undo all the stack
 		while(rewriter.length>0)
 			this.unStack();
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
 	}
-	this.clearStack = function clearStack(){
+	this.clearStack = function clearStack(){//clear the undo stack
 		rewriter=[];
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
 	};
-	this.save = function save(){
+	this.save = function save(){//save the current graph (clear the undo stack and set it to modified)
 		this.clearStack();
 		modified=true;
 	}
@@ -564,7 +567,14 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								.html(div_ct);
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			for(var i=0;i<d.context.length;i++){
-				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
+				var ctx_el=d3.selectAll("g").filter(function(e){return e.id==d.context[i];});
+				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
+				if(d3.event.shiftKey){
+					d3.selectAll(ctx_el).filter(function(e){return e.classes[0]=="attribute" || e.classes[0]=="flag"}).each(function(e){
+						//var dt_div=""
+						//div gestion : flag + attributes values !
+					});
+				}
 			}
 		}
 		//console.log(d);
