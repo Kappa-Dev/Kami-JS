@@ -45,12 +45,21 @@
 }
 .influence{
   stroke-width: 2.5px;
+  stroke-dasharray:10 3;
 }
 .influence.positive{
-	stroke:#ff0000;
+	stroke:#00cc00;
 }
 .influence.negative{
+	stroke:#ff0000;	
+}
+#pos_end{
+	fill:#00cc00;
 	stroke:#00cc00;
+}
+#neg_end{
+	fill:#ff0000;
+	stroke:#ff0000;
 }
 
 .parent {

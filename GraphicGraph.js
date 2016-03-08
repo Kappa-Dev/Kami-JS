@@ -104,13 +104,30 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var update = function(){//update all the SVG elements
 		//links svg representation
 		dynG.init();
+		svg.append("svg:defs").selectAll("marker")
+		.data(["pos_end","neg_end"])      // Different link/path types can be defined here
+		.enter().append("svg:marker")    // This section adds in the arrows
+		.attr("id", function(d){return d;})
+		.attr("refX", 40)
+		.attr("refY", 7)
+		.attr("markerWidth", 13)
+		.attr("markerHeight", 13)
+		.attr("orient", "auto")
+		.attr("markerUnits","strokeWidth")
+		.append("svg:path")
+		.attr("d", "M2,2 L2,13 L8,7 L2,2");
 		s_link = svg.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
         s_link.enter().insert("line","g")
 			.classed("link",true)
             .classed("links",function(d){return d.e_class=="link"})
-			.classed("parent",function(d){return d.e_class=="parent"});		
+			.classed("parent",function(d){return d.e_class=="parent"})
+			.classed("influence",function(d){return d.e_class=="positive" || d.e_class=="negative"})
+			.classed("positive",function(d){return d.e_class=="positive"})
+			.classed("negative",function(d){return d.e_class=="negative"});
 		d3.selectAll(".links").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
+		d3.selectAll(".positive").attr("marker-end", "url(#pos_end)");
+		d3.selectAll(".negative").attr("marker-end", "url(#neg_end)");
         s_link.exit().remove();
 		//none action nodes svg representation
 		s_node = svg.selectAll("g.node")
@@ -308,12 +325,27 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			stack(layerG,layerG.removeEdge,[id1,id2]);
 		update();	
 	};
+	this.addInfluence = function addInfluence(id1,id2,type){//add an INFLUENCE edge (positive or negative) between two node of a graph
+		dynG.getForce().stop();
+		var tmp_l=layerG.links.length;
+		layerG.addInfluence(id1,id2,type);
+		if(layerG.links.length>tmp_l)
+			stack(layerG,layerG.removeInfluence,[id1,id2,type]);
+		update();	
+	}
 	this.removeEdge = function removeEdge(id1,id2){//remove a LINK edge between two nodes in the svg AND in the graph structure
 		dynG.getForce().stop();
 		stack(layerG,layerG.addEdge,[id1,id2]);
 		layerG.removeEdge(id1,id2);
 		update();		
 	};
+	this.removeInfluence = function removeInfluence(id1,id2,type){//remove an INFLUENCE edge (positive or negative) between two nodes in the svg AND in the graph structure
+		dynG.getForce().stop();
+		stack(layerG,layerG.addInfluence,[id1,id2,type]);
+		layerG.removeInfluence(id1,id2,type);
+		update();		
+	};
+	
 	this.addParent = function addParent(son,fath){//add a PARENT edge between two node in the graph structure and un the svg and update graph structure
 		dynG.getForce().stop();
 		if(layerG.nodes[layerG.nodesHash[son]].father != fath){
@@ -606,8 +638,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			menu.push({
 				title: "remove",
 				action: function(elm,d,i){
-					if(confirm('Are you sure you want to delete this Edge ? The linked element wont be removed from the context'))
+					if(d.e_class=="link" && confirm('Are you sure you want to delete this Edge ? The linked element wont be removed from the context'))
 						self.removeEdge(d.sourceID,d.targetID);
+					if((d.e_class=="positive" || d.e_class=="negative") && confirm('Are you sure you want to delete this Influence ?'))
+						self.removeInfluence(d.sourceID,d.targetID,d.e_class);
 				}
 			});
 		}
@@ -719,6 +753,24 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 													});
 						tmp_select.each(function(d2){self.mergeNode(d.id,d2.id);});
 					}
+				});
+			}
+			if(d3.selectAll("g.selected").size()==1){
+				menu.push(
+				{
+					title: "Add influence from Selected",
+					child:[
+					{
+						title:"Positive",
+						action: function(elm,d,i){
+							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
+						}
+					},{
+						title:"Negative",
+						action: function(elm,d,i){
+							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
+						}
+					}]
 				});
 			}
 		}
@@ -836,7 +888,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				action:function(elm,d,i){
 					var selected=d3.selectAll("g.selected");
 					d3.event.stopPropagation();
-					selected.each(function(d2){self.addCtx(d.id,[d2.id])});
+					selected.each(function(d2){if(d.id!=d2.id) self.addCtx(d.id,[d2.id])});
 					selected.classed("selected",function(d){return d.selected=false;});
 				}
 			},{
@@ -882,6 +934,23 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					});
 				}
 			});
+		}if(edition && d3.selectAll("g.selected").size()==1){
+				menu.push(
+				{
+					title: "Add influence from Selected",
+					child:[
+					{
+						title:"Positive",
+						action: function(elm,d,i){
+							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
+						}
+					},{
+						title:"Negative",
+						action: function(elm,d,i){
+							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
+						}
+					}]
+				});
 		}
 		return menu;
 	};
@@ -1069,12 +1138,12 @@ window.onload = function () {
 	gGraph.addEdge("n3","n15");
 	gGraph.addEdge("n4","n16");
 	gGraph.addEdge("n2","n17");
-	gGraph.addEdge("n4","n18");
+	gGraph.addInfluence("n4","n18","positive");
 	gGraph.addCtx("n3",["n1","n4"]);
 	gGraph.addCtx("n13",["n3","n4"]);
 	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
-	gGraph.mergeNode("n0","n1");
+	//gGraph.mergeNode("n0","n1");
 	console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
 	
 };

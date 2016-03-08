@@ -228,6 +228,21 @@ function LayeredGraph(){
 			this.links.push(new Edge(this.nodes[this.nodesHash[id1]],this.nodes[this.nodesHash[id2]],"link"));
 		}
 	};
+	this.addInfluence = function addInfluence(id1,id2,type){//add an edge between two node based on there id
+		if(typeof(this.nodesHash[id1])=='undefined')
+			console.log(id1+" is undefined");
+		else if(typeof(this.nodesHash[id2])=='undefined')
+			console.log(id2+" is undefined");
+		else{
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class==type && ((this.links[i].sourceID==id1 && this.links[i].targetID==id2) || (this.links[i].sourceID==id2 && this.links[i].targetID==id1))){
+					console.log("this influence between "+id1+" "+id2+" already exist !");
+					return;
+				}
+			}
+			this.links.push(new Edge(this.nodes[this.nodesHash[id1]],this.nodes[this.nodesHash[id2]],type));
+		}
+	};
 	this.removeEdge = function removeEdge(sid,tid){//remove an edge between two nodes based on there id
 		if(typeof(this.nodesHash[sid])=='undefined')
 			console.log(sid+" is undefined");
@@ -236,6 +251,18 @@ function LayeredGraph(){
 		else{
 			for(var i=0;i<this.links.length;i++){
 				if(this.links[i].e_class=="link" && ((this.links[i].sourceID==sid && this.links[i].targetID==tid) || (this.links[i].sourceID==tid && this.links[i].targetID==sid)))
+					this.links.splice(i--,1);				
+			}
+		}		
+	};
+	this.removeInfluence = function removeInfluence(sid,tid,type){//remove an edge between two nodes based on there id
+		if(typeof(this.nodesHash[sid])=='undefined')
+			console.log(sid+" is undefined");
+		else if(typeof(this.nodesHash[tid])=='undefined')
+			console.log(tid+" is undefined");
+		else{
+			for(var i=0;i<this.links.length;i++){
+				if(this.links[i].e_class==type && ((this.links[i].sourceID==sid && this.links[i].targetID==tid) || (this.links[i].sourceID==tid && this.links[i].targetID==sid)))
 					this.links.splice(i--,1);				
 			}
 		}		
