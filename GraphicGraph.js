@@ -893,10 +893,23 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							if(d2.classes[0]!="flag" && d2.classes[0]!="attribute")
 								self.addCtx(d.id,[d2.id],null);
 							else{
-								d3.select(this).classed("hilighted",true);
-								console.log(d3.select(this).datum());
-								var values=window.prompt("define values for the hillighted "+d2.classes[0]+" ("+d2.id+":"+d2.label.join(',')+")",d2.context.join(','));
-								d3.select(this).classed("hilighted",false);
+								var el = d3.select(this);
+								el.classed("hilighted",true);
+								var frm = svg.append("foreignObject");
+								var inp = frm.attr("x", getNodeX(d2)-100)
+											.attr("y", getNodeY(d2)-12)
+											.attr("width", 200)
+											.attr("height", 25)
+											.append("xhtml:form")
+											.append("input")
+											.attr("value", function() {this.focus();return d2.context.join(",");})
+											.attr("style", "width: 294px;");
+								var txt = inp.node().value;
+								//while(d3.event.keyCode != 13 && (txt==null || txt==""));
+								layerG.addCtx(d.id,[d2.id],txt.split(","));
+								svg.select("foreignObject").remove();
+								//var values=window.prompt("define values for the hillighted "+d2.classes[0]+" ("+d2.id+":"+d2.label.join(',')+")",d2.context.join(','));
+								el.classed("hilighted",false);
 							}
 					} });// to modify !!!!!!
 					selected.classed("selected",function(d){return d.selected=false;});

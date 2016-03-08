@@ -73,9 +73,9 @@ function LayeredGraph(){
 					res[n_keys[i]]=new_vctx[n_keys[i]].concat();
 			}
 		}else if(old_vctx==null && new_vctx!=null)
-			res=this.dumpVCtx(new_vctx);
+			res=dumpVCtx(new_vctx);
 		else if(new_vctx==null && old_vctx!=null)
-			res=this.dumpVCtx(old_vctx);
+			res=dumpVCtx(old_vctx);
 		else return null;
 		var r_keys=Object.keys(res);
 		for(var i=0;i<r_keys.length;i++){
@@ -84,7 +84,7 @@ function LayeredGraph(){
 		}
 		return res;
 	}
-	this.dumpVCtx = function dumpVCtx(vtcx){
+	var dumpVCtx = function(vtcx){
 		if(vtcx==null) return null;
 		var res={};
 		var key =Object.keys(vtcx);
