@@ -80,13 +80,17 @@ circle.node {
 }
 .node.hilighted{
 	fill:#ffa31a;
-	stroke:#ffff00;
+	stroke:#000;
 }
 .node.selected_overlay{
 	stroke:#1496bb;
 }
 .action.selected_overlay{
 	stroke:#9933ff;
+}
+label.hilighted{
+	fill:#ffa31a;
+	stroke:#000;
 }
 rect.action{
   cursor: move;

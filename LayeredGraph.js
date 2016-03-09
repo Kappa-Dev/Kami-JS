@@ -92,6 +92,9 @@ function LayeredGraph(){
 			res[key[i]]=vtcx[key[i]].concat();
 		return res;
 	}
+	this.copyVCtx = function copyVCtx(vctx){
+		return dumpVCtx(vctx);
+	}
 	this.mergeDiff = function mergeDiff(s_node,t_node){//merge two existing nodes : a source node to a specific target node (by ID) : source become the target
 		if(typeof(this.nodesHash[s_node])=='undefined')
 			console.log(s_node+" doesn't exist !");

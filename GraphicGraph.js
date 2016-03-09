@@ -15,7 +15,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link and binders
 	var node_count=0;
 	var first_init;
-	var nugget_add,edition,kr_show,lcg_view,kappa_view;
+	var nugget_add,edition,kr_show,lcg_view,kappa_view;//edition mod
+	var ctx_mode=false;
 	var self=this;
 	var nuggets=[];
 	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
@@ -370,7 +371,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.rmCtx = function rmCtx(id,ctx){//remove a context from a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context)]);
+		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context)]);
 		layerG.rmCtx(id,ctx);
 		update();	
 	};
@@ -598,16 +599,28 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			d3.select(".n_tooltip").style("visibility","visible")
 								.html(div_ct);
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
+			var ctx_lst=[];
 			for(var i=0;i<d.context.length;i++){
 				var ctx_el=d3.selectAll("g").filter(function(e){return e.id==d.context[i];});
 				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
-				if(d3.event.shiftKey && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
+				if(d3.event.shiftKey && d.valued_context!=null && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
 					var tmp_node=ctx_el.datum();
-					//d3.select("#"+containerID).append("div")
-					//.classed("att_tooltip",true)
-					//.style("visibility","hidden");
-				}
+					var tmp_id;
+					if(tmp_node.label.length>0) tmp_id=tmp_node.label[0]; 
+					else tmp_id=tmp_node.id;
+					ctx_lst.push({id:tmp_id,x:tmp_node.x,values:d.valued_context[tmp_node.id]});
+					ctx_lst.sort(function(a,b){return a.x-b.x});
+				}	
 			}
+			var div_ct="<p><h3><b><center>id: "+d.classes.join("/")+"</center></b>";
+			if(ctx_lst.length>0){
+				div_ct+="detailled values : <ul style='padding: 7px;margin:1px;'>";
+				for(var i=0;i<ctx_lst.length;i++)
+					div_ct+="<li>"+ctx_lst[i].id+" : "+ctx_lst[i].values.join(",");
+				div_ct+="</ul></p>"
+				d3.select(".n_tooltip").style("visibility","visible")
+								.html(div_ct);
+			}	
 		}
 		//console.log(d);
 		var divs_ct="<h5><b><center>class: "+d.classes.join("/")+"</center></b></h5>";
@@ -619,14 +632,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			d3.select(".n_tooltip").style("visibility","hidden")
 								.text("");
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
+			d3.select(".n_tooltip").style("visibility","hidden")
+								.text("");
 			for(var i=0;i<d.context.length;i++)
 				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false);	
+			
 		}
 		d3.select(".s_tooltip").style("visibility","hidden")
 								.text("");
 	};
 	var edgeCtMenu = function(){
 		var menu;
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return [];
+		}
 		menu=[{
 			title: "Select Source-target",
 			action: function(elm,d,i){
@@ -648,7 +668,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return menu;
 	}
 	var nodeCtMenu = function(){
-	var evt_trg=d3.select(d3.event.target.parentNode);
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return [];
+		}
+		var evt_trg=d3.select(d3.event.target.parentNode);
 		var menu;
 		menu=[{
 			title: "Unlock",
@@ -755,7 +779,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				});
 			}
-			if(d3.selectAll("g.selected").size()==1){
+			/*if(d3.selectAll("g.selected").size()==1){
 				menu.push(
 				{
 					title: "Add influence from Selected",
@@ -772,12 +796,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						}
 					}]
 				});
-			}
+			}*/
 		}
 		return menu;
 	}
 	var binderCtMenu = function(){//handling right click on action binders
 		var menu;
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return [];
+		}
 		if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
 			menu=[
 			{
@@ -795,6 +823,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	var actCtMenu = function(){//handling right click on actions
 		var menu;
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return [];
+		}
 		menu = [
 			{
 				title: "Unlock",
@@ -893,25 +925,48 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							if(d2.classes[0]!="flag" && d2.classes[0]!="attribute")
 								self.addCtx(d.id,[d2.id],null);
 							else{
+								ctx_mode=true;
 								var el = d3.select(this);
 								el.classed("hilighted",true);
 								var frm = svg.append("foreignObject");
-								var inp = frm.attr("x", getNodeX(d2)-100)
-											.attr("y", getNodeY(d2)-12)
-											.attr("width", 200)
-											.attr("height", 25)
+								var inp = frm.attr("x", getNodeX(d2)-50)
+											.attr("y", getNodeY(d2)-45-d2.toInt())
+											.attr("width", 100)
+											.attr("height", 50)
 											.append("xhtml:form")
+											.append("label")
+												.classed("hilighted",true)
+												.attr("for",function(){return "i_"+d2.id;})
+												.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
 											.append("input")
-											.attr("value", function() {this.focus();return d2.context.join(",");})
-											.attr("style", "width: 294px;");
-								var txt = inp.node().value;
-								//while(d3.event.keyCode != 13 && (txt==null || txt==""));
-								layerG.addCtx(d.id,[d2.id],txt.split(","));
-								svg.select("foreignObject").remove();
-								//var values=window.prompt("define values for the hillighted "+d2.classes[0]+" ("+d2.id+":"+d2.label.join(',')+")",d2.context.join(','));
-								el.classed("hilighted",false);
+												.attr("id",function(){return "i_"+d2.id;})
+												.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
+												.attr("style", "width: 294px;")
+												.on("focus",function(){
+													d3.select(this).on("keypress",function(){
+														d3.event.stopPropagation();
+														//d3.event.preventDefault();
+														var txt = inp.node().value;
+														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
+															var tmp_obj={};
+															tmp_obj[d2.id]=txt.split(",");
+															for(var i=0;i<tmp_obj[d2.id].length;i++){
+																if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+															}
+															self.addCtx(d.id,[d2.id],tmp_obj);
+															d3.select(this.parentNode.parentNode).remove();
+															el.classed("hilighted",false);
+															if(svg.selectAll("input").empty())ctx_mode=false;
+														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
+															d3.event.preventDefault();
+														}
+													});
+												})
+												.on("blur",function() {d3.select(this).on("keypress",null);});
+											
 							}
-					} });// to modify !!!!!!
+					} });
 					selected.classed("selected",function(d){return d.selected=false;});
 				}
 			},{
@@ -957,10 +1012,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					});
 				}
 			});
-		}if(edition && d3.selectAll("g.selected").size()==1){
+		}if(edition && d3.selectAll("g.selected").size()==1 && d3.select("g.selected").classed("action")){
 				menu.push(
 				{
-					title: "Add influence from Selected",
+					title: "Add influence from Selected action",
 					child:[
 					{
 						title:"Positive",
@@ -979,6 +1034,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
 		var menu;
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return [];
+		}
 		menu = [
 			{
 				title: "Unlock all",
@@ -1082,6 +1141,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var clickHandler = function(d) {//handling click on on a node or an action 
 		d3.event.stopPropagation();
+		if(ctx_mode){
+			window.alert("Please fill all values for the action context");
+			return;
+		}
 		if(d3.event.ctrlKey){
 			d3.select(this).classed("fixed", d.fixed = false);
 		}
@@ -1152,7 +1215,7 @@ window.onload = function () {
 	gGraph.addNode(["flag"],["fl2"],["n1","n6"]);
 	gGraph.addNode(["flag"],["fl3"],["n1"]);
 	gGraph.addNode(["flag"],["fl4"],["n2"]);
-	gGraph.addNode(["action","bnd"],["brk1"],[]);
+	gGraph.addNode(["action","bnd"],["bnd1"],[]);
 	gGraph.addNode(["action","brk"],["brk1"],[]);
 	gGraph.addNode(["action","binder","left"],[],["n13"]);
 	gGraph.addNode(["action","binder","right"],[],["n13"]);
@@ -1161,12 +1224,13 @@ window.onload = function () {
 	gGraph.addEdge("n3","n15");
 	gGraph.addEdge("n4","n16");
 	gGraph.addEdge("n2","n17");
-	gGraph.addInfluence("n4","n18","positive");
+	gGraph.addEdge("n4","n18");
+	gGraph.addInfluence("n13","n14","positive");
 	gGraph.addCtx("n3",["n1","n4"]);
 	gGraph.addCtx("n13",["n3","n4"]);
 	gGraph.addCtx("n14",["n2","n4"]);
 	gGraph.wakeUp();
 	//gGraph.mergeNode("n0","n1");
-	console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
+	//console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
 	
 };
