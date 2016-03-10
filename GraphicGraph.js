@@ -85,7 +85,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		nuggS=[];//stack for nugget transformation
 		nuggDynG=new DynamicGraph(nuggG,height,width);
 		nuggDynG.init();
-		nuggDynG.getForce().on("tick",tick).start();
+		nuggDynG.getForce().on("tick",tick);
 		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
 		//initialize
 		first_init=false;
@@ -346,7 +346,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.removeInfluence(id1,id2,type);
 		update();		
 	};
-	
 	this.addParent = function addParent(son,fath){//add a PARENT edge between two node in the graph structure and un the svg and update graph structure
 		dynG.getForce().stop();
 		if(layerG.nodes[layerG.nodesHash[son]].father != fath){
@@ -380,7 +379,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.getCtxV = function getCtxV(id){//get a specific node context values
 		return layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
-	}
+	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
 		var tmp_l=layerG.nodes[layerG.nodesHash[id]].label.length;
@@ -414,7 +413,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		rewriter.push({f:fun,o:obj,p:param});
 		d3.select("#undo").property("disabled",false)
 							.style("display","initial");
-	}
+	};
 	this.unStack = function unStack(){//remove element from the undo stack and apply it !
 		if(rewriter.length==0){
 			console.log("stack empty");
@@ -438,7 +437,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			this.unStack();
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
-	}
+	};
 	this.clearStack = function clearStack(){//clear the undo stack
 		rewriter=[];
 		d3.select("#undo").property("disabled",true)
@@ -447,7 +446,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.save = function save(){//save the current graph (clear the undo stack and set it to modified)
 		this.clearStack();
 		modified=true;
-	}
+	};
 	this.setState = function setState(state){//set the graphical interface state : "nugget_view", "kr_view", "kr_edit", "lcg_view", "kappa_view"
 		switch(state){
 			case "nugget_view":
@@ -1199,38 +1198,3 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 
 //example
 
-var gGraph = new GraphicGraph('graph');
-window.onload = function () { 
-	gGraph.init();
-	gGraph.addNode(["agent"],["ag1","othername","thirdname"],[]);
-	gGraph.addNode(["agent"],["ag2"],[]);
-	gGraph.addNode(["agent"],["ag3"],[]);
-	gGraph.addNode(["region"],["reg1"],["n0"]);
-	gGraph.addNode(["region"],["reg2"],["n1"]);
-	gGraph.addNode(["key_res"],["kr1"],["n0"]);
-	gGraph.addNode(["key_res"],["kr2"],["n1"]);
-	gGraph.addNode(["attribute"],["att2"],["n0"]);
-	gGraph.addNode(["attribute"],["att2"],["n1","n4"]);
-	gGraph.addNode(["flag"],["fl1"],["n0"]);
-	gGraph.addNode(["flag"],["fl2"],["n1","n6"]);
-	gGraph.addNode(["flag"],["fl3"],["n1"]);
-	gGraph.addNode(["flag"],["fl4"],["n2"]);
-	gGraph.addNode(["action","bnd"],["bnd1"],[]);
-	gGraph.addNode(["action","brk"],["brk1"],[]);
-	gGraph.addNode(["action","binder","left"],[],["n13"]);
-	gGraph.addNode(["action","binder","right"],[],["n13"]);
-	gGraph.addNode(["action","binder","left"],[],["n14"]);
-	gGraph.addNode(["action","binder","right"],[],["n14"]);
-	gGraph.addEdge("n3","n15");
-	gGraph.addEdge("n4","n16");
-	gGraph.addEdge("n2","n17");
-	gGraph.addEdge("n4","n18");
-	gGraph.addInfluence("n13","n14","positive");
-	gGraph.addCtx("n3",["n1","n4"]);
-	gGraph.addCtx("n13",["n3","n4"]);
-	gGraph.addCtx("n14",["n2","n4"]);
-	gGraph.wakeUp();
-	//gGraph.mergeNode("n0","n1");
-	//console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
-	
-};

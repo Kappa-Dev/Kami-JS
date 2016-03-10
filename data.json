@@ -1,0 +1,52 @@
+{
+"infos":[
+	{"scale":1,"center":"A"}
+],
+"agents":[
+	{"class":["node","agent"],"name":"EGFR","cx":null,"cy":null,"family":null,"abstract":false},
+	{"class":["node","agent"],"name":"Grb2","cx":null,"cy":null,"family":null,"abstract":false},
+	{"class":["node","agent"],"name":"Shc","cx":null,"cy":null,"family":null,"abstract":false}
+],
+"regions":[
+	{"class":["node","region"],"name":"Sh2","ag_name":"Grb2","color":"green"}
+],
+"key_rs":[
+	{"class":["node","key_r"],"name":"1068","ag_name":"EGFR","region_name":null,"angle":null},
+	{"class":["node","key_r"],"name":"427","ag_name":"Shc","region_name":null,"angle":null}
+],
+"attributes":[
+	{"class":["node","attr"],"name":"aa1","dest_class":["node","key_r"],"dest_path":["EGFR","1068"],"values":["y"]},
+	{"class":["node","attr"],"name":"aa2","dest_class":["node","key_r"],"dest_path":["Shc","427"],"values":["y"]}
+],
+"flags":[
+	{"class":["node","flag"],"name":"P1","dest_class":["node","key_r"],"dest_path":["EGFR","1068"],"values":["uphos","phos"],"v_equiv":null},
+	{"class":["node","flag"],"name":"P2","dest_class":["node","key_r"],"dest_path":["Shc","427"],"values":["uphos","phos"],"v_equiv":null},
+	{"class":["node","flag"],"name":"P","dest_class":["node","agent"],"dest_path":["EGFR"],"values":["uphos","phos"],"v_equiv":null}
+],
+"actions":[
+	{"class":["node","action","bind"],"name":"bnd1","context":[
+																{"el_cl":["node","flag"],"el_path":["EGFR","1068","P1"],"el_value":["phos"]},
+																{"el_cl":["node","attr"],"el_path":["EGFR","1068","aa1"],"el_value":["y"]},
+																{"el_cl":["node","key_r"],"el_path":["EGFR","1068"]},
+																{"el_cl":["node","agent"],"el_path":["EGFR"]},
+																{"el_cl":["node","region"],"el_path":["Grb2","Sh2"]},
+																{"el_cl":["node","agent"],"el_path":["Grb2"]}
+															]},
+	{"class":["node","action","bind"],"name":"bnd2","context":[
+																{"el_cl":["node","flag"],"el_path":["EGFR","P"],"el_value":["phos"]},
+																{"el_cl":["node","agent"],"el_path":["EGFR"]},
+																{"el_cl":["node","agent"],"el_path":["Shc"]}
+															]}
+],
+"actions_binder":[
+	{"class":["node","binder"],"name":"left","act_name":"bnd1"},
+	{"class":["node","binder"],"name":"right","act_name":"bnd1"},
+	{"class":["node","binder"],"name":"left","act_name":"bnd2"},
+	{"class":["node","binder"],"name":"right","act_name":"bnd2"}
+],
+"edges":[
+	{"class":["edge"],"in_class":["node","agent"],"in_path":["EGFR"],"out_class":["node","binder"],"out_path":["bnd1","left"]},
+	{"class":["edge"],"in_class":["node","region"],"in_path":["Grb2","Sh2"],"out_class":["node","binder"],"out_path":["bnd1","right"]},
+	{"class":["edge"],"in_class":["node","agent"],"in_path":["EGFR"],"out_class":["node","binder"],"out_path":["bnd2","left"]},
+	{"class":["edge"],"in_class":["node","agent"],"in_path":["Shc"],"out_class":["node","binder"],"out_path":["bnd2","right"]}
+]}
