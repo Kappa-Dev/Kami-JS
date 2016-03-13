@@ -127,6 +127,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("positive",function(d){return d.e_class=="positive"})
 			.classed("negative",function(d){return d.e_class=="negative"});
 		d3.selectAll(".links").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
+		d3.selectAll(".influence").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
 		d3.selectAll(".positive").attr("marker-end", "url(#pos_end)");
 		d3.selectAll(".negative").attr("marker-end", "url(#neg_end)");
         s_link.exit().remove();
@@ -166,6 +167,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("brk",function(d){return d.classes[1]=="brk"})
 			.classed("syn",function(d){return d.classes[1]=="syn"})
 			.classed("deg",function(d){return d.classes[1]=="deg"})
+			.classed("pos",function(d){return d.classes[1]=="mod" && d.classes[2]=="pos"})
+			.classed("neg",function(d){return d.classes[1]=="mod" && d.classes[2]=="neg"})
             .call(drag)
 			.on("mouseover",mouseOver)
 			.on("mouseout",mouseOut)
@@ -282,9 +285,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			stack(layerG,layerG.setFather,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].father]);//put fathers
 			stack(layerG,layerG.setFather,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].father]);
 			stack(layerG,layerG.addLabel,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].label.concat()]);//put label and context
-			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[old_nodeID]].valued_context)]);
+			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[old_nodeID]].valued_context)]);
 			stack(layerG,layerG.addLabel,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].label.concat()]);
-			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[new_nodeID]].valued_context)]);
+			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[new_nodeID]].valued_context)]);
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[new_nodeID]].classes,new_nodeID]);//add the old and new nodes
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[old_nodeID]].classes,old_nodeID]);
 			stack(layerG,layerG.removeNode,[old_nodeID]);//remove the merged node
@@ -308,7 +311,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(layerG.nodes[layerG.nodesHash[nID]].father!=null)
 			stack(layerG,layerG.setFather,[nID,layerG.nodes[layerG.nodesHash[nID]].father]);
 		stack(layerG,layerG.addLabel,[nID,layerG.nodes[layerG.nodesHash[nID]].label.concat()]);
-		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat(),layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[nID]].valued_context)]);
+		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[nID]].valued_context)]);
 		stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[nID]].classes.concat(),nID]);
 		layerG.removeNode(nID);
 		update();			
@@ -378,7 +381,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return layerG.nodes[layerG.nodeHash[id]].context.concat();
 	};
 	this.getCtxV = function getCtxV(id){//get a specific node context values
-		return layerG.dumpVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
+		return layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
 	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
@@ -812,7 +815,62 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				action: function(elm,d,i){
 					d3.event.stopPropagation();
 					var selected=d3.selectAll("g.selected");
-					selected.each(function(d2){self.addEdge(d.id,d2.id); self.addCtx(d.father,[d2.id])});
+					selected.each(function(d2){
+						if(layerG.nodes[layerG.nodesHash[d.father]].classes[1]!="mod"){
+							if((layerG.nodes[layerG.nodesHash[d.father]].classes[1]=="bnd"|| layerG.nodes[layerG.nodesHash[d.father]].classes[1]=="brk") &&(d2.classes[0]=="attribute" ||  d2.classes[0]=="flag")){
+								console.log("can't bind a flag/attribute");
+								return;
+							}
+							self.addEdge(d.id,d2.id);
+							self.addCtx(d.father,[d2.id]);
+						}
+						else if(layerG.nodes[layerG.nodesHash[d.father]].classes[1]=="mod" && d2.classes[0]!="attribute" && d2.classes[0]!="flag"){
+							console.log("can't modify a none flag/attribute");
+						}
+						else{
+							ctx_mode=true;
+							var el = d3.select(this);
+							el.classed("hilighted",true);
+							var frm = svg.append("foreignObject");
+							var inp = frm.attr("x", getNodeX(d2)-50)
+								.attr("y", getNodeY(d2)-45-d2.toInt())
+								.attr("width", 100)
+								.attr("height", 50)
+								.append("xhtml:form")
+								.append("label")
+									.classed("hilighted",true)
+									.attr("for",function(){return "i_"+d2.id;})
+									.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
+								.append("input")
+									.attr("id",function(){return "i_"+d2.id;})
+									.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
+									.attr("style", "width: 294px;")
+									.on("focus",function(){
+										d3.select(this).on("keypress",function(){
+											d3.event.stopPropagation();
+											//d3.event.preventDefault();
+											var txt = inp.node().value;
+											if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
+												var tmp_obj={};
+												tmp_obj[d2.id]=txt.split(",");
+												for(var i=0;i<tmp_obj[d2.id].length;i++){
+													if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+														self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+												}
+												self.addCtx(d.father,[d2.id],tmp_obj);
+												//console.log(binder_id);
+												self.addEdge(d.id,d2.id);
+												d3.select(this.parentNode.parentNode).remove();
+												el.classed("hilighted",false);
+												if(svg.selectAll("input").empty())ctx_mode=false;
+											}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
+												d3.event.preventDefault();
+											}
+										});
+									})
+									.on("blur",function() {d3.select(this).on("keypress",null);});
+						}
+					});
 					selected.classed("selected",function(d){return d.selected=false;});
 				}
 				
@@ -826,6 +884,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			window.alert("Please fill all values for the action context");
 			return [];
 		}
+		// by default an action can only be moved around
 		menu = [
 			{
 				title: "Unlock",
@@ -835,7 +894,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 		];
-		if(edition || nugget_add){
+		if(edition || nugget_add){//in case of edition or nugget mod : we can add attributes to an action or remove it or select its context
 			menu.push(
 			{
 				title: "Add Attribute",
@@ -878,18 +937,117 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
 				}
 			});
-		}if(nugget_add && !d3.selectAll("g.selected").empty()){
-			menu.push({
-				title: "link to all selected",
-				child:[
-				{
+		}
+		if(nugget_add && !d3.selectAll("g.selected").empty()){//in nugget mode, allow to link elements to the action
+			var selected_elt=d3.select(d3.event.target.parentNode);
+			var tmp_child=null;
+			if(selected_elt.classed("bnd") || selected_elt.classed("brk")){ //for bnd & break : link is on both binders, the elemet is also added to the context. we only can link agent, region and key_res
+				tmp_child=[{
+					title: "link right",
+					action:function(elm,d,i){
+						var selected=d3.selectAll("g.selected");
+						d3.event.stopPropagation();
+						for(var i=0;i<d.sons.length;i++){
+							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
+								selected.each(function(d2){
+									if(d2.classes[0]!="action" && d2.classes[0]!="attribute" && d2.classes[0]!="flag"){
+										self.addEdge(d.sons[i],d2.id);
+										self.addCtx(d.id,[d2.id])
+									}else console.log("can't link two action or flags or attributes : put it in context instead");
+								});
+								selected.classed("selected",function(d){return d.selected=false;});
+							}
+						}
+					}
+				},{
 					title: "link left",
 					action:function(elm,d,i){
-						var mousepos=d3.mouse(svg[0][0]);
 						var selected=d3.selectAll("g.selected");
 						d3.event.stopPropagation();
 						for(var i=0;i<d.sons.length;i++){
 							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="left"){
+								selected.each(function(d2){
+									if(d2.classes[0]!="action" && d2.classes[0]!="attribute" && d2.classes[0]!="flag"){
+										self.addEdge(d.sons[i],d2.id);
+										self.addCtx(d.id,[d2.id])
+									}else console.log("can't link two action or flags or attributes : put it in context instead");
+								});
+								selected.classed("selected",function(d){return d.selected=false;});
+							}
+						}
+					}
+				}];
+			}
+			else if(selected_elt.classed("mod")){ //for bnd & break : link is one binder, the elemet is also added to the context. we only can link attributes and flags : the value to modify is also needed for the action !
+				tmp_child=[{
+					title: "link",
+					action:function(elm,d,i){
+						d3.event.stopPropagation();
+						var selected=d3.selectAll("g.selected");
+						var binder_id;
+						for(var i=0;i<d.sons.length;i++){
+							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
+								binder_id=d.sons[i];
+								selected.each(function(d2){
+									if(d2.classes[0]!="flag" && d2.classes[0]!="attribute") console.log("can't modify a none flag or attribute element");
+									else{
+										ctx_mode=true;
+										var el = d3.select(this);
+										el.classed("hilighted",true);
+										var frm = svg.append("foreignObject");
+										var inp = frm.attr("x", getNodeX(d2)-50)
+											.attr("y", getNodeY(d2)-45-d2.toInt())
+											.attr("width", 100)
+											.attr("height", 50)
+											.append("xhtml:form")
+											.append("label")
+												.classed("hilighted",true)
+												.attr("for",function(){return "i_"+d2.id;})
+												.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
+											.append("input")
+												.attr("id",function(){return "i_"+d2.id;})
+												.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
+												.attr("style", "width: 294px;")
+												.on("focus",function(){
+													d3.select(this).on("keypress",function(){
+														d3.event.stopPropagation();
+														//d3.event.preventDefault();
+														var txt = inp.node().value;
+														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
+															var tmp_obj={};
+															tmp_obj[d2.id]=txt.split(",");
+															for(var i=0;i<tmp_obj[d2.id].length;i++){
+																if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+															}
+															self.addCtx(d.id,[d2.id],tmp_obj);
+															//console.log(binder_id);
+															self.addEdge(binder_id,d2.id);
+															d3.select(this.parentNode.parentNode).remove();
+															el.classed("hilighted",false);
+															if(svg.selectAll("input").empty())ctx_mode=false;
+														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
+															d3.event.preventDefault();
+														}
+													});
+												})
+												.on("blur",function() {d3.select(this).on("keypress",null);});
+									}
+									selected.classed("selected",function(d){return d.selected=false;});
+								});
+							}
+						}
+					}
+				}];
+			}
+			else{//in case of synth or deg : we can link everything except action to one binder.
+				tmp_child=[{
+					title: "link",
+					action:function(elm,d,i){
+						var selected=d3.selectAll("g.selected");
+						d3.event.stopPropagation();
+						for(var i=0;i<d.sons.length;i++){
+							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
 								selected.each(function(d2){
 									if(d2.classes[0]!="action"){
 										self.addEdge(d.sons[i],d2.id);
@@ -900,20 +1058,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							}
 						}
 					}
-				},{
-					title: "link right",
-					action:function(elm,d,i){
-						var mousepos=d3.mouse(svg[0][0]);
-						var selected=d3.selectAll("g.selected");
-						d3.event.stopPropagation();
-						for(var i=0;i<d.sons.length;i++){
-							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
-								selected.each(function(d2){self.addEdge(d.sons[i],d2.id); self.addCtx(d.id,[d2.id])});
-								selected.classed("selected",function(d){return d.selected=false;});
-							}
-						}
-					}
-				}]
+				}];
+			}//an action can be linked, or a set of elements added/removed to the context (in case of attribute/flag : the values are needed for adding)
+			menu.push({
+				title: "link to all selected",
+				child:tmp_child
 			},{
 				title: "Add Selection to context",
 				action:function(elm,d,i){
@@ -1000,7 +1149,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														}
 														return true;
 													});
-		if(nugget_add && !tmp_select.empty()){
+		if(nugget_add && !tmp_select.empty()){//allow to merge two different action if they are of the same type
 			menu.push(
 			{
 				title: "Merge with selected Actions",
@@ -1011,7 +1160,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					});
 				}
 			});
-		}if(edition && d3.selectAll("g.selected").size()==1 && d3.select("g.selected").classed("action")){
+		}if(edition && d3.selectAll("g.selected").size()==1 && d3.select("g.selected").classed("action")){//allow to add influence between action
 				menu.push(
 				{
 					title: "Add influence from Selected action",
@@ -1104,22 +1253,31 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				},
 				{
-					title:"Modify",
+					title:"Modify pos",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","mod"],["mod"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","mod","pos"],["mod+"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
-					self.addNode(["action","binder","left"],[],[last_node]);
+					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
 					}
 				},
 				{
+					title:"Modify neg",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","mod","neg"],["mod-"],[],mousepos[0],mousepos[1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					//self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);
+					}
+				},{
 					title:"Synthesis",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
 					self.addNode(["action","syn"],["synth"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
-					self.addNode(["action","binder","left"],[],[last_node]);
+					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
 					}
 				},
@@ -1129,7 +1287,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					var mousepos=d3.mouse(svg[0][0]);
 					self.addNode(["action","deg"],["deg"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
-					self.addNode(["action","binder","left"],[],[last_node]);
+					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
 					}
 				}
@@ -1138,7 +1296,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		return menu;
 	};
-	var clickHandler = function(d) {//handling click on on a node or an action 
+	var clickHandler = function(d) {//handling click on a node or an action 
 		d3.event.stopPropagation();
 		if(ctx_mode){
 			window.alert("Please fill all values for the action context");

@@ -7,12 +7,10 @@ function jSonFormatter(gGraph){
 	var json=null;
 	var gGraph=gGraph;
 	var force=false;
-	var count=-1;
-	this.init = function init(filename){
+	//var count=-1;
+	this.init = function init(filename){//import a layered graph from a json file
 		name=filename;
 		count=gGraph.lastNode();
-		console.log(name);
-		console.log(count);
 		d3.json(name,function(error, graph) {
 			if (error) throw error;
 			json={
@@ -26,31 +24,51 @@ function jSonFormatter(gGraph){
 				actions_binder:graph.actions_binder,
 				edges:graph.edges
 			}
-			console.log(json);
-			console.log("ended");
 			jsToLGraph();
 		});	
-		console.log("ended1");
 	}
-	var jsToLGraph = function(){
+	var jsToLGraph = function(){//translate json to graph
 		force=false;
-	if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
-		force=true;
-	if(typeof(json.version)!='undefined')
-		delete json.version;
-	var keys = Object.keys(json);
-	console.log(keys);
-	for(var i=0;i<keys.length;i++){
-		if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
-			if(json[keys[i]]=="edges")
-				genEdges(json[keys[i]]);
-			else genNode_Rec(json[keys[i]],keys[i]);
-		}else if(force && keys[i]!="version"){
-			console.log("Unable to find"+keys[i]+" !");
-			return;
+		if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
+			force=true; oldCast();
+		console.log(json);
+		var keys = Object.keys(json);
+		for(var i=0;i<keys.length;i++){
+			if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
+				if(json[keys[i]]=="edges") genEdges(json[keys[i]]);
+				else genNode_Rec(json[keys[i]],keys[i]);
+			}else if(force && keys[i]!="version"){
+				console.log("Unable to find"+keys[i]+" !");
+				return;
+			}
 		}
 	}
-}
+	var oldCast = function(){//cast the old version of json in the new one
+		var keys=Object.keys(json);
+		for(var i=0;i<keys.length;i++){
+			if(typeof(json[keys[i]])=='undefined' || json[keys[i]]==null || json[keys[i]].length==0) continue;	
+			for(var j=0;j<json[keys[i]].length;j++){
+				var elt=json[keys[i]][j];
+				switch(keys[i]){
+					case "agents":     json[keys[i]][j]={classes:["agent"],labels:[elt.name],path:[],path_cl:null,values:null,x:elt.cx,y:elt.cy};break;
+					case "regions":    json[keys[i]][j]= {classes:["region"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};break;
+					case "key_rs":
+						if(elt.region_name!=null) json[keys[i]][j]= {classes:["key_res"],labels:[elt.name],path:[elt.region_name,elt.ag_name],path_cl:"region",values:null};
+						else json[keys[i]][j]= {classes:["key_res"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};
+						break;
+					case "attributes": json[keys[i]][j]= {classes:["attribute","list"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class[1]),values:elt.values};break;
+					case "flags":      json[keys[i]][j]={classes:["flag"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class[1]),values:elt.values};break;
+					case "actions":
+						if(elt['class'][2]=="mod") json[keys[i]][j]= {classes:["action",classCast(elt['class'][2]),setMod(elt.mods)],labels:[elt.name],path:[],path_cl:null,context:castCtx(elt.context)};
+						else json[keys[i]][j]= {classes:["action",classCast(elt['class'][2])],labels:[elt.name],path:[],path_cl:null,context:castCtx(elt.context)};
+						break;
+					case "actions_binder": json[keys[i]][j]= {classes:["action","binder",elt.name],labels:[],path:[elt.act_name],path_cl:"action",values:null};break;
+					case "edges": json[keys[i]][j]= {in_class:classCast(elt.in_class[1]),in_path:elt.in_path,out_class:classCast(elt.out_class[1]),out_path:elt.out_path};break;
+					default: console.log("unknown key class : "+keys[i]);
+				}
+			}
+		}
+	}
 	var classCast = function(cls){
 		switch(cls){
 			case "key_r":
@@ -66,6 +84,16 @@ function jSonFormatter(gGraph){
 			return cls;
 		}
 	}
+	var genEdges = function (js_edges){
+		//console.log(js_edges);
+	}
+	var genNode_Rec = function(js_nodes,js_class){
+		//console.log(js_class);
+		//console.log(js_nodes);
+	}
+
+
+	
 	var setMod = function(val){
 		if(val=="incr") return "pos";
 		else return "neg";
@@ -73,90 +101,17 @@ function jSonFormatter(gGraph){
 	var castCtx = function(ctx){
 		var ret=[];
 		for(var i=0;i<ctx.length;i++){
-			ret.push({labels:[ctx[i].el_path[ctx[i].el_path.length-1]],path:ctx[i].el_path.splice(ctx[i].el_path.length-1,1),path_cl:ctx[i].el_cl[1],values:ctx[i].el_value});
+			var tmp_label=[ctx[i].el_path[ctx[i].el_path.length-1]];
+			ctx[i].el_path.pop();
+			var tmp_path=ctx[i].el_path;
+			var tmp_path_cl=classCast(ctx[i].el_cl[1]);
+			var tmp_values=ctx[i].el_value;
+			ret.push({labels:tmp_label,path:tmp_path,path_cl:tmp_path_cl,values:tmp_values});
 		}
 		return ret;
 	}
-	var oldCast = function(elt,elt_class){
-	switch(elt_class){
-		case "agents":
-			return {classes:["agent"],labels:[elt.name],path:[],path_cl:null,values:null,x:elt.cx,y:elt.cy};
-		case "regions":
-			return {classes:["region"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};
-		case "key_rs":
-			if(elt.region_name!=null)
-				return {classes:["key_res"],labels:[elt.name],path:[elt.region_name,elt.ag_name],path_cl:"region",values:null};
-			else
-				return {classes:["key_res"],labels:[elt.name],path:[elt.ag_name],path_cl:"agent",values:null};
-		case "attributes":
-				return {classes:["attribute","list"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class[1]),values:elt.values};
-		case "flags":
-			return {classes:["flag"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class[1]),values:elt.values};
-		case "actions":
-			if(elt['class'][2]=="mod")
-				return {classes:["action",classCast(elt['class'][2]),setMod(elt.mods)],labels:[elt.name],path:[],path_cl:null,context:castCtx(elt.context)};
-			else
-				return {classes:["action",classCast(elt['class'][2])],labels:[elt.name],path:[],path_cl:null,context:castCtx(elt.context)};
-		case "actions_binder":
-			return {classes:["action","binder",elt.name],labels:[],path:[elt.act_name],path_cl:"action",values:null};
-		case "edges":
-			return {in_class:classCast(elt.in_class[1]),in_path:elt.in_path,out_class:classCast(elt.out_class[1]),out_path:elt.out_path};
-		default:
-			console.log("unknown key class : "+elt_class);
-			return null;
-	}
-}
-	var genNode_Rec = function(key,elt_class){
-		for(var i=0;i<key.length;i++){
-			var tmp_el=key[i];
-			if(force) tmp_el=oldCast(tmp_el,elt_class);
-			if(elt_class=="actions"){
-				genAction(tmp_el);
-			}else{
-				if(typeof(tmp_el.path)!='undefined' && tmp_el.path!=null && tmp_el.path>0){
-					for(var j=tmp_el.path.length-1;j>=0;j--){
-						var cls=findClass(tmp_el.path.length,path_cl,elt_class,j);
-						var label=[tmp_el.path[j]];
-						var pth=tmp_el.path.concat().splice(0,j);
-						var path_cls=findClass(tmp_el.path.length,path_cl,elt_class,j-1);
-						var val=null;
-						genNode({classes:cls,labels:label,path:pth,path_cl:path_cls,values:val});
-					}
-				}
-			}
-			genNode(tmp_el);
-			var ex_nd=gGraph.findByName(tmp_el.labels,tmp_el.classes,tmp_el.path);
-			if(ex_nd!=null)
-				gGraph.mergeDiff(gGraph.lastNode(),ex_nd.id);
-	//for region : create father if needed + merge if needed + create node region + merge if needed.
-	//for key residus : create all element needed on the path + merge them if needed + create key residus +merge if needed.
-	//for flags : create all element needed on the path + merge them if needed + create flag +merge if needed.
-	//for attributes : create all element needed on the path + merge them if needed + create attribute + merge if needed.
-	//for action : create node + merge if needed + create all element of context needed + merge them.
-		}
-	};
-	var genNode = function(key_el){
-	for(var i=0;i<key_el.length;i++){
-		tmp_el=key_el[i];
-		if(force){
-			tmp_el=oldCast(tmp_el);
-		}
-		var n_id=findByName(tmp_el.path.push(tmp_el.labels),tmp_el.path_cl);
-		var fath_id=findByName(tmp_el.path,tmp_el.path_cl);
-		console.log("adding node !!!");
-		gGraph.addNode(key[i].classes,key[i].labels,fath_id,key[i].x,key[i].y);
-		if(typeof(key[i].values)!='undefined' && key[i].values!=null && key[i].values.length>0)
-			gGraph.addCtx(gGraph.lastNode(),key[i].values);
-		if(typeof(key[i].context)!='undefined' && key[i].context!=null && key[i].context.length>0){
-			for(var j=0;j<key[i].context.length;j++){
-				genNode(key[i].context)
-			}
-			gGraph.addCtx(gGraph.lastNode(),key[i].context);
-		}
-		if(n_id!=null)
-			gGraph.mergeNode(gGraph.lastNode(),n_id);
-	}
-}
+
+	
 	var checkpath = function(lgraph,path){
 	for(var i=0;i<lgraph.nodes.length;i++){
 		if(includeIn(path[0].classes,lgraph.nodes[i].classes) && includeIn(path[0].name,lgraph.nodes[i].label)){

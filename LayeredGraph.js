@@ -96,6 +96,10 @@ function LayeredGraph(){
 		return dumpVCtx(vctx);
 	}
 	this.mergeDiff = function mergeDiff(s_node,t_node){//merge two existing nodes : a source node to a specific target node (by ID) : source become the target
+		if(this.nodes[this.nodesHash[s_node]].classes.join(",")!=this.nodes[this.nodesHash[t_node]].classes.join(",")){
+			console.log("can't merge nodes from different classes");
+			return;
+		}
 		if(typeof(this.nodesHash[s_node])=='undefined')
 			console.log(s_node+" doesn't exist !");
 		else if(typeof(this.nodesHash[t_node])=='undefined')
