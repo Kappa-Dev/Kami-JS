@@ -46,7 +46,7 @@ function jSonFormatter(gGraph){
 		for(var i=0;i<keys.length;i++){
 			if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
 				for(var j=0;j<json[keys[i]].length;j++){
-					if(keys[i]=="edges") genEdges(json[keys[i]][j]);
+					if(keys[i]=="actions") genAction(json[keys[i]][j]);
 					else genNode_Rec(json[keys[i]][j],keys[i]);
 				}
 			}else if(force && keys[i]!="version"){
@@ -55,7 +55,103 @@ function jSonFormatter(gGraph){
 			}
 		}
 	};
-	var fndNCvtThatF_ingAction = function(act_name){
+	var oldCast = function(){//cast the old version of json in the new one
+		/*var keys=Object.keys(json);
+		var new_json={};
+		for(var i=0;i<keys.length;i++){
+			if(typeof(json[keys[i]])=='undefined' || json[keys[i]]==null || json[keys[i]].length==0) continue;	
+			for(var j=0;j<json[keys[i]].length;j++){
+				var elt=json[keys[i]][j];
+				switch(keys[i]){
+					case "agents":     new_json[keys[i]].push({classes:["agent"],father_class:[],path:[],labels:[elt.name],values:[],x:elt.cx,y:elt.cy});break;
+					case "regions":     new_json[keys[i]].push({classes:["region"],father_class:["agent"],path:[elt.ag_name],labels:[elt.name],values:[]});break;
+					case "key_rs":
+						if(elt.region_name!=null)  new_json[keys[i]].push({classes:["key_res"],father_class:["region"],path:[elt.ag_name,elt.region_name],labels:[elt.name],values:[]});
+						else  new_json[keys[i]].push({classes:["key_res"],father_class:["agent"],path:[elt.ag_name],labels:[elt.name],values:[]});
+						break;
+					case "attributes": new_json[keys[i]].push({classes:["attribute","list"],father_class:classCast(elt.dest_class),path:elt.dest_path,labels:[elt.name],values:elt.values});break;
+					case "flags":      new_json[keys[i]].push({classes:["flag"],father_class:classCast(elt.dest_class),path:elt.dest_path,labels:[elt.name],values:elt.values});break;
+					case "actions": new_json[keys[i]].push(buildOldAction(json[keys[i]][j],json.actions_binder,json.edges));break;
+					default: console.log("unknown key class : "+keys[i]);
+				}
+			}
+		}
+		return new_json;*/
+		console.log("no backward compatibility yet");
+	};
+	var classCast = function(cls,mod){//translate old class format to the new one
+		var tmp=[];
+		for(var i=0;i<cls.length;i++){
+			switch(cls[i]){
+				case "node":
+				case "edge":
+					break;
+				case "key_r":
+				case "key_rs":
+					tmp.push("key_res");
+					break;
+				case "bind":
+					tmp.push("bnd");
+					break;
+				case "mod":
+					tmp.push("mod");
+					if(typeof(mod)!='undefined' && mod!=null)
+						tmp.push(setMod(mod));
+					else console.log("this action modification is not defined !")
+					break;
+				case "attr":
+					tmp.push("attribute");
+					break;
+				default:
+					tmp.push(cls[i]);
+			}
+		}
+		return tmp;
+	};
+	var setMod = function(val){//translate old mod to the new version
+		if(val=="incr") return "pos";
+		else return "neg";
+	};
+	var toOldContext = function(el_class,el_path){
+		if(el_class[1]=="binder"){
+			el_class[1]="action";
+			el_path=[el_path[0]];
+		} 
+		for(var i=0;i<json[el_class[1]].length;i++){
+			if(json[el_class[1]][i].name==el_path[el_path.length-1]){
+				return {classes:classCast(json[el_class[1]][i]['class'],json[el_class[1]][i].mods),father_class:tmp_fc,path:tmp_elp,labels:tmp_lbs,values:[]};
+			}
+		}
+	}
+	var buildOldAction = function(action,act_binders,edges){
+		var tmp_labels=[action.name];
+		var tmp_classes=classCast(action['class']);
+		if(tmp_classes[1]=="mod") tmp_classes.push(setMod(action.mods));
+		var tmp_left=[];
+		var tmp_right=[];
+		var tmp_ctx=[];
+		for(var i=0;i<edges.length;i++){
+			if(edges[i].in_class[1]=="binder" && edges[i].in_path[0]==action.name && edges[i].in_path[1]=="left"){
+				tmp_left.push(toOldContext(edges[i].out_class,edges[i].out_path));
+			}
+			else if(edges[i].in_class[1]=="binder" && edges[i].in_path[0]==action.name && edges[i].in_path[1]=="right"){
+				tmp_right.push(toOldContext(edges[i].out_class,edges[i].out_path));
+			}
+			else if(edges[i].out_class[1]=="binder" && edges[i].out_path[0]==action.name && edges[i].out_path[1]=="left"){
+				tmp_left.push(toOldContext(edges[i].in_class,edges[i].in_path));
+			}
+			else if(edges[i].out_class[1]=="binder" && edges[i].out_path[0]==action.name && edges[i].out_path[1]=="right"){
+				tmp_right.push(toOldContext(edges[i].in_class,edges[i].in_path));
+			}
+		}
+		for(var i=0;i<action.context.length;i++){
+			var tmp_ct=convertContext(action.context[i]);
+			if(!existing(tmp_ct,tmp_ctx))
+				tmp_ctx.push(tmp_ct);
+		}
+		return {classes:tmp_classes,labels:tmp_labels,left:tmp_left,right:tmp_right,context:tmp_ctx};
+	};
+	var fndNCvtThatF_ingAction = function(act_name){//get for an attribute or a binder the correct action !
 		for(var i=0;i<json.actions.length;i++){
 			if(json.actions[i].labels[0]==act_name)
 				return classCast(json.actions[i].classes);
@@ -65,33 +161,7 @@ function jSonFormatter(gGraph){
 			}
 		}
 	}
-	var oldCast = function(){//cast the old version of json in the new one
-		var keys=Object.keys(json);
-		for(var i=0;i<keys.length;i++){
-			if(typeof(json[keys[i]])=='undefined' || json[keys[i]]==null || json[keys[i]].length==0) continue;	
-			for(var j=0;j<json[keys[i]].length;j++){
-				var elt=json[keys[i]][j];
-				switch(keys[i]){
-					case "agents":     json[keys[i]][j]={classes:["agent"],labels:[elt.name],path:[],path_cl:[],values:null,x:elt.cx,y:elt.cy};break;
-					case "regions":    json[keys[i]][j]= {classes:["region"],labels:[elt.name],path:[elt.ag_name],path_cl:["agent"],values:null};break;
-					case "key_rs":
-						if(elt.region_name!=null) json[keys[i]][j]= {classes:["key_res"],labels:[elt.name],path:[elt.region_name,elt.ag_name],path_cl:["region"],values:null};
-						else json[keys[i]][j]= {classes:["key_res"],labels:[elt.name],path:[elt.ag_name],path_cl:["agent"],values:null};
-						break;
-					case "attributes": json[keys[i]][j]= {classes:["attribute","list"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class),values:elt.values};break;
-					case "flags":      json[keys[i]][j]={classes:["flag"],labels:[elt.name],path:elt.dest_path,path_cl:classCast(elt.dest_class),values:elt.values};break;
-					case "actions":
-						if(elt['class'][2]=="mod") json[keys[i]][j]= {classes:["action","mod",setMod(elt.mods)],labels:[elt.name],path:[],path_cl:[],context:castCtx(elt.context)};
-						else json[keys[i]][j]= {classes:classCast(elt['class']),labels:[elt.name],path:[],path_cl:null,context:castCtx(elt.context)};
-						break;
-					case "actions_binder": 
-						json[keys[i]][j]= {classes:["action","binder",elt.name],labels:[],path:[elt.act_name],path_cl:fndNCvtThatF_ingAction(elt.act_name),values:null};break;
-					case "edges": json[keys[i]][j]= {in_class:classCast(elt.in_class),in_path:elt.in_path,out_class:classCast(elt.out_class),out_path:elt.out_path};break;
-					default: console.log("unknown key class : "+keys[i]);
-				}
-			}
-		}
-	}
+	
 	var findClass = function(length,pos,orig_cl,dest_cl){
 		switch(orig_cl[0]){
 			
@@ -110,36 +180,8 @@ function jSonFormatter(gGraph){
 				
 		}
 	}
-	var classCast = function(cls){//translate old class format to the new one
-		var tmp=[];
-		for(var i=0;i<cls.length;i++){
-			switch(cls[i]){
-				case "node":
-				case "edge":
-					break;
-				case "key_r":
-				case "key_rs":
-					tmp.push("key_res");
-					break;
-				case "bind":
-					tmp.push("bnd");
-					break;
-				case "mod":
-					tmp.push("mod");
-					break;
-				case "attr":
-					tmp.push("attribute");
-					break;
-				default:
-					tmp.push(cls[i]);
-			}
-		}
-		return tmp;
-	};
-	var setMod = function(val){//translate old mod to the new version
-		if(val=="incr") return "pos";
-		else return "neg";
-	};
+	
+	
 	var genEdges = function (js_edges){
 		//console.log(js_edges);
 	}
