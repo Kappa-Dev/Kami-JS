@@ -35,7 +35,9 @@ function jSonFormatter(gGraph){
 				edges:graph.edges
 			}
 			jsToLGraph();
+			gGraph.wakeUp();
 			console.log(json);
+			console.log(refNode);
 		});	
 	};
 	var jsToLGraph = function(){//translate json to graph
@@ -58,22 +60,22 @@ function jSonFormatter(gGraph){
 	};
 		//console.log(js_edges);
 	var genNode_Rec = function(js_node,js_class){
-		console.log("generating "+js_class);
-		console.log(js_node);
-		gGraph.addNode(js_node.classes,js_node.labels,convertPath(js_node.path),js_node.x,js_node.y);
-		console.log(gGraph.getLG());
-		var node_id=gGraph.lastNode();
 		var existing_node=gGraph.findByName(js_node.labels,js_node.classes,js_node.father_classes,js_node.path);
+		gGraph.addNode(js_node.classes,js_node.labels,[],js_node.x,js_node.y);
+		console.log(gGraph.getLG().nodesHash);
+		var node_id=gGraph.lastNode();
 		if (existing_node!=null){
 			gGraph.mergeNode(node_id,existing_node.id);
 			node_id=existing_node.id;
+			console.log("node finded");
+			console.log(existing_node);
 		}
 		if(typeof(refNode[js_class])=="undefined" || refNode[js_class]==null)
 			refNode[js_class]=[];
 		refNode[js_class].push(node_id);
 		if(js_node.values!=null && js_node.values.length>0)
 			gGraph.addCtx(node_id,js_node.values,null);
-		if(existing_node==null){
+		if(existing_node==null && js_node.father_classes!=null && js_node.father_classes.length>0){
 			var tmp_fcls=findPathClass(js_node.path.length,js_node.path.length,js_node.classes,js_node.father_classes);
 			var tmp_ffcls=findPathClass(js_node.path.length,js_node.path.length-1,js_node.classes,js_node.father_classes);
 			var tmp_father=gGraph.findByName([js_node.path[js_node.path.length-1]],tmp_fcls,tmp_ffcls,sublist(js_node.path,0,js_node.path.length-2));
@@ -81,7 +83,7 @@ function jSonFormatter(gGraph){
 				console.log("unable to find the nodepath "+js_node.path[i]);
 			}else{
 				gGraph.addParent(node_id,tmp_father.id);
-			}			
+			}		
 		}
 	};
 	var genAction = function(action){
@@ -120,8 +122,13 @@ function jSonFormatter(gGraph){
 			if(path_size==1) return ["agent"];
 		}if(endclass[0]=="region" && pre_endclass[0]=="agent"){
 			if(path_size==1) return ["agent"];
-		}if(endclass[0]=="agent" || endclass[0]=="action") return null;
-		console.log("unable to find a flass");
+		}if(endclass[0]=="agent" || endclass[0]=="action" || path_size==0) return null;
+		console.log("unable to find a class");
+		console.log(total_p_s);
+		console.log(path_size);
+		console.log(endclass);
+		console.log(pre_endclass);
+		
 		return null;	
 	};
 

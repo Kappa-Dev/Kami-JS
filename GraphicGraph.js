@@ -34,9 +34,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			console.log("tested node");
 			console.log(tmp_node.label);
 			console.log(tmp_node.classes);
-			if(fcls!=null && fcls.length!=0)
+			if(fcls!=null && fcls.length!=0 && tmp_node.father!=null && typeof(layerG.nodesHash[tmp_node.father])!="undefined" && layerG.nodesHash[tmp_node.father]!=null)
 				console.log(layerG.nodes[layerG.nodesHash[tmp_node.father]].classes);
-			cl_ok=(tmp_node.classes.join(",")==cls.join(",")) && (fcls==null || fcls.length==0 || layerG.nodes[layerG.nodesHash[tmp_node.father]].classes.join(",")==fcls.join(","));
+			cl_ok=(tmp_node.classes.join(",")==cls.join(",")) && (fcls==null || fcls.length==0 || (tmp_node.father!=null && typeof(layerG.nodesHash[tmp_node.father])!="undefined" && layerG.nodesHash[tmp_node.father]!=null && layerG.nodes[layerG.nodesHash[tmp_node.father]].classes.join(",")==fcls.join(",")));
 			if(cl_ok) {
 				for(var j=0;j<label.length;j++)
 					lb_ok=lb_ok || (tmp_node.label.indexOf(label[j])!=-1);
