@@ -22,13 +22,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
 	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
 	var modified=true;
-	this.findByName = function findByName(label,cls,path){//find a node by its name+path+class
+	this.findByName = function findByName(label,cls,fcls,path){//find a node by its name+path+class+father class
+		console.log("looking for");
+		console.log(label);
+		console.log(cls);
+		console.log(fcls);
+		console.log(path);
 		var cl_ok=false,lb_ok=false,p_ok=true;
 		for(var i=0;i<layerG.nodes.length;i++){
 			var tmp_node=layerG.nodes[i];
-			cl_ok=(tmp_node.classes.length==cls.length);
-			for(var j=0;j<cls.length;j++)
-				cl_ok=cl_ok && (tmp_node.classes[j]==cls[j]);
+			console.log("tested node");
+			console.log(tmp_node.label);
+			console.log(tmp_node.classes);
+			if(fcls!=null && fcls.length!=0)
+				console.log(layerG.nodes[layerG.nodesHash[tmp_node.father]].classes);
+			cl_ok=(tmp_node.classes.join(",")==cls.join(",")) && (fcls==null || fcls.length==0 || layerG.nodes[layerG.nodesHash[tmp_node.father]].classes.join(",")==fcls.join(","));
 			if(cl_ok) {
 				for(var j=0;j<label.length;j++)
 					lb_ok=lb_ok || (tmp_node.label.indexOf(label[j])!=-1);
@@ -53,7 +61,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.lastNode = function lastNode(){//return the last node ID
 		return "n"+(node_count-1);
 	}
-	this.getLG = function getLG(){//return a pointer to the current layered graph
+	this.getLG = function getLG(){//return a pointer to the current layered graph warning : modifying the lg can result in incoherences
 		return layerG;
 	}
 	this.wakeUp = function wakeUp(){//speed up tick function

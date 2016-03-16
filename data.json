@@ -21,7 +21,7 @@
 	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","1068"],"labels":["aa"],"values":["y"]},
 	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["Shc","427"],"labels":["aa"],"values":["y"]},
 	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["Ras","12"],"labels":["aa"],"values":["g","d"]},
-	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["bnd1"],"labels":["rate"],"values":[0.1]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["bnd1"],"labels":["rate"],"values":[0.1]}
 ],
 "flags":[
 	{"classes":["flag"],"father_classes":["key_res"],"path":["EGFR","1068"],"labels":["phos"],"values":["uphos","phos"]},
