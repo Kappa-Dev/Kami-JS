@@ -616,7 +616,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(d3.event.shiftKey && d.valued_context!=null && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
 					var tmp_node=ctx_el.datum();
 					var tmp_id;
-					if(tmp_node.label.length>0) tmp_id=tmp_node.label[0]; 
+					if(tmp_node.label.length>0) tmp_id=tmp_node.id+":"+tmp_node.label[0]; 
 					else tmp_id=tmp_node.id;
 					ctx_lst.push({id:tmp_id,x:tmp_node.x,values:d.valued_context[tmp_node.id]});
 					ctx_lst.sort(function(a,b){return a.x-b.x});

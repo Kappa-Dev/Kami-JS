@@ -64,7 +64,7 @@
 	},
 	{"classes":["action","bnd"],"labels":["bnd5"],
 	 "left":[{"ref":["agents",3]}],
-	 "right":[{"ref":["regions",4]}],
+	 "right":[{"ref":["regions",0]}],
 	 "context":[{"ref":["flags",3],"values":["gtp"]},
 				{"ref":["actions",3]}
 			   ]

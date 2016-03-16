@@ -21,6 +21,7 @@ function jSonFormatter(gGraph){
 	this.init = function init(filename){//import a layered graph from a json file
 		name=filename;
 		count=gGraph.lastNode();
+		refNode={};
 		d3.json(name,function(error, graph) {
 			if (error) throw error;
 			json={
@@ -86,10 +87,84 @@ function jSonFormatter(gGraph){
 			}		
 		}
 	};
-	var genAction = function(action){
+	var checkExist = function(tab){
+		return typeof(tab)!='undefined' && tab!=null && tab.length>0;
+	};
+	var genAction = function(js_node){
+		var js_class="actions";
+		gGraph.addNode(js_node.classes,js_node.labels,[],js_node.x,js_node.y);
+		console.log(gGraph.getLG().nodesHash);
+		var node_id=gGraph.lastNode();
+		var l_bind_id;
+		var r_bind_id;
+		switch(js_node.classes[1]){
+			case "bnd":
+			case "brk":
+				gGraph.addNode(["action","binder","left"],[],[node_id]);
+				l_bind_id=gGraph.lastNode();
+			case "syn":
+			case "deg":
+			case "mod":
+				gGraph.addNode(["action","binder","right"],[],[node_id]);
+				r_bind_id=gGraph.lastNode();
+		}
+		if(typeof(json.attributes)!='undefined' && json.attributes!=null && json.attributes.length>0){
+			for(var i=0;i<json.attributes.length;i++){
+				if(checkExist(json.attributes[i].father_classes) && json.attributes[i].father_classes.join(",")==js_node.classes.join(",") && js_node.labels.indexOf(json.attributes[i].path[0])!=-1){
+					gGraph.addParent(refNode.attributes[i],node_id);
+				}
+			}
+		}
+		if(typeof(refNode[js_class])=="undefined" || refNode[js_class]==null)
+			refNode[js_class]=[];
+		refNode[js_class].push(node_id);
+		if(checkExist(js_node.left)){
+			for(var i=0;i<js_node.left.length;i++){
+				if(checkExist(js_node.left[i].ref)){
+					var dest_id=refNode[js_node.left[i].ref[0]][js_node.left[i].ref[1]];
+					if(js_node.classes[1]=="bnd" || js_node.classes[1]=="brk")	
+						gGraph.addEdge(l_bind_id,dest_id);
+					var vctx=null;
+					if(checkExist(js_node.left[i].values)){
+						vctx={};
+						vctx[dest_id]=js_node.left[i].values;
+					}
+					gGraph.addCtx(node_id,[dest_id],vctx);
+				}
+			}
+		}if(checkExist(js_node.right)){
+			for(var i=0;i<js_node.right.length;i++){
+				if(checkExist(js_node.right[i].ref)){
+					var dest_id=refNode[js_node.right[i].ref[0]][js_node.right[i].ref[1]];
+					gGraph.addEdge(r_bind_id,dest_id);
+					var vctx=null;
+					if(checkExist(js_node.right[i].values)){
+						vctx={};
+						vctx[dest_id]=js_node.right[i].values;
+					}
+					gGraph.addCtx(node_id,[dest_id],vctx);	
+				}
+			}
+			
+		}if(checkExist(js_node.context)){
+			for(var i=0;i<js_node.context.length;i++){
+				if(checkExist(js_node.context[i].ref)){
+					var dest_id=refNode[js_node.context[i].ref[0]][js_node.context[i].ref[1]];
+					var vctx=null;
+					if(checkExist(js_node.context[i].values)){
+						vctx={};
+						vctx[dest_id]=js_node.context[i].values;
+					}
+					gGraph.addCtx(node_id,[dest_id],vctx);	
+				}
+			}
+		}
+		
+		
+		
 		
 	};
-	var sublist = function(l,sidx,eidx){
+	var sublist = function(l,sidx,eidx){//get the surlist of l from sidx to eidx
 		var ret=[];
 		if(eidx>=l.length){
 			console.log("unable to sublist, endpoint fixed to list length-1");
@@ -100,7 +175,7 @@ function jSonFormatter(gGraph){
 		}
 		return ret;
 	};
-	var findPathClass = function(total_p_s,path_size,endclass,pre_endclass){
+	var findPathClass = function(total_p_s,path_size,endclass,pre_endclass){//find the class of a specific element of a path given the path size, the element position, the class of thelast element of the path and the class of its previous element
 		if((endclass[0]=="flag" || endclass[0]=="attribute") && pre_endclass[0]=="region"){
 			if(path_size==2) return pre_endclass;
 			if(path_size==1) return ["agent"];
