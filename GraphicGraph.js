@@ -548,6 +548,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kappa_view=false;
 				break;
 			case "lcg_view":
+				var selected_l=[];
+				console.log(svg.selectAll("g").filter(".selected").filter(".action"));
+				svg.selectAll("g").filter(".selected").filter(".action").each(function(d){selected_l.push(d.id)});
+				if(selected_l==null || selected_l.length==0){
+					alert("Select at least one action");
+					return;
+				}
 				d3.select("#menu_f").selectAll("input").property("disabled",true)
 				   .style("display","none");
 				d3.select("#kr").property("disabled",false)
@@ -572,7 +579,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					drag=lcgDrag;
 					svg.selectAll("*").remove();
 					update();
-					if(modified || confirm("Generate a new LCG ?"))self.addNode(["agent"],["ag1","othername","thirdname"],[]);
+					if(modified || confirm("Generate a new LCG ?"))lcgConvert(selected_l);
 					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				break;
@@ -1358,7 +1365,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
                             }
                         });
-	}
+	};
+	var lcgConvert = function(id_list){
+		console.log(id_list);
+	};
 	
 };
 

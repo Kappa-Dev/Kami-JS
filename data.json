@@ -9,7 +9,8 @@
 	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Sos1"],"values":[]}
 ],
 "regions":[
-	{"classes":["region"],"father_classes":["agent"],"path":["Grb2"],"labels":["Sh2"],"values":[]}
+	{"classes":["region"],"father_classes":["agent"],"path":["Grb2"],"labels":["Sh2"],"values":[]},
+	{"classes":["region"],"father_classes":[],"path":[],"labels":["Sh22"],"values":[]}
 ],
 "key_rs":[
 	{"classes":["key_res"],"father_classes":["agent"],"path":["EGFR"],"labels":["1068"],"values":[]},

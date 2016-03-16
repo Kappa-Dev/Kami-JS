@@ -1,3 +1,9 @@
+rect.selection {
+    stroke          : gray;
+    stroke-dasharray: 4px;
+    stroke-opacity  : 0.5;
+    fill            : transparent;
+}
 .d3-context-menu {
 	position: absolute;
 	display: none;
