@@ -39,6 +39,11 @@ function LayeredGraph(){
 	this.nodesHash={};// the hashtable in order to get a node by his name
 	this.nodes=[];//liste des noeud
 	this.links=[];//liste des arcs
+	this.init = function init(){
+		this.nodesHash={};// the hashtable in order to get a node by his name
+		this.nodes=[];//liste des noeud
+		this.links=[];//liste des arcs
+	}
 	var union = function(list1,list2){// effectue l'union de deux listes sans redondances
 		var tmp=[];
 		for(var i=0;i<list2.length;i++)
