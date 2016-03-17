@@ -1367,7 +1367,54 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
                         });
 	};
 	var lcgConvert = function(id_list){
+		var convert_table={};
 		console.log(id_list);
+		for(var i=0;i<id_list.length;i++){//for eache action
+			var tmp_node=nuggG.nodes[nuggG.nodesHash[id_list[i]]];//add the action in the LCG
+			var possible_target=[tmp_node.id];//possible target for edges
+			if(typeof(convert_table[tmp_node.id])=="undefined" || convert_table[tmp_node.id]==null){
+				self.addNode(tmp_node.classes.concat(),tmp_node.label.concat(),[],tmp_node.x,tmp_node.y);
+				var node_id=self.lastNode();
+				convert_table[tmp_node.id]=node_id;
+				for(var s=0;s<tmp_node.sons.length;s++){//add all the action sons in the lcg
+					if(typeof(convert_table[tmp_node.sons[s]])=="undefined" || convert_table[tmp_node.sons[s]]==null){
+						var tmp_son=nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]];
+						self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]],tmp_son.x,tmp_son.y);
+						var node_id=self.lastNode();
+						convert_table[tmp_son.id]=node_id;
+					}else{
+						self.addParent(convert_table[tmp_node.sons[s]],convert_table[tmp_node.id]);
+					}if(nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]].classes[0]=="action"){
+						possible_target.push(tmp_node.sons[s]);
+					}
+				}
+				for(var c=0;c<tmp_node.context.length;c++){//add recursively all the element from the context
+					if(typeof(convert_table[tmp_node.context[c]])=="undefined" || convert_table[tmp_node.context[c]]==null){
+						addNConvertRec(nuggG.nodes[nuggG.nodesHash[tmp_node.context[c]]],convert_table);
+					}
+					var vctx=null;
+					if(tmp_node.valued_context!=null && checkExist(tmp_node.valued_context[tmp_node.context[c]])){
+						vctx={};
+						vctx[convert_table[tmp_node.context[c]]]=tmp_node.valued_context[tmp_node.context[c]].concat();
+					}
+					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_node.context[c]]],vctx);
+				}
+			}	
+			for(var l=0;l<nuggG.links.length;l++){
+				if(possible_target.indexOf(nuggG.links[i].sourceID)!=-1 || possible_target.indexOf(nuggG.links[i].targetID)!=-1){
+					if(nuggG.links[i].e_class=="link")
+						self.addEdge(convert_table[nuggG.links[i].sourceID],convert_table[nuggG.links[i].targetID]);
+					else if(nuggG.links[i].e_class!="parent")
+						self.addInfluence(convert_table[nuggG.links[i].sourceID],convert_table[nuggG.links[i].targetID],nuggG.links[i].e_class);
+				}					
+			}
+		}
+	};
+	var addConvertRec = function(node,convert_table){
+		
+	}
+	var checkExist = function(tab){
+		return typeof(tab)!='undefined' && tab!=null && tab.length>0;
 	};
 	
 };
