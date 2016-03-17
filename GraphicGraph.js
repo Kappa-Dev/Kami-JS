@@ -587,17 +587,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 				break;
 			case "kappa_view"://nobody care : open jasim !
-				d3.select("#menu_f").selectAll("input").property("disabled",true)
-					.style("display","none");
-				d3.select("#kr").property("disabled",false)
-					.style("display","initial");
-				d3.select("#lcg").property("disabled",false)
-					.style("display","initial");
-				nugget_add=false;
-				edition=false;
-				kr_show=false;
-				lcg_view=false;
-				kappa_view=true;
+				kappaConvert();
 				break;
 		}
 	};
@@ -701,6 +691,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				update();
 			}
 		}];
+		if(lcg_view && evt_trg.classed("attribute")){
+			menu.push({
+				title: "Edit Values",
+				action: function(elm,d,i){
+					var lbl=window.prompt("define Attributes",d.context.join(","));
+					self.rmCtx(d.id,[]);
+					if(lbl!=null && lbl!="") self.addCtx(d.id,lbl.split(","));
+				}
+			});
+		}
 		if(edition || nugget_add){
 			if(!evt_trg.classed("attribute") && !evt_trg.classed("flag")){
 				menu.push({
@@ -1331,7 +1331,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}	
 	};
 	var clickText = function(d){//click on labels
-		if(!edition && !nugget_add) return;
+		if(!edition && !nugget_add && !lcg_view) return;
         var el = d3.select(this);
         var frm = svg.append("foreignObject");
         var inp = frm
@@ -1382,63 +1382,247 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		var possible_target=[tmp_node.id];//possible target for edges
 		if(typeof(convert_table[tmp_node.id])=="undefined" || convert_table[tmp_node.id]==null){
 			self.addNode(tmp_node.classes.concat(),tmp_node.label.concat(),[],tmp_node.x,tmp_node.y);
-			var node_id=self.lastNode();
-			convert_table[tmp_node.id]=node_id;
+			convert_table[tmp_node.id]=self.lastNode();
 			for(var s=0;s<tmp_node.sons.length;s++){//add all the action sons in the lcg
 				if(typeof(convert_table[tmp_node.sons[s]])=="undefined" || convert_table[tmp_node.sons[s]]==null){
 					var tmp_son=nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]];
-					self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]],tmp_son.x,tmp_son.y);
-					var node_id=self.lastNode();
-					convert_table[tmp_son.id]=node_id;
+					self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]]);
+					convert_table[tmp_son.id]=self.lastNode();
+					if(checkExist(tmp_son.context))
+						self.addCtx(convert_table[tmp_son.id],tmp_son.context.concat(),null);
 				}else{
 					self.addParent(convert_table[tmp_node.sons[s]],convert_table[tmp_node.id]);
 				}if(nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]].classes[0]=="action"){
 					possible_target.push(tmp_node.sons[s]);
 				}
 			}
+			var act_links=[];
+			for(var l=0;l<nuggG.links.length;l++){//get the link from or to the action
+				if(possible_target.indexOf(nuggG.links[l].sourceID)!=-1 || possible_target.indexOf(nuggG.links[l].targetID)!=-1){
+					if(nuggG.links[l].e_class=="link")
+						act_links.push(nuggG.links[l]);
+				}
+			}
 			for(var c=0;c<tmp_node.context.length;c++){//add recursively all the element from the context
-				if(typeof(convert_table[tmp_node.context[c]])=="undefined" || convert_table[tmp_node.context[c]]==null){
-					addConvertRec(nuggG.nodes[nuggG.nodesHash[tmp_node.context[c]]],convert_table);
+				var tmp_ctx=nuggG.nodes[nuggG.nodesHash[tmp_node.context[c]]];
+				if(tmp_ctx.classes[0]=="agent"){
+					if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null){
+						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[],tmp_ctx.x,tmp_ctx.y);
+						convert_table[tmp_ctx.id]=self.lastNode();
+					}
+					for(var l=0;l<act_links.length;l++){
+						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
+							self.addNode(["region"],tmp_ctx.label.concat(["_reg"]),[convert_table[tmp_ctx.id]]);
+							self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
+							if(act_links[l].sourceID==tmp_ctx.id)
+								self.addEdge(self.lastNode(),convert_table[act_links[l].targetID]);
+							else
+								self.addEdge(self.lastNode(),convert_table[act_links[l].sourceID]);
+						}
+					}	
 				}
-				var vctx=null;
-				if(tmp_node.valued_context!=null && checkExist(tmp_node.valued_context[tmp_node.context[c]])){
-					vctx={};
-					vctx[convert_table[tmp_node.context[c]]]=tmp_node.valued_context[tmp_node.context[c]].concat();
+				if(tmp_ctx.classes[0]=="attribute" || tmp_ctx.classes[0]=="flag"){
+					if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null){
+						var tmp_agent_root=getRoot(tmp_ctx,nuggG);
+						if(typeof(convert_table[tmp_agent_root.id])=="undefined" || convert_table[tmp_agent_root.id]==null){
+							self.addNode(tmp_agent_root.classes.concat(),tmp_agent_root.label.concat(),[],tmp_agent_root.x,tmp_agent_root.y);
+							convert_table[tmp_agent_root.id]=self.lastNode();
+						}self.addNode(["key_res"],tmp_agent_root.label.concat(["_keyr"]),[convert_table[tmp_agent_root.id]]);
+						var tmp_kr=self.lastNode();
+						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[tmp_kr]);
+						convert_table[tmp_ctx.id]=self.lastNode();
+						self.addCtx(convert_table[tmp_ctx.id],tmp_ctx.context.concat(),null);
+						
+					}
+					for(var l=0;l<act_links.length;l++){
+						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
+								self.addEdge(convert_table[act_links[l].sourceID],convert_table[act_links[l].targetID]);
+						}
+					}	
+					var vctx=null;
+					if(tmp_node.valued_context!=null && checkExist(tmp_node.valued_context[tmp_ctx.id])){
+						vctx={};
+						vctx[convert_table[tmp_ctx.id]]=tmp_node.valued_context[tmp_ctx.id].concat();
+					}
+					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],vctx);	
 				}
-				self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_node.context[c]]],vctx);
+				if(tmp_ctx.classes[0]=="action" && tmp_ctx.classes[1]!="binder"){
+					addLcgAction(tmp_ctx,convert_table);
+					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],null);
+				}
+				if(tmp_ctx.classes[0]=="region" || tmp_ctx.classes[0]=="key_res"){
+					var tmp_agent_root=getRoot(tmp_ctx,nuggG);
+					if(typeof(convert_table[tmp_agent_root.id])=="undefined" || convert_table[tmp_agent_root.id]==null){
+							self.addNode(tmp_agent_root.classes.concat(),tmp_agent_root.label.concat(),[],tmp_agent_root.x,tmp_agent_root.y);
+							convert_table[tmp_agent_root.id]=self.lastNode();
+					}
+					for(var l=0;l<act_links.length;l++){
+						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
+							self.addNode(["region"],tmp_ctx.label.concat(["_reg"]),[convert_table[tmp_agent_root.id]]);
+							self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
+							if(act_links[l].sourceID==tmp_ctx.id)
+								self.addEdge(self.lastNode(),convert_table[act_links[l].targetID]);
+							else
+								self.addEdge(self.lastNode(),convert_table[act_links[l].sourceID]);
+						}
+					}	
+				}
 			}
 		}	
-		for(var l=0;l<nuggG.links.length;l++){
-			console.log(nuggG.links[l]);
-			if(possible_target.indexOf(nuggG.links[l].sourceID)!=-1 || possible_target.indexOf(nuggG.links[l].targetID)!=-1){
-				console.log("find");
-				if(nuggG.links[l].e_class=="link")
-					self.addEdge(convert_table[nuggG.links[l].sourceID],convert_table[nuggG.links[l].targetID]);
-					/*else if(nuggG.links[l].e_class!="parent")
-						self.addInfluence(convert_table[nuggG.links[l].sourceID],convert_table[nuggG.links[l].targetID],nuggG.links[l].e_class);*/
-			}					
-		}
 	}
-	var addConvertRec = function(node,convert_table){
-		if(node.classes[0]=="action" && node.classes[1]!="binder"){
-			addLcgAction(node,convert_table);
-			return;
+	var getRoot = function(node,lg){
+		var tmp_node=node;
+		while(tmp_node.father!=null){
+			tmp_node=lg.nodes[lg.nodesHash[tmp_node.father]];
 		}
-		var father_id=[];
-		if(node.father!=null && (typeof(convert_table[node.father])=="undefined" || convert_table[node.father]==null)){
-			addConvertRec(nuggG.nodes[nuggG.nodesHash[node.father]],convert_table);
-		}
-		if(node.father!=null){
-			father_id=[convert_table[node.father]];
-		}
-		self.addNode(node.classes.concat(),node.label.concat(),father_id,node.x,node.y);
-		convert_table[node.id]=self.lastNode();		
+		return tmp_node;
 	}
 	var checkExist = function(tab){
 		return typeof(tab)!='undefined' && tab!=null && tab.length>0;
 	};
-	
+	var binder_count=1;//for binding!
+	var kappaConvert = function(){
+		binder_count=1;
+		console.log("converting to Kappa");
+		var kappa_code="#### Signatures\n\n";
+		var ag_name_var_l={};
+		svg.selectAll("g").filter(".agent").each(function(d){
+			var ag_def="%agent: "+d.id+"_"+d.label.join("_")+"(";
+			ag_name_var_l[d.id]=[];
+			ag_name_var_l[d.id].push(d.id+"_"+d.label.join("_")+"(");
+			var prems="";
+			for(var s=0;s<d.sons.length;s++){//all the site
+				var tmp_son=layerG.nodes[layerG.nodesHash[d.sons[s]]];//a site
+				ag_def+=tmp_son.id+"_"+tmp_son.label.join("_");
+				if(checkExist(tmp_son.sons)){
+					var tmp_son_son=layerG.nodes[layerG.nodesHash[tmp_son.sons[0]]];//this site flags/attributes
+					if(tmp_son_son.classes[0]=="attribute"){
+						if(checkExist(tmp_son_son.context)){
+							var expl=[];
+							for(var x=0;x<tmp_son_son.context.length;x++){
+								for(var anv=0;anv<ag_name_var_l[d.id].length;anv++){
+									var sentence=ag_name_var_l[d.id][anv]+prems+tmp_son.id+"_"+tmp_son.label.join("_")+"~"+tmp_son_son.context[x];
+									expl.push(sentence);
+								}
+							}ag_name_var_l[d.id]=expl;
+							if(prems=="") prems=",";
+						}
+					}
+					if(checkExist(tmp_son_son.context))
+						ag_def+="~"+tmp_son_son.context.join("~");
+				}
+				if(s<d.sons.length-1)
+					ag_def+=",";
+			}
+			ag_def+=")\n";
+			kappa_code+=ag_def;
+		});
+		//rules
+		var rule_list={};
+		svg.selectAll("g").filter(".action").each(function(d){
+			if(checkExist(rule_list[d.id])){
+				return;
+			}else rule_list[d.id]=genAction(d);
+		});
+		//var
+		var initial_val="";
+		var observer="";
+		
+		//init
+		var quantities="";
+		var tkey=Object.keys(ag_name_var_l);
+		for(var k=0;k<tkey.length;k++){
+			for(var i=0;i<ag_name_var_l[tkey[k]].length;i++){
+				quantities+="%init: 'qtt_"+k+""+i+"' "+ag_name_var_l[tkey[k]][i]+")\n";
+				initial_val+="%var: 'qtt_"+k+""+i+"' "+prompt("Please enter "+ag_name_var_l[tkey[k]][i]+") quantity", "1000")+"\n";
+			}
+		}
+		kappa_code+="#### Variables\n";
+		kappa_code+=initial_val;
+		kappa_code+=observer;
+		kappa_code+="#### Initial conditions\n";
+		kappa_code+=quantities;
+		console.log(kappa_code);
+	}
+	var genAction = function(d){
+		var l_ct=[];
+		var r_ct=[];
+		var left_side=null;
+			var right_side=null;
+			var context=[];
+			var l_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="left" && d1.father==d.id});
+			if(!l_bind.empty()) left_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==l_bind.datum().id || d1.targetID==l_bind.datum().id}).data();
+			var r_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="right" && d1.father==d.id});
+			if(!r_bind.empty()) right_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==r_bind.datum().id || d1.targetID==r_bind.datum().id}).data();
+			console.log("action");
+			console.log(d);
+			console.log(left_side);
+			console.log(right_side);
+			var multictx={};
+			for(var c=0;c<d.context.length;c++){
+				var nop=false;
+				if(left_side!=null){
+					for(var i=0;i<left_side.length;i++){
+						if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
+							nop=true;
+							l_ct.push({el:d.context[c],st:0,v:null});
+						}
+					}
+				}if(right_side!=null){
+					for(var i=0;i<right_side.length;i++){
+						if(right_side[i].sourceID==d.context[c] || right_side[i].targetID==d.context[c]){
+							nop=true;
+							r_ct.push(d.context[c]);
+						}
+					}
+				}if(!nop){
+					if(layerG.nodes[layerG.nodesHash[d.context[c]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.context[c]]].classes[1]!="binder"){
+						rule_list[d.context[c]]=genAction(layerG.nodes[layerG.nodesHash[d.context[c]]]);
+						multictx[d.context[c]]=[];
+						for(var i=0;i<rule_list[d.context[c]].length;i++){
+							multictx[d.context[c]].push(rule_list[d.context[c]][i].right);
+						}
+					}else{
+						if(typeof(d.valued_context)!="undefined" && d.valued_context!=null)
+							context.push({el:d.context[c],st:0,v:d.valued_context[d.context[c]]});
+						else
+							context.push({el:d.context[c],st:0,v:null});
+					}
+							
+				}
+			}
+		var rules=[];
+		var rate="";
+		for(var k=0;k<d.sons.length;k++){
+			if(layerG.nodes[layerG.nodesHash[d.sons[k]]].label[0]=="rate")
+				rate=layerG.nodes[layerG.nodesHash[d.sons[k]]].context[0];
+		}
+		if(rate="")rate=prompt("define rate for action "+d.id+":"+d.label.join(","),"0.1");
+			switch(d.classes[1]){
+				case "bnd":
+					var final_ctx=context.concat();
+					var ctx_a_val=Object.keys(multictx);
+					for(var k=0;k<ctx_a_val.length;k++){
+						for(var m=0;m<multictx[ctx_a_val[k]].length;m++){
+							final_ctx.push()	
+								}
+							}
+					for(var i=0;i<l_ct.length;i++){
+						for(var j=0;j<r_ct.length;j++){
+							
+							rules.push({name:"#bnd_"+d.id+"_"+d.label.join("_")+"_"+i+""+j, left:[{el:l_ct[i],st:0},{el:r_ct[j],st:0}],right:[{el:l_ct[i],st:++binder_count},{el:r_ct[j],st:binder_count}],context:context,type:["bnd"],r:rate});
+						}
+					}
+				break;
+				default:
+				console.log("not yet implemented");
+			}
+		return rules;
+	}
+	var genBPatern = function(elt,context,side){
+		return elt;
+	}
 };
 
 //example
-
+//rules.push("#bnd_"+d.id+"_"+d.label.join("_")+"_"+i+""+j+"\n"+genBPatern(l_ct[i],context,"left")+","+genBPatern(r_ct[j],context,"left")+"->"+genBPatern(l_ct[i],context,"right")+","+genBPatern(r_ct[j],context,"right")+" @"+rate+"\n");
