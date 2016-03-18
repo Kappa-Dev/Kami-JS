@@ -1588,19 +1588,49 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 		}
-		var non_ctx_rule=[];
-		rule_list[node.id]=[];
+		var new_cannonical=[];
 		for(var i=0;i<cannonical_action.length;i++){
-			non_ctx_rule.push(ruleOf(node.classes,cannonical_action[i].left,cannonical_action[i].right,b_count++));
-			non_ctx_rule[i]=rootConvert(non_ctx_rule[i]);
-			var right_ctx=convertForCtx(non_ctx_rule[i],node.classes);
-			console.log(right_ctx);
-			var rule=ruleWCtx(non_ctx_rule[i],rule_list);
-			rule_list[node.id].push({r:rule,cx:right_ctx});
+			var expd_ctx=[];
+			for(var j=0;j<cannonical_action[i].ctx.length;j++){
+				if(checkExist(cannonical_action[i].ctx[j].v)){
+					var tmpexpd=[];
+					for(var l=0;l<expd_ctx.length;l++){
+						for(var k=0;k<cannonical_action[i].ctx[j].v.length;k++)
+							tmpexpd.push(expd_ctx[l].push({e:cannonical_action[i].ctx[j].e,v:cannonical_action[i].ctx[j].v[k]}));
+					}
+					expd_ctx=tmpexpd;
+					if(expd_ctx.length==0){
+						for(var k=0;k<cannonical_action[i].ctx[j].v.length;k++)
+							expd_ctx.push([{e:cannonical_action[i].ctx[j].e,v:cannonical_action[i].ctx[j].v[k]}]);
+					}
+				}else{
+					for(var l=0;l<expd_ctx.length;l++){
+						expd_ctx[l].push({e:cannonical_action[i].ctx[j].e,v:null});
+					}
+					if(expd_ctx.length==0){
+						expd_ctx.push([{e:cannonical_action[i].ctx[j].e,v:null}]);
+					}
+				}
+			}
+			for(var j=0;j<expd_ctx.length;j++){
+				new_cannonical.push({left:cannonical_action[i].left,right:cannonical_action[i].right,ctx:expd_ctx[j]});
+			}
+		}
+		//cannonical_action=new_cannonical;
+		console.log("canonical");
+		console.log(new_cannonical);
+		console.log(cannonical_action);
+		for(var i=0;i<cannonical_action.length;i++){
+			var non_ctx_rule=ruleOf(node.classes,cannonical_action[i].left,cannonical_action[i].right,b_count++);
+			non_ctx_rule=rootConvert(non_ctx_rule);
+			var right_ctx=convertForCtx(non_ctx_rule,node.classes);
+			var rules=ruleWCtx(non_ctx_rule,cannonical_action[i].ctx,rule_list);
+			/*for(var j=0;j<rules.length;j++)
+				rule_list[node.id].push({r:rules[j],cx:right_ctx});*/
 		}		
 	}
-	var ruleWCtx = function(){
-		
+	var ruleWCtx = function(rule,ctx,rule_list){
+		//addCtx(rule.l,ctx,rule_list);
 	}
 	var convertForCtx = function(rule,a_class){
 		switch(a_class[1]){
