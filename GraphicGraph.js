@@ -616,15 +616,14 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(d3.event.shiftKey && d.valued_context!=null && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
 					var tmp_node=ctx_el.datum();
 					var tmp_id;
-					if(tmp_node.label.length>0) tmp_id=tmp_node.id+":"+tmp_node.label[0]; 
-					else tmp_id=tmp_node.id;
+					tmp_id=tmp_node.classes[0]+":"+tmp_node.id; 
 					ctx_lst.push({id:tmp_id,x:tmp_node.x,values:d.valued_context[tmp_node.id]});
 					ctx_lst.sort(function(a,b){return a.x-b.x});
 				}	
 			}
 			var div_ct="<p><h3><b><center>id: "+d.classes.join("/")+"</center></b>";
 			if(ctx_lst.length>0){
-				div_ct+="detailled values : <ul style='padding: 7px;margin:1px;'>";
+				div_ct+="detailed values : <ul style='padding: 7px;margin:1px;'>";
 				for(var i=0;i<ctx_lst.length;i++)
 					div_ct+="<li>"+ctx_lst[i].id+" : "+ctx_lst[i].values.join(",");
 				div_ct+="</ul></p>"
@@ -1518,12 +1517,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		});
 		//rules
 		var rule_list={};
-		var binder_count=1;//for binding!
 		svg.selectAll("g").filter(".action").each(function(d){
-			if(checkExist(rule_list[d.id])){
-				return;
-			}else genAction(d,rule_list,binder_count);
+			genAction(d,rule_list,1);
 		});
+		kappa_code+="#### rules\n\n";
+		var r_key=Object.keys(rule_list);
+		for(var i=0;i<r_key.length;i++){
+			for(var j=0;j<rule_list[r_key[i]].length;j++){
+				kappa_code+="#"+r_key[i]+""+j+"\n"+rToKappa(rule_list[r_key[i]][j])+"\n";
+			}
+		}
 		//var
 		var initial_val="";
 		var observer="";
@@ -1543,21 +1546,97 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+=quantities;
 		console.log(kappa_code);
 	}
-	var genAction(node,rule_list,b_count){
-		var l_side_els=[];
-		var r_side_els=[];
-		var context_els=[];
+	var elToKappa = function(el_l,ctx){
+		var ag_l={};
+		for(var i=0;i<el_l.length;i++){
+			elConvert(el_l[i],ag_l);
+		}for(var i=0;i<ctx.length;i++){
+			elConvert(ctx[i],ag_l);
+		}
+		var ag_k_l=Object.keys(ag_l);
+		var ret="";
+		for(var i=0;i<ag_k_l.length;i++){
+			var agent=layerG.nodes[layerG.nodesHash[ag_k_l[i].split("/")[0]]]
+			ret+=agent.id+"_"+agent.label.join("_")+"(";
+			var s_k_l=Object.keys(ag_l[ag_k_l[i]]);
+			for(var j=0;j<s_k_l.length;j++){
+				var site=layerG.nodes[layerG.nodesHash[s_k_l[j]]];
+				ret+=site.id+"_"+site.label.join();
+				for(var k=0;k<ag_l[ag_k_l[i]][s_k_l[j]].length;k++){
+					ret+=ag_l[ag_k_l[i]][s_k_l[j]][k];
+				}
+				if(j<s_k_l.length-1)
+					ret+=",";
+			}
+			ret+=")";
+			if(i<ag_k_l.length-1)
+				ret+=",";
+		}
+	}
+	var elConvert = function(el,ag_l){
+		var el_node=layerG.nodes[layerG.nodesHash[el.id]];
+		var ag_root=layerG.nodes[layerG.nodesHash[el.father]];
+		if(el_node.classes[0]=="flag" || el_node.classes[0]=="attribute")
+			ag_root=layerG.nodes[layerG.nodesHash[ag_root.father]];
+		if(!checkExist(ag_l[ag_root.id+""+el.d])){
+			ag_l[ag_root.id+""+el.d]={};
+		}if(!checkExist(ag_l[ag_root.id+"/"+el.d][el_node.id])){
+			ag_l[ag_root.id+""+el.d][el_node.id]="";
+		}
+		if(el.v!=null && el.v.length==1 && el.s==0)
+			ag_l[ag_root.id+""+el.d][el_node.id]+="~"+el.v[0];
+		else if(el.s!=0 && el.v==null)
+			ag_l[ag_root.id+""+el.d][el_node.id]+="!"+el.s;
+		else{
+			console.log("this is unexpected !");
+			console.log(el);
+		}
+	}
+	var rToKappa = function(rule){//take a rule and translate it into kappa
+		var res="";
+		res+=elToKappa(rule.left,rule.context);
+		res+=" -> ";
+		res+=elToKappa(rule.right,rule.context);
+		res+=" @ "
+		res+=rule.rate;
+	}
+	var genAction = function(node,rule_list,b_count){
+		if(checkExist(rule_list[node.id])) return;
+		var splitted_ctx=splitCtx(node);
+		for(var i=0;i<splitted_ctx.left.length;i++){
+			for(var j=0;j<splitted_ctx.right.length;j++){
+				genFormRule(splitted_ctx.left[i],splitted_ctx.right[j],splitted_ctx.ctx,rule_list,b_count,node.classes);
+			}
+		}			
+	}
+	var splitCtx = function(d){
+		var left_side=null;
+		var right_side=null;
+		var ret={left:[],right:[],ctx:[]};
 		var l_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="left" && d1.father==d.id});//getting left and right edges link to the action.
 		if(!l_bind.empty()) left_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==l_bind.datum().id || d1.targetID==l_bind.datum().id}).data();
 		var r_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="right" && d1.father==d.id});
 		if(!r_bind.empty()) right_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==r_bind.datum().id || d1.targetID==r_bind.datum().id}).data();
 		for(var c=0;c<d.context.length;c++){
 			var nop=false;
-			if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
-				nop=true;
-				l_ct.push({el:d.context[c],st:0,v:null});
-			}if(){}
-			
+			if(left_side!=null){
+				for(var i=0;i<left_side.length;i++){
+					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
+						nop=true;
+						ret.left.push(d.context[c]);
+					}
+				}
+			}if(right_side!=null){
+				for(var i=0;i<right_side.length;i++){
+					if(right_side[i].sourceID==d.context[c] || right_side[i].targetID==d.context[c]){
+						nop=true;
+						ret.right.push(d.context[c]);
+					}
+				}
+			}if(!nop)
+				ret.ctx.push(d.context[c]);
+		}
+		return ret;
 	}
 	/*var genAction = function(d){
 		var l_ct=[];
