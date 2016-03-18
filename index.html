@@ -43,7 +43,7 @@ window.onload = function () {
 var loadJson = function(){
 	var data="data.json"; 
 	var yep=true;
-	var file=document.getElementById("import_f").value
+	var file=document.getElementById("import_f").value;
 	if(typeof(file)!="undefined" && file !=null && file !="") data=file;
 	else alert("No input file. Default datas loaded !");
 	if(gGraph==null || !confirm('Merge with the existing graph ?')){

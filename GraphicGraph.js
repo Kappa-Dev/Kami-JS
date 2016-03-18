@@ -1625,6 +1625,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			non_ctx_rule=rootConvert(non_ctx_rule);
 			var right_ctx=convertForCtx(non_ctx_rule,node.classes);
 			var rules=ruleWCtx(non_ctx_rule,cannonical_action[i].ctx,rule_list);
+			console.log(non_ctx_rule.l);
+			console.log("->");
+			console.log(non_ctx_rule.r);
 			/*for(var j=0;j<rules.length;j++)
 				rule_list[node.id].push({r:rules[j],cx:right_ctx});*/
 		}		
