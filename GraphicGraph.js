@@ -1480,7 +1480,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var checkExist = function(tab){
 		return typeof(tab)!='undefined' && tab!=null && tab.length>0;
 	};
-	var binder_count=1;//for binding!
 	var kappaConvert = function(){
 		binder_count=1;
 		console.log("converting to Kappa");
@@ -1519,15 +1518,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		});
 		//rules
 		var rule_list={};
+		var binder_count=1;//for binding!
 		svg.selectAll("g").filter(".action").each(function(d){
 			if(checkExist(rule_list[d.id])){
 				return;
-			}else rule_list[d.id]=genAction(d);
+			}else genAction(d,rule_list,binder_count);
 		});
 		//var
 		var initial_val="";
 		var observer="";
-		
 		//init
 		var quantities="";
 		var tkey=Object.keys(ag_name_var_l);
@@ -1544,7 +1543,23 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+=quantities;
 		console.log(kappa_code);
 	}
-	var genAction = function(d){
+	var genAction(node,rule_list,b_count){
+		var l_side_els=[];
+		var r_side_els=[];
+		var context_els=[];
+		var l_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="left" && d1.father==d.id});//getting left and right edges link to the action.
+		if(!l_bind.empty()) left_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==l_bind.datum().id || d1.targetID==l_bind.datum().id}).data();
+		var r_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="right" && d1.father==d.id});
+		if(!r_bind.empty()) right_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==r_bind.datum().id || d1.targetID==r_bind.datum().id}).data();
+		for(var c=0;c<d.context.length;c++){
+			var nop=false;
+			if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
+				nop=true;
+				l_ct.push({el:d.context[c],st:0,v:null});
+			}if(){}
+			
+	}
+	/*var genAction = function(d){
 		var l_ct=[];
 		var r_ct=[];
 		var left_side=null;
@@ -1621,7 +1636,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	var genBPatern = function(elt,context,side){
 		return elt;
-	}
+	}*/
 };
 
 //example
