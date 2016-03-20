@@ -37,15 +37,12 @@ function jSonFormatter(gGraph){
 			}
 			jsToLGraph();
 			gGraph.wakeUp(false);
-			console.log(json);
-			console.log(refNode);
 		});	
 	};
 	var jsToLGraph = function(){//translate json to graph
 		force=false;
 		if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
-			force=true; //oldCast();
-		//console.log(json);
+			force=true;
 		var keys = Object.keys(json);
 		for(var i=0;i<keys.length;i++){
 			if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
@@ -133,11 +130,8 @@ function jSonFormatter(gGraph){
 		if(d.label!=null && d.label.length>0)names=d.label.join("\",\"");
 		else names=d.id;
 		var b_left,b_right;
-		console.log(d);
 		for(var i=0;i<d.sons.length;i++){
 			if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[0]=="action"){
-				console.log(d.sons[i]);
-				console.log(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes);
 				if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[2]=="left")
 					b_left=gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]];
 				if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[2]=="right")
@@ -230,13 +224,10 @@ function jSonFormatter(gGraph){
 	var genNode_Rec = function(js_node,js_class){
 		var existing_node=gGraph.findByName(js_node.labels,js_node.classes,js_node.father_classes,js_node.path);
 		gGraph.addNode(js_node.classes,js_node.labels,[],js_node.x,js_node.y);
-		console.log(gGraph.getLG().nodesHash);
 		var node_id=gGraph.lastNode();
 		if (existing_node!=null){
 			gGraph.mergeNode(node_id,existing_node.id);
 			node_id=existing_node.id;
-			console.log("node finded");
-			console.log(existing_node);
 		}
 		if(typeof(refNode[js_class])=="undefined" || refNode[js_class]==null)
 			refNode[js_class]=[];
@@ -260,7 +251,6 @@ function jSonFormatter(gGraph){
 	var genAction = function(js_node){
 		var js_class="actions";
 		gGraph.addNode(js_node.classes,js_node.labels,[],js_node.x,js_node.y);
-		console.log(gGraph.getLG().nodesHash);
 		var node_id=gGraph.lastNode();
 		var l_bind_id;
 		var r_bind_id;
@@ -365,12 +355,7 @@ function jSonFormatter(gGraph){
 		}if(endclass[0]=="region" && pre_endclass[0]=="agent"){
 			if(path_size==1) return ["agent"];
 		}if(endclass[0]=="agent" || endclass[0]=="action" || path_size==0) return null;
-		console.log("unable to find a class");
-		console.log(total_p_s);
-		console.log(path_size);
-		console.log(endclass);
-		console.log(pre_endclass);
-		
+		console.log("unable to find a class");		
 		return null;	
 	};
 
