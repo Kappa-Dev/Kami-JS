@@ -23,19 +23,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
 	var modified=true;
 	this.findByName = function findByName(label,cls,fcls,path){//find a node by its name+path+class+father class
-		console.log("looking for");
-		console.log(label);
-		console.log(cls);
-		console.log(fcls);
-		console.log(path);
 		var cl_ok=false,lb_ok=false,p_ok=true;
 		for(var i=0;i<layerG.nodes.length;i++){
 			var tmp_node=layerG.nodes[i];
-			console.log("tested node");
-			console.log(tmp_node.label);
-			console.log(tmp_node.classes);
-			if(fcls!=null && fcls.length!=0 && tmp_node.father!=null && typeof(layerG.nodesHash[tmp_node.father])!="undefined" && layerG.nodesHash[tmp_node.father]!=null)
-				console.log(layerG.nodes[layerG.nodesHash[tmp_node.father]].classes);
 			cl_ok=(tmp_node.classes.join(",")==cls.join(",")) && (fcls==null || fcls.length==0 || (tmp_node.father!=null && typeof(layerG.nodesHash[tmp_node.father])!="undefined" && layerG.nodesHash[tmp_node.father]!=null && layerG.nodes[layerG.nodesHash[tmp_node.father]].classes.join(",")==fcls.join(",")));
 			if(cl_ok) {
 				for(var j=0;j<label.length;j++)
@@ -64,8 +54,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.getLG = function getLG(){//return a pointer to the current layered graph warning : modifying the lg can result in incoherences
 		return layerG;
 	}
-	this.wakeUp = function wakeUp(){//speed up tick function
+	this.wakeUp = function wakeUp(val){//speed up tick function
 		dynG.getForce().start();
+		if(!(typeof(val)!="undefined" && val!=null && !val))
 			d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
 		for(var i=0;i<300;i++){
 			dynG.getForce().tick();
@@ -433,12 +424,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			return;
 		}
 		fun=rewriter.pop();
-		//console.log(fun);
 		fun.f.apply(fun.o,fun.p);
 		if(fun.f == layerG.addLabel){
-			console.log("add label stacked");
-			console.log(d3.select(fun.p[0]));
-			console.log(d3.select(fun.p[0]).select("text"));
 			d3.select(fun.p[0]).select("text").text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
 		}
 		update();
@@ -480,7 +467,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kappa_view=false;
 				break;
 			case "kr_view":
-				//console.log(modified);
 				if(!first_init){
 					rewriter=nuggS;
 					layerG=nuggG;
@@ -524,7 +510,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					drag=nuggDrag;
 					svg.selectAll("*").remove();
 					update();
-					//console.log("here'");
 					modified=false;
 				}
 				break;
@@ -549,7 +534,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				break;
 			case "lcg_view":
 				var selected_l=[];
-				console.log(svg.selectAll("g").filter(".selected").filter(".action"));
 				svg.selectAll("g").filter(".selected").filter(".action").each(function(d){selected_l.push(d.id)});
 				if(selected_l==null || selected_l.length==0){
 					alert("Select at least one action");
@@ -631,7 +615,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								.html(div_ct);
 			}	
 		}
-		//console.log(d);
 		var divs_ct="<h5><b><center>class: "+d.classes.join("/")+"</center></b></h5>";
 		d3.select(".s_tooltip").style("visibility","visible")
 								.html(divs_ct);
@@ -776,7 +759,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						self.removeNodeR(d.id);
 				}
 			});
-		}if(edition){
+		}if(edition || lcg_view){
 			var tmp_select = d3.selectAll("g.selected").filter(function(d){
 														for(var i=0;i<d.classes.length;i++){
 															if(!evt_trg.classed(d.classes[i]))
@@ -875,7 +858,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
 												}
 												self.addCtx(d.father,[d2.id],tmp_obj);
-												//console.log(binder_id);
 												self.addEdge(d.id,d2.id);
 												d3.select(this.parentNode.parentNode).remove();
 												el.classed("hilighted",false);
@@ -1038,7 +1020,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
 															}
 															self.addCtx(d.id,[d2.id],tmp_obj);
-															//console.log(binder_id);
 															self.addEdge(binder_id,d2.id);
 															d3.select(this.parentNode.parentNode).remove();
 															el.classed("hilighted",false);
@@ -1147,11 +1128,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								return fd.source.classes[0]=="action" && fd.source.father!=null && fd.source.father==d.id;
 							else return false;
 						});
-						//console.log(from_to);
 						if(from_to.empty())
 							self.rmCtx(d.id,[d2.id]);
 						else
-							console.log("can't remove a linked element from the context")
+							console.log("can't remove a linked element from the context");
 					});
 					selected.classed("selected",function(d){return d.selected=false;});
 				}
@@ -1322,7 +1302,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(d3.event.ctrlKey){
 			d3.select(this).classed("fixed", d.fixed = false);
 		}
-		if(d3.event.shiftKey && (edition || nugget_add || kr_show)){
+		if(d3.event.shiftKey && (edition || nugget_add || kr_show || lcg_view)){
 			if(d3.select(this).classed("selected"))
 				d3.select(this).classed("selected", d.selected = false);
 			else 
@@ -1370,12 +1350,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var lcgConvert = function(id_list){
 		var convert_table={};
-		console.log(id_list);
+		id_list.sort(function(a,b){ if(nuggG.nodes[nuggG.nodesHash[a]].classes[0]=="bnd") return 1; else return -1});
 		for(var i=0;i<id_list.length;i++){//for eache action
 			var tmp_node=nuggG.nodes[nuggG.nodesHash[id_list[i]]];//add the action in the LCG
 			addLcgAction(tmp_node,convert_table);
 		}
-		layerG.log();
 	};
 	var addLcgAction = function(tmp_node,convert_table){
 		var possible_target=[tmp_node.id];//possible target for edges
@@ -1407,16 +1386,20 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(tmp_ctx.classes[0]=="agent"){
 					if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null){
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[],tmp_ctx.x,tmp_ctx.y);
-						convert_table[tmp_ctx.id]=self.lastNode();
+						convert_table[tmp_ctx.id]=[self.lastNode()];
 					}
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
-							self.addNode(["region"],tmp_ctx.label.concat(["_reg"]),[convert_table[tmp_ctx.id]]);
-							self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
-							if(act_links[l].sourceID==tmp_ctx.id)
-								self.addEdge(self.lastNode(),convert_table[act_links[l].targetID]);
-							else
-								self.addEdge(self.lastNode(),convert_table[act_links[l].sourceID]);
+							if(convert_table[tmp_ctx.id].length==1 || tmp_node.classes[1]=="bnd"){
+								self.addNode(["key_res"],[],[convert_table[tmp_ctx.id][0]]);
+								convert_table[tmp_ctx.id].push(self.lastNode());
+							}for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
+								self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+								if(act_links[l].sourceID==tmp_ctx.id)
+									self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
+								else
+									self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
+							}
 						}
 					}	
 				}
@@ -1426,12 +1409,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						if(typeof(convert_table[tmp_agent_root.id])=="undefined" || convert_table[tmp_agent_root.id]==null){
 							self.addNode(tmp_agent_root.classes.concat(),tmp_agent_root.label.concat(),[],tmp_agent_root.x,tmp_agent_root.y);
 							convert_table[tmp_agent_root.id]=self.lastNode();
-						}self.addNode(["key_res"],tmp_agent_root.label.concat(["_keyr"]),[convert_table[tmp_agent_root.id]]);
+						}self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id]]);
 						var tmp_kr=self.lastNode();
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[tmp_kr]);
 						convert_table[tmp_ctx.id]=self.lastNode();
-						self.addCtx(convert_table[tmp_ctx.id],tmp_ctx.context.concat(),null);
-						
+						self.addCtx(convert_table[tmp_ctx.id],tmp_ctx.context.concat(),null);		
 					}
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
@@ -1453,21 +1435,33 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					var tmp_agent_root=getRoot(tmp_ctx,nuggG);
 					if(typeof(convert_table[tmp_agent_root.id])=="undefined" || convert_table[tmp_agent_root.id]==null){
 							self.addNode(tmp_agent_root.classes.concat(),tmp_agent_root.label.concat(),[],tmp_agent_root.x,tmp_agent_root.y);
-							convert_table[tmp_agent_root.id]=self.lastNode();
+							convert_table[tmp_agent_root.id]=[self.lastNode()];
 					}
-					var checkedRegion=[];
+					var checkedRegion=[];						
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
-							
-							if(checkedRegion.indexOf(tmp_ctx.id)==-1){
-								self.addNode(["region"],tmp_ctx.label.concat(["_reg"]),[convert_table[tmp_agent_root.id]]);
-								self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
-								checkedRegion.push(tmp_ctx.id);
+							if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null || tmp_node.classes[1]=="bnd"){
+								if(convert_table[tmp_ctx.id]=="undefined" || convert_table[tmp_ctx.id]==null) convert_table[tmp_ctx.id]=[];
+								if(checkedRegion.indexOf(tmp_ctx.id)==-1){
+									self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id]]);
+									convert_table[tmp_ctx.id].push(self.lastNode());
+									self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
+									checkedRegion.push(tmp_ctx.id);
+								}
+								if(act_links[l].sourceID==tmp_ctx.id)
+									self.addEdge(self.lastNode(),convert_table[act_links[l].targetID]);
+								else
+									self.addEdge(self.lastNode(),convert_table[act_links[l].sourceID]);
 							}
-							if(act_links[l].sourceID==tmp_ctx.id)
-								self.addEdge(self.lastNode(),convert_table[act_links[l].targetID]);
-							else
-								self.addEdge(self.lastNode(),convert_table[act_links[l].sourceID]);
+							else if(tmp_node.classes[1]!="bnd" ){
+								for(var i=0;i<convert_table[tmp_ctx.id].length;i++){
+									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+									if(act_links[l].sourceID==tmp_ctx.id)
+										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
+									else
+										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
+								}
+							}	
 						}
 					}	
 				}

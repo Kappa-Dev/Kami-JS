@@ -8,7 +8,7 @@ function jSonFormatter(gGraph){
 	var gGraph=gGraph;
 	var force=false;
 	var refNode={};
-	//var count=-1;
+	var count=0;
 	var sublist = function(list,start,end){//return a new list containing the value from start to end(excluded)
 		var ret=[];
 		if(start==null) start =0;
@@ -36,7 +36,7 @@ function jSonFormatter(gGraph){
 				edges:graph.edges
 			}
 			jsToLGraph();
-			gGraph.wakeUp();
+			gGraph.wakeUp(false);
 			console.log(json);
 			console.log(refNode);
 		});	
@@ -59,7 +59,174 @@ function jSonFormatter(gGraph){
 			}
 		}
 	};
-		//console.log(js_edges);
+	this.outputJs = function outputJs(){
+		var ret=graphToJs();
+		var url = 'data:text/json;charset=utf8,' + encodeURIComponent(ret);
+		window.open(url, '_blank');
+		window.focus();
+    };
+	var graphToJs = function(){
+		var output="";
+		var agents={};
+		var regions={};
+		var key_rs={};
+		var attributes={};
+		var flags={};
+		var actions={};
+		output+="{\"version\":2.0,\n \"agents\":[\n";
+		var i=0;
+		d3.selectAll("g").filter(".agent").each(function(d){
+			output+=toText(d);
+			agents[d.id]=i++;
+		});
+		if(i>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="],\n \"regions\":[\n";
+		i=0;
+		d3.selectAll("g").filter(".region").each(function(d){
+			output+=toText(d);
+			regions[d.id]=i++;
+		});
+		if(i>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="],\n \"key_rs\":[\n";
+		i=0;
+		d3.selectAll("g").filter(".key_res").each(function(d){
+			output+=toText(d);
+			key_rs[d.id]=i++;
+		});
+		if(i>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="],\n \"attributes\":[\n";
+		i=0;
+		d3.selectAll("g").filter(".attribute").each(function(d){
+			output+=toText(d);
+			attributes[d.id]=i++;
+		});
+		if(i>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="],\n \"flags\":[\n";
+		i=0;
+		d3.selectAll("g").filter(".flag").each(function(d){
+			output+=toText(d);
+			flags[d.id]=i++;
+		});
+		if(i>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="],\n \"actions\":[\n";
+		count=0;
+		d3.selectAll("g").filter(".action").each(function(d){
+			if(typeof(actions[d.id])=='undefined'){
+				output+=toTextAct(d,agents,regions,key_rs,attributes,flags,actions,"");
+			}
+		});
+		if(count>0)
+		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
+		output+="]\n}";
+		return output;
+	}
+	var toTextAct = function(d,a,r,k,att,f,act,out){
+		var names="";
+		var left="";
+		var right="";
+		var ctx="";
+		if(d.label!=null && d.label.length>0)names=d.label.join("\",\"");
+		else names=d.id;
+		var b_left,b_right;
+		console.log(d);
+		for(var i=0;i<d.sons.length;i++){
+			if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[0]=="action"){
+				console.log(d.sons[i]);
+				console.log(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes);
+				if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[2]=="left")
+					b_left=gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]];
+				if(gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]].classes[2]=="right")
+					b_right=gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.sons[i]]];
+			}	
+		}var l_left,l_right,l_ctx;
+		l_left=[];
+		if(typeof(b_left)!="undefined" && b_left!=null)
+			d3.selectAll(".links").filter(function(d){return d.sourceID==b_left.id || d.targetID==b_left.id}).each(function(d){if(d.sourceID==b_left.id) l_left.push(d.targetID); else l_left.push(d.sourceID);});
+		l_right=[];
+		d3.selectAll(".links").filter(function(d){return d.sourceID==b_right.id || d.targetID==b_right.id}).each(function(d){if(d.sourceID==b_right.id) l_right.push(d.targetID); else l_right.push(d.sourceID);});
+		l_ctx=[];
+		for(var i=0;i<d.context.length;i++){
+			if(l_left.indexOf(d.context[i])==-1 && l_right.indexOf(d.context[i])==-1)
+				l_ctx.push(d.context[i]);
+		}
+		left+=strConvert(l_left,d,a,r,k,att,f,act,out);	
+		right+=strConvert(l_right,d,a,r,k,att,f,act,out);
+		ctx+=strConvert(l_ctx,d,a,r,k,att,f,act,out);
+		act[d.id]=count++;
+		return out+"{\"classes\":[\""+d.classes.join("\",\"")+"\"],\"labels\":[\""+names+"\"],\n\"left\":["+left+"],\n\"right\":["+right+"],\n\"context\":["+ctx+"],\n\"x\":"+d.px+",\"y\":"+d.py+"},\n";
+	}
+	var strConvert = function (l_left,d,a,r,k,att,f,act,out){
+		var left="";
+		for(var i=0;i<l_left.length;i++){
+			var tmp_node=gGraph.getLG().nodes[gGraph.getLG().nodesHash[l_left[i]]];
+			if(tmp_node.classes[0]=="action" && typeof(act[tmp_node.id])=="undefined"){
+				var tmp=toTextact(tmp_node,a,r,k,att,f,act,out);
+				out+=tmp;
+			}	
+			var tmp_cl;
+			var tmp_pos;
+			var val="";
+			switch(tmp_node.classes[0]){
+				case "agent":
+				tmp_cl="agents";
+				tmp_pos=a[tmp_node.id];
+				break;
+				case "region":
+				tmp_cl="regions";
+				tmp_pos=r[tmp_node.id];
+				break;
+				case "key_res":
+				tmp_cl="key_rs";
+				tmp_pos=k[tmp_node.id];
+				break;
+				case "attribute":
+				tmp_cl="attributes";
+				tmp_pos=att[tmp_node.id];
+				break;
+				case "flag":
+				tmp_cl="flags";
+				tmp_pos=f[tmp_node.id];
+				break;
+				case "action":
+				tmp_cl="actions";
+				tmp_pos=act[tmp_node.id];
+				break;	
+			}
+			if(d.valued_context!=null && checkExist(d.valued_context[tmp_node.id])){
+				val+=",\"values\":[\""+d.valued_context[tmp_node.id].join("\",\"")+"\"]";
+			}
+			left+="{\"ref\":[\""+tmp_cl+"\","+tmp_pos+"]"+val+"}";
+			if(i<l_left.length-1)left+=",";
+		}
+		return left;
+	}
+	
+	
+	var toText = function(d){
+		var names="";
+		var fclass="";
+		var path="";
+		var values="";
+		if(d.label!=null && d.label.length>0)names=d.label.join("\",\"");
+		else names=d.id;
+		if(d.father!=null) fclass+="\""+gGraph.getLG().nodes[gGraph.getLG().nodesHash[d.father]].classes.join("\",\"")+"\"";
+		var id_path=gGraph.getLG().getPath(d.id);
+		for(var j=id_path.length-1;j>=0;j--){
+			var fathern=gGraph.getLG().nodes[gGraph.getLG().nodesHash[id_path[j]]];
+			var name="";
+			if(fathern.label!=null && fathern.label.length>0)name=fathern.label[0];
+			else name=fathern.id;
+			path+="\""+name+"\"";
+			if(j>0) path+=",";
+		}
+		if(d.context!=null && d.context.length>0) values+="\""+d.context.join("\",\"")+"\"";
+		return "{\"classes\":[\""+d.classes.join("\",\"")+"\"],\"father_classes\":["+fclass+"],\"path\":["+path+"],\"labels\":[\""+names+"\"],\"values\":["+values+"],\"x\":"+d.px+",\"y\":"+d.py+"},\n";
+	};
 	var genNode_Rec = function(js_node,js_class){
 		var existing_node=gGraph.findByName(js_node.labels,js_node.classes,js_node.father_classes,js_node.path);
 		gGraph.addNode(js_node.classes,js_node.labels,[],js_node.x,js_node.y);
