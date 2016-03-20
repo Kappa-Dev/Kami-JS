@@ -14,6 +14,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var dynG;//the force layout graph for this graphical graph
 	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link and binders
 	var node_count=0;
+	var binder_count=0;
 	var first_init;
 	var nugget_add,edition,kr_show,lcg_view,kappa_view;//edition mod
 	var ctx_mode=false;
@@ -1348,7 +1349,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
                             }
                         });
 	};
-	var lcgConvert = function(id_list){
+	var lcgConvert = function(id_list){//convert a list of action into a LCG
 		var convert_table={};
 		id_list.sort(function(a,b){ if(nuggG.nodes[nuggG.nodesHash[a]].classes[0]=="bnd") return 1; else return -1});
 		for(var i=0;i<id_list.length;i++){//for eache action
@@ -1356,7 +1357,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			addLcgAction(tmp_node,convert_table);
 		}
 	};
-	var addLcgAction = function(tmp_node,convert_table){
+	var addLcgAction = function(tmp_node,convert_table){//for a specific action, add all the needed node in the LCG
 		var possible_target=[tmp_node.id];//possible target for edges
 		if(typeof(convert_table[tmp_node.id])=="undefined" || convert_table[tmp_node.id]==null){
 			self.addNode(tmp_node.classes.concat(),tmp_node.label.concat(),[],tmp_node.x,tmp_node.y);
@@ -1468,19 +1469,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			}
 		}	
 	}
-	var getRoot = function(node,lg){
+	var getRoot = function(node,lg){//get the root node of a slecific node "node" in a specific grap "lg"
 		var tmp_node=node;
 		while(tmp_node.father!=null){
 			tmp_node=lg.nodes[lg.nodesHash[tmp_node.father]];
 		}
 		return tmp_node;
 	}
-	var checkExist = function(tab){
+	var checkExist = function(tab){//chech if a tab exist, is not null and not empty
 		return typeof(tab)!='undefined' && tab!=null && tab.length>0;
 	};
-	var kappaConvert = function(){
+	var kappaConvert = function(){//convert a site graph to Kappa.
 		binder_count=1;
 		console.log("converting to Kappa");
+		/*************************** adding agent signature *******************/
+		// notice that formal name of a node is : id _ label list if any, separeted by _
 		var kappa_code="#### Signatures\n\n";
 		var ag_name_var_l={};
 		svg.selectAll("g").filter(".agent").each(function(d){
@@ -1514,18 +1517,19 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			ag_def+=")\n";
 			kappa_code+=ag_def;
 		});
-		//rules
+		/************************************************************/
+		/*************************** adding rules *******************/
 		var rule_list={};
 		svg.selectAll("g").filter(".action").each(function(d){
-			genAction(d,rule_list,1);
+			genAction(d,rule_list);
 		});
 		kappa_code+="#### rules\n\n";
-		/*var r_key=Object.keys(rule_list);
+		var r_key=Object.keys(rule_list);
 		for(var i=0;i<r_key.length;i++){
 			for(var j=0;j<rule_list[r_key[i]].length;j++){
-				kappa_code+="#"+r_key[i]+""+j+"\n"+rToKappa(rule_list[r_key[i]][j])+"\n";
+				kappa_code+="#"+r_key[i]+":"+layerG.nodes[layerG.nodesHash[r_key[i]]].label.join(",")+"_"+j+"\n"+rule_list[r_key[i]][j].txt+"\n";
 			}
-		}*/
+		}
 		//var
 		var initial_val="";
 		var observer="";
@@ -1544,117 +1548,265 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+="#### Initial conditions\n";
 		kappa_code+=quantities;
 		console.log(kappa_code);
+		var url = 'data:text;charset=utf8,' + encodeURIComponent(kappa_code);
+		window.open(url, '_blank');
+		window.focus();
+		
 	}
-	var genAction = function(node,rule_list,b_count){
+	var genAction = function(node,rule_list){// generate a liste of rule from an action
 		if(checkExist(rule_list[node.id])) return;
 		var splitted_ctx=splitCtx(node);
 		var cannonical_action=[];
 		var rules=[];
-		console.log("action");
-		console.log(node);
-		if(splitted_ctx.left.length==0){
+		//console.log("action");
+		//console.log(node);
+		if(splitted_ctx.left.length==0){//create a new rule for each combination of right node of the action
 			for(var j=0;j<splitted_ctx.right.length;j++){
-				if(splitted_ctx.right[j].v!=null){
-					if(splitted_ctx.right[j].v.length==0)
-						cannonical_action.push({left:null,right:{e:splitted_ctx.right[j].e,v:null},ctx:splitted_ctx.ctx});
-						else{
-							for(var k=0;k<splitted_ctx.right[j].v.length;k++)
-								cannonical_action.push({left:null,right:{e:splitted_ctx.right[j].e,v:splitted_ctx.right[j].v[k]},ctx:splitted_ctx.ctx});
-						}
-					}
-					else
-						cannonical_action.push({left:null,right:splitted_ctx.right[j],ctx:splitted_ctx.ctx});
+				if(splitted_ctx.right[j].v!=null && splitted_ctx.right[j].v.length>0 ){
+					for(var k=0;k<splitted_ctx.right[j].v.length;k++)
+						cannonical_action.push({left:null,right:{e:splitted_ctx.right[j].e,v:splitted_ctx.right[j].v[k]},ctx:splitted_ctx.ctx});
+				}
+				else
+					cannonical_action.push({left:null,right:{e:splitted_ctx.right[j].e,v:null},ctx:splitted_ctx.ctx});
 			}
 		}
-		else{
+		else{//create a new rule for each combination of left and right node of the action !!!!!!!!!!!! notice that a left context never has Value !
 			for(var i=0;i<splitted_ctx.left.length;i++){//split action in atomic version
 				for(var j=0;j<splitted_ctx.right.length;j++){
-					if(splitted_ctx.right[j].v!=null){
-						if(splitted_ctx.right[j].v.length==0)
-							cannonical_action.push({left:splitted_ctx.left[i],right:{e:splitted_ctx.right[j].e,v:null},ctx:splitted_ctx.ctx});
-						else{
-							for(var k=0;k<splitted_ctx.right[j].v.length;k++)
-								cannonical_action.push({left:splitted_ctx.left[i],right:{e:splitted_ctx.right[j].e,v:splitted_ctx.right[j].v[k]},ctx:splitted_ctx.ctx});
-						}
+					if(splitted_ctx.right[j].v!=null && splitted_ctx.right[j].v.length>0){
+						for(var k=0;k<splitted_ctx.right[j].v.length;k++)
+							cannonical_action.push({left:{e:splitted_ctx.left[i].e,v:null},right:{e:splitted_ctx.right[j].e,v:splitted_ctx.right[j].v[k]},ctx:splitted_ctx.ctx});
 					}
 					else
-						cannonical_action.push({left:splitted_ctx.left[i],right:splitted_ctx.right[j],ctx:splitted_ctx.ctx});
+						cannonical_action.push({left:{e:splitted_ctx.left[i].e,v:null},right:{e:splitted_ctx.right[j].e,v:null},ctx:splitted_ctx.ctx});
 				}
 			}
 		}
+//now there is a rule for each couple of left/right side branch
+		//we need to split cannonical_action ctx over each variation !
 		var new_cannonical=[];
-		for(var i=0;i<cannonical_action.length;i++){
-			var expd_ctx=[];
-			for(var j=0;j<cannonical_action[i].ctx.length;j++){
-				if(checkExist(cannonical_action[i].ctx[j].v)){
-					var tmpexpd=[];
-					for(var l=0;l<expd_ctx.length;l++){
-						for(var k=0;k<cannonical_action[i].ctx[j].v.length;k++)
-							tmpexpd.push(expd_ctx[l].push({e:cannonical_action[i].ctx[j].e,v:cannonical_action[i].ctx[j].v[k]}));
-					}
-					expd_ctx=tmpexpd;
-					if(expd_ctx.length==0){
-						for(var k=0;k<cannonical_action[i].ctx[j].v.length;k++)
-							expd_ctx.push([{e:cannonical_action[i].ctx[j].e,v:cannonical_action[i].ctx[j].v[k]}]);
-					}
-				}else{
-					for(var l=0;l<expd_ctx.length;l++){
-						expd_ctx[l].push({e:cannonical_action[i].ctx[j].e,v:null});
-					}
-					if(expd_ctx.length==0){
-						expd_ctx.push([{e:cannonical_action[i].ctx[j].e,v:null}]);
+		for(var i=0;i<cannonical_action.length;i++){//for each cannonical action
+			if(cannonical_action[i].ctx!=null && cannonical_action[i].ctx.length>0){//if this action have a context
+				var multi_ctx=[{left:cannonical_action[i].left,right:cannonical_action[i].right,ctx:cannonical_action[i].ctx.concat()}];//create at least one copy of this action
+				for(var j=0;j<cannonical_action[i].ctx.length;j++){//parcous the action context to find elements with multiples values
+					if(cannonical_action[i].ctx[j].v!=null && cannonical_action[i].ctx[j].v.length>0){//if multiples values or at least one.
+						var tmp_mult_ctx=[];//create an accumulator for the future actions
+						for(var k=0;k<cannonical_action[i].ctx[j].v.length;k++){//for each value of this context
+							var multiply=[];//create a copy of the multi_ctx
+							for(var l=0;l<multi_ctx.length;l++){
+								var cp_ctx=[];
+								for(var tg=0;tg<multi_ctx[l].ctx.length;tg++){
+									if(Array.isArray(multi_ctx[l].ctx[tg].v))
+										cp_ctx.push({e:multi_ctx[l].ctx[tg].e,v:multi_ctx[l].ctx[tg].v.concat()});
+									else
+										cp_ctx.push({e:multi_ctx[l].ctx[tg].e,v:multi_ctx[l].ctx[tg].v});
+								}
+								multiply.push({left:multi_ctx[l].left,right:multi_ctx[l].right,ctx:cp_ctx});
+							}
+							for(var mc=0;mc<multiply.length;mc++){
+								multiply[mc].ctx[j].v=cannonical_action[i].ctx[j].v[k];
+								tmp_mult_ctx.push(multiply[mc]);
+							}
+						}
+						multi_ctx=tmp_mult_ctx;
 					}
 				}
+				for(var j=0;j<multi_ctx.length;j++)
+					new_cannonical.push(multi_ctx[j]);
 			}
-			for(var j=0;j<expd_ctx.length;j++){
-				new_cannonical.push({left:cannonical_action[i].left,right:cannonical_action[i].right,ctx:expd_ctx[j]});
-			}
+			else new_cannonical.push(cannonical_action[i]);	
 		}
-		//cannonical_action=new_cannonical;
-		console.log("canonical");
-		console.log(new_cannonical);
-		console.log(cannonical_action);
+		cannonical_action=new_cannonical;//the new canonical action is the atomic version of each action !		
+		// translation into a correct rule format !
+		rule_list[node.id]=[];
 		for(var i=0;i<cannonical_action.length;i++){
-			var non_ctx_rule=ruleOf(node.classes,cannonical_action[i].left,cannonical_action[i].right,b_count++);
-			non_ctx_rule=rootConvert(non_ctx_rule);
-			var right_ctx=convertForCtx(non_ctx_rule,node.classes);
-			var rules=ruleWCtx(non_ctx_rule,cannonical_action[i].ctx,rule_list);
-			console.log(non_ctx_rule.l);
-			console.log("->");
-			console.log(non_ctx_rule.r);
-			/*for(var j=0;j<rules.length;j++)
-				rule_list[node.id].push({r:rules[j],cx:right_ctx});*/
-		}		
-	}
-	var ruleWCtx = function(rule,ctx,rule_list){
-		//addCtx(rule.l,ctx,rule_list);
-	}
-	var convertForCtx = function(rule,a_class){
-		switch(a_class[1]){
-			case "bnd":
-				return [{a:rule.r[0].a,s:rule.r[0].s,v:null,st:rule.r[1].s}];
-			case "brk":
-			case "syn":
-			case "deg":
-			case "mod":
-				return rule.r
+			//console.log(node);
+			//console.log(cannonical_action[i]);
+			to_rule(cannonical_action[i],node,rule_list);
+			//console.log(rule_list);
+			//console.log(tmp_rules);
+			//rule_list[node.id].push(tmp_rules);
 		}
 	}
-	var rootConvert = function(rule){
-		var new_l=[];
-		var new_r=[];
-		for(var i=0;i<rule.l.length;i++){
-			new_l.push({a:getRoot(layerG.nodes[layerG.nodesHash[rule.l[i].e]],layerG).id,s:rule.l[i].e,v:rule.l[i].v,st:rule.l[i].s});
-		}for(var i=0;i<rule.r.length;i++){
-			new_r.push({a:getRoot(layerG.nodes[layerG.nodesHash[rule.r[i].e]],layerG).id,s:rule.r[i].e,v:rule.r[i].v,st:rule.r[i].s});
-		}return {l:new_l,r:new_r};
+	
+	var to_rule = function(c_act,node,rule_list){
+		//var ret={txt:"",right:null};
+		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
+		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
+		console.log("das rule");
+		console.log(s_rule);
+		var tmp_ctx=[];//transformed context
+		for(var i=0;i<c_act.ctx.length;i++){//for each element
+			if(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[1]!="binder"){
+				if(!checkExist(rule_list[c_act.ctx[i].e])){
+					 genAction(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]],rule_list);
+				}
+				var accu=[];//context accumulator
+				for(var k=0;k<rule_list[c_act.ctx[i].e].length;k++){//pour chaque regle de l'action, créé une variation du context
+					//console.log("rule of action")
+						//console.log(rule_list[c_act.ctx[i].e]);
+					var expl_ctx=[];
+					if(tmp_ctx.length==0){
+						var tmp_clone=[];
+						for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
+							tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
+						}
+						expl_ctx.push(tmp_clone);
+					}else{
+					for(var j=0;j<tmp_ctx.length;j++){
+						var tmp_clone=cloneEl_l(tmp_ctx[j]);
+						for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
+							tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
+						}
+						expl_ctx.push(tmp_clone);
+					}
+					}//create a copy of the context with the content of the right member of the action
+					for(var j=0;j<expl_ctx.length;j++){
+						accu.push(expl_ctx[j]);
+					}
+				}
+				tmp_ctx=accu;
+			}
+			else{//sinon ajoute cette variable à tous les contextes
+				if(tmp_ctx.length==0)tmp_ctx.push([]);//pour le premier element du context : lui donne une liste vide
+				for(var j=0;j<tmp_ctx.length;j++)
+					tmp_ctx[j].push(shrinkEl(c_act.ctx[i]));
+			}
+		}
+		console.log("the context");
+		console.log(tmp_ctx);
+		//here the context is demultiplied with all the possible variation due to action in context
+		if(!checkExist(rule_list[node.id]))
+			rule_list[node.id]=[];
+		if(tmp_ctx.length>0){
+			for(var i=0;i<tmp_ctx.length;i++){//for each posible context : create a version of rule
+				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:s_rule.r});
+			}
+		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:s_rule.r});
+		console.log("final rule");
+		console.log(rule_list[node.id]);		
 	}
-	var ruleOf = function(n_class,left,right,bc){
+	var rToText = function(node,rule,ctx){
+		var ret="";
+		ret+=sToText(node,rule.l,ctx);
+		ret+=" -> ";
+		ret+=sToText(node,rule.r,ctx);
+		var rate="";
+		for(var i=0;i<node.sons.length;i++){
+			if(layerG.nodes[layerG.nodesHash[node.sons[i]]].classes[0]=="attribute" && layerG.nodes[layerG.nodesHash[node.sons[i]]].label[0]=="rate")
+				rate=layerG.nodes[layerG.nodesHash[node.sons[i]]].context[0];
+		}
+		if(rate=="") rate=prompt("please define the rate for action "+node.id+":"+node.label.join(","),"1");
+		ret+=" @ "+rate;
+		return ret;
+	}
+	var sToText = function(node,side,ctx){
+		var ret="";
+		var st=[];
+		for(var i=0;i<side.length;i++){//put agents
+			st.push({a:side[i].a,site:{}});
+		}
+		for(var j=0;j<st.length;j++){//for each agent
+			for(var i=0;i<side.length;i++){//find its sites
+				//console.log("begin2");
+				//console.log(st);
+				if(side[i].a==st[j].a){
+						//console.log("finded");
+						//console.log(side[i].e);
+						//console.log(st[j].site[side[i].e]);
+					if(typeof(st[j].site[side[i].e]) =="undefined" || st[j].site[side[i].e] == null)//if the site doesn't exist, create it
+						st[j].site[side[i].e]={v:[],s:null};
+						//console.log(st[j].site[side[i].e]);
+					if(typeof(side[i].v)!="undefined" && side[i].v!=null)//if this site has state, give him
+						st[j].site[side[i].e].v.push(side[i].v);
+					if(typeof(side[i].s)!="undefined" && side[i].s!=null)//if this site has binding, give him
+						st[j].site[side[i].e].s=side[i].s;
+				}
+			}
+		}
+		for(var i=0;i<ctx.length;i++){//find its sites
+			var exist=false;
+			for(var j=0;j<st.length;j++){//for each agent
+				if(ctx[i].a==st[j].a) exist=true;//verify if this agent exist
+			}
+			if(!exist){//if it doesn't exist, check if he is bind to one of the side
+				if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null){
+					for(var k=0;k<ctx.length;k++){
+						if(ctx[k].s == ctx[i].s){
+							for(var l=0;l<st.length;l++){
+								if(st[l].a==ctx[k].a){
+									st.push({a:side[i].a,site:{}});//in this case, add it to each occurence
+								}
+							}
+						}
+					}
+				}else{//if it is not a bind, ad it one time
+					st.push({a:side[i].a,site:{}});
+				}
+			}
+		}
+		for(var j=0;j<st.length;j++){//for each agent
+			for(var i=0;i<ctx.length;i++){//find its sites
+				if(ctx[i].a==st[j].a){
+					if(typeof(st[j].site[ctx[i].e]) == "undefined" || st[j].site[ctx[i].e] == null)//if the site doesn't exist, create it
+						st[j].site[ctx[i].e]={v:[],s:null};
+					if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
+						st[j].site[ctx[i].e].v.push(ctx[i].v);
+					if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
+						st[j].site[ctx[i].e].s=ctx[i].s;
+				}
+			}
+		}
+		for(var i=0;i<st.length;i++){
+			ret+=fullName(st[i].a)+"(";
+			var site_l=Object.keys(st[i].site);
+			for(var j=0;j<site_l.length;j++){
+				ret+=site_l[j];
+				if(st[i].site[site_l[j]].v.length>0){
+					ret+="~";
+					ret+=st[i].site[site_l[j]].v.join("~");
+				}if(st[i].site[site_l[j]].s!=null && st[i].site[site_l[j]].s>0){
+					ret+="!"+st[i].site[site_l[j]].s;
+				}
+				if(j<site_l.length-1) ret+=",";
+			}
+			ret+=")";
+			if(i<st.length-1) ret+=",";
+		}
+		return ret;
+	}
+	var fullName = function(id){
+		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
+		return tmp_node.id+"_"+tmp_node.label.join("_");
+	}
+	var cloneEl_l = function(el_l){
+		var ret=[];
+		for(var i=0;i<el_l.length;i++){
+			ret.push({e:el_l.e,v:el_l.v});
+		}
+		return ret;
+	}
+	var shrinkElList = function(el_list){
+		var list=[];
+		for(var i=0;i<el_list.length;i++){
+			list.push(shrinkEl(el_list[i]));
+		}return list;
+	}
+	var shrinkEl = function(el){
+		var tmp_node=layerG.nodes[layerG.nodesHash[el.e]];
+		var tmp_root=getRoot(tmp_node,layerG);
+		if(tmp_node.classes[0]=="flag" || tmp_node.classes[0]=="attribute"){
+			tmp_node=layerG.nodes[layerG.nodesHash[tmp_node.father]];
+		}
+		return{a:tmp_root.id,e:tmp_node.id,v:el.v,s:el.s};
+	}
+	var ruleOf = function(n_class,left,right){//translate a left/right handside action to a rule without context
 		switch(n_class[1]){
 			case "bnd":
-				return {l:[left,right],r:[{e:left.e,v:null,s:bc},{e:right.e,v:null,s:bc}]};
+				binder_count++;
+				return {l:[left,right],r:[{e:left.e,v:null,s:binder_count},{e:right.e,v:null,s:binder_count}]};
 			case "brk":
-				return {l:[{e:left.e,v:null,s:bc},{e:right.e,v:null,s:bc}],r:[left,right]};
+				return {l:[{e:left.e,v:null,s:binder_count},{e:right.e,v:null,s:binder_count}],r:[left,right]};
 			case "syn":
 				return {l:[],r:[right]};
 			case "deg":
@@ -1669,7 +1821,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					return {l:[right],r:[{e:right.e,v:el_values[v_idx-1]}]};
 		}
 	}
-	var splitCtx = function(d){//get an action, return a {left,right,ctx} object corresponding to the element branched to the action and the context
+	var splitCtx = function(d){//get an action, return a {left,right,ctx} object corresponding to the element branched to the action and the context left/right/ctx are list of elements {e,v,s} where e is the element id, v a list of its values and s its state
 		var left_side=null;
 		var right_side=null;
 		var ret={left:[],right:[],ctx:[]};
@@ -1683,7 +1835,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				for(var i=0;i<left_side.length;i++){
 					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
 						nop=true;
-						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]]))ret.left.push({e:d.context[c],v:d.valued_context[d.context[c]]});
+						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.left.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else ret.left.push({e:d.context[c],v:null});
 					}
 				}
