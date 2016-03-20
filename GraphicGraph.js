@@ -1548,7 +1548,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+="#### Initial conditions\n";
 		kappa_code+=quantities;
 		console.log(kappa_code);
-		var url = 'data:text;charset=utf8,' + encodeURIComponent(kappa_code);
+		var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
 		window.open(url, '_blank');
 		window.focus();
 		
