@@ -1686,7 +1686,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		console.log(rule_list[node.id]);		
 	}
 	var crush = function(r,node){
-		if(node.classes[1]=="bnd" && r[0].a==r[1].a){
+		if(node.classes[1]=="bnd" ){//
 			console.log("crushing");
 			r[0].s=fullName(r[1].e)+"."+fullName(r[1].a);
 			return [r[0]];
@@ -1726,8 +1726,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		/************************************/
 		for(var i=0;i<ctx.length;i++){//add inexistent element from context to the rule
 			var exist=false;
-			for(var j=0;j<st.length;j++)
-				exist= exist || st[j].a == ctx[i].a;
+			for(var j=0;j<st.length;j++){
+				var gmn=getBackMyName(ctx[i].s);
+				exist= exist || st[j].a == ctx[i].a || (gmn!=null && gmn[0]==st[j].a);
+				if(st[j].a != ctx[i].a && gmn!=null && gmn[0]==st[j].a){
+					var new_ct=fullName(ctx[i].e)+"."+fullName(ctx[i].a);
+					ctx[i].a=gmn[0];
+					ctx[i].e=gmn[1];
+					ctx[i].s=new_ct;
+				}
+			}
 			if(!exist){
 				var tmp_v =[];
 				var tmp_s=null;
@@ -1795,6 +1803,17 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			if(i<st.length-1) ret+=",";
 		}
 		return ret;
+	}
+	var getBackMyName = function(state){
+		if (state==null) return null;
+		var tab=state.split(".");
+		if(tab.length<2) return null;
+		var site_n=tab[0].split("_");
+		var ag_n=tab[1].split("_");
+		console.log("My name !");
+		console.log(state);
+		console.log([ag_n[0],site_n[0]]);
+		return [ag_n[0],site_n[0]];
 	}
 	var fullName = function(id){
 		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
@@ -1877,6 +1896,3 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	
 };
-
-//example
-//rules.push("#bnd_"+d.id+"_"+d.label.join("_")+"_"+i+""+j+"\n"+genBPatern(l_ct[i],context,"left")+","+genBPatern(r_ct[j],context,"left")+"->"+genBPatern(l_ct[i],context,"right")+","+genBPatern(r_ct[j],context,"right")+" @"+rate+"\n");
