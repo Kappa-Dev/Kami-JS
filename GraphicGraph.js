@@ -1761,7 +1761,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			ret+=fullName(st[i].a)+"(";
 			var site_l=Object.keys(st[i].site);
 			for(var j=0;j<site_l.length;j++){
-				ret+=site_l[j];
+				ret+=fullName(site_l[j]);
 				if(st[i].site[site_l[j]].v.length>0){
 					ret+="~";
 					ret+=st[i].site[site_l[j]].v.join("~");
