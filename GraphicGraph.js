@@ -1681,9 +1681,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var i=0;i<tmp_ctx.length;i++){//for each posible context : create a version of rule
 				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:s_rule.r});
 			}
-		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:s_rule.r});
+		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:crush(s_rule.r,node)});
 		console.log("final rule");
 		console.log(rule_list[node.id]);		
+	}
+	var crush = function(r,node){
+		if(node.classes[1]=="bnd"){
+			r[0].s=fullName(r[1].e)+"."+fullName(r[1].a);
+			return [r[0]];
+		}else return r;
 	}
 	var rToText = function(node,rule,ctx){
 		var ret="";
@@ -1715,41 +1721,52 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		/************************************/
 		/************************************/
-		for(var i=0;i<ctx.length;i++){//find its sites
+		for(var i=0;i<ctx.length;i++){//add inexistent element from context to the rule
+			var exist=false;
+			for(var j=0;j<st.length;j++)
+				exist= exist || st[j].a == ctx[i].a;
+			if(!exist){
+				var tmp_v =[];
+				var tmp_s=null;
+				if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
+					tmp_v.push(ctx[i].v);
+				if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
+					tmp_s=ctx[i].s;
+				var s_l={};
+				s_l[ctx[i].e]={s:tmp_s,v:tmp_v};
+				st.push({a:ctx[i].a,site:s_l});
+			}
+		}
+		for(var i=0;i<ctx.length;i++){
 			for(var j=0;j<st.length;j++){
-				if(typeof(st[j].site[ctx[i].e]) == 'undefined' && st[j].a==ctx[i].a){
-					st[j].site[ctx[i].e]={v:ctx[i].v,s:ctx[i].s};
-				}
-			}
-			var st_size=st.length;
-			var pos=[];
-			for(var j=0;j<st_size;j++){
-				if(ctx[i].a==st[j].a){
-					pos.push(j);
-				}
-			}
-			if(pos.length>0 && checkExist(st[j].site[ctx[i].e])){
-					var tmp_s={};
-					tmp_s[ctx[i].e]={s:ctx[i].s,v:[ctx[i].v]};
-					st.push({a:ctx[i].a,site:tmp_s});
-				}else if(ctx[i].a==st[j].a &&!checkExist(st[j].site[ctx[i].e])){
-					st[j].site[ctx[i].e]={s:ctx[i].s,v:[ctx[i].v]};
-				}
-			}
-			
-		}/****************************************/
-		for(var j=0;j<st.length;j++){//for each agent
-			for(var i=0;i<ctx.length;i++){//find its sites
-				if(ctx[i].a==st[j].a){
-					if(typeof(st[j].site[ctx[i].e]) == "undefined" || st[j].site[ctx[i].e] == null)//if the site doesn't exist, create it
-						st[j].site[ctx[i].e]={v:[],s:null};
-					if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
-						st[j].site[ctx[i].e].v.push(ctx[i].v);
-					if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
-						st[j].site[ctx[i].e].s=ctx[i].s;
+				if(st[j].a == ctx[i].a){
+					if(typeof(st[j].site[ctx[i].e])=='undefined' || st[j].site[ctx[i].e]==null){
+						var tmp_v =[];
+						var tmp_s=null;
+						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
+							tmp_v.push(ctx[i].v);
+						if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
+							tmp_s=ctx[i].s;
+						st[j].site[ctx[i].e]={s:tmp_s,v:tmp_v};
+					}else{
+						var tmp_v =[];
+						var tmp_s=null;
+						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
+							tmp_v.push(ctx[i].v);
+						if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
+							tmp_s=ctx[i].s;
+						if(typeof(st[j].site[ctx[i].e].s)!="undefined" && st[j].site[ctx[i].e].s!=null && tmp_s!=null) console.log("this site already have a Binding !!!");
+						else if(typeof(st[j].site[ctx[i].e].s)=="undefined" || st[j].site[ctx[i].e].s==null)
+							st[j].site[ctx[i].e].s=tmp_s;
+						if(checkExist(st[j].site[ctx[i].e].v) && tmp_v.length>0) console.log("this site already have a value ! !!!");
+						else if(!checkExist(st[j].site[ctx[i].e].v))
+							st[j].site[ctx[i].e].v=tmp_v;
+					}
 				}
 			}
 		}
+		
+		//add the text version of the rule !
 		for(var i=0;i<st.length;i++){
 			ret+=fullName(st[i].a)+"(";
 			var site_l=Object.keys(st[i].site);
