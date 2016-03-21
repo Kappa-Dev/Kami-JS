@@ -1723,28 +1723,28 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						st[j].site[side[i].e].s=side[i].s;
 				}
 			}
-		}
+		}/************************************/
 		for(var i=0;i<ctx.length;i++){//find its sites
 			var exist=false;
 			for(var j=0;j<st.length;j++){//for each agent
 				if(ctx[i].a==st[j].a) exist=true;//verify if this agent exist
 			}
 			if(!exist){//if it doesn't exist, check if he is bind to one of the side
-				if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null){
+				if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null && ctx[i].s!=0){
 					for(var k=0;k<ctx.length;k++){
-						if(ctx[k].s == ctx[i].s){
+						if(ctx[k].s == ctx[i].s && ctx[k].a!=ctx[i].a){
 							for(var l=0;l<st.length;l++){
 								if(st[l].a==ctx[k].a){
-									st.push({a:side[i].a,site:{}});//in this case, add it to each occurence
+									st.push({a:ctx[i].a,site:{}});//in this case, add it to each occurence
 								}
 							}
 						}
 					}
 				}else{//if it is not a bind, ad it one time
-					st.push({a:side[i].a,site:{}});
+				st.push({a:ctx[i].a,site:{}});
 				}
 			}
-		}
+		}/****************************************/
 		for(var j=0;j<st.length;j++){//for each agent
 			for(var i=0;i<ctx.length;i++){//find its sites
 				if(ctx[i].a==st[j].a){
