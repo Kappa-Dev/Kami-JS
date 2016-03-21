@@ -1,0 +1,188 @@
+{
+"version":2.0,
+"agents":[
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["EGFR"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Grb2"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Shc"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["EGF"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Sos"],"values":[]}
+],
+"regions":[
+	{"classes":["region"],"father_classes":["agent"],"path":["Shc"],"labels":["PTB"],"values":[]}, 
+	{"classes":["region"],"father_classes":["agent"],"path":["Grb2"],"labels":["SH2"],"values":[]},
+	{"classes":["region"],"father_classes":["agent"],"path":["Grb2"],"labels":["SH3"],"values":[]},
+	{"classes":["region"],"father_classes":["agent"],"path":["EGFR"],"labels":["dimerization"],"values":[]},
+	{"classes":["region"],"father_classes":["agent"],"path":["EGFR"],"labels":["intra"],"values":[]}
+],
+"key_rs":[
+	{"classes":["key_res"],"father_classes":["agent"],"path":["EGFR"],"labels":["a"],"values":[]},
+	{"classes":["key_res"],"father_classes":["agent"],"path":["EGFR"],"labels":["b"],"values":[]},
+	{"classes":["key_res"],"father_classes":["agent"],"path":["EGFR"],"labels":["l"],"values":[]},
+	{"classes":["key_res"],"father_classes":["region"],"path":["EGFR","intra"],"labels":["c"],"values":[]},
+	{"classes":["key_res"],"father_classes":["region"],"path":["EGFR","intra"],"labels":["n"],"values":[]},
+	{"classes":["key_res"],"father_classes":["region"],"path":["EGFR","dimerization"],"labels":["cr"],"values":[]},
+	{"classes":["key_res"],"father_classes":["agent"],"path":["Shc"],"labels":["a"],"values":[]},
+	{"classes":["key_res"],"father_classes":["region"],"path":["Grb2","SH2"],"labels":["sh2"],"values":[]}
+],
+"attributes":[
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","a"],"labels":["aa"],"values":["Y"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","b"],"labels":["aa"],"values":["Y"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","a"],"labels":["pos"],"values":["1092"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","b"],"labels":["pos"],"values":["1172"]},
+	{"classes":["attribute","list"],"father_classes":["agent"],"path":["EGF"],"labels":["note"],"values":["Note to self: Call mama"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["Shc","a"],"labels":["aa"],"values":["Y"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["ligand binding"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["ligand unbinding"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["EGFR dimerization"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["EGFR unbind"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["Shc binds Grb2"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["Shc unbinds Grb2"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["EGFR internal binding"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["EGFR internal unbinding"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["Grb binds Sos"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["Grb unbinds Sos"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["EGFR binds Shc"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["EGFR unbinds Shc"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["EGFR binds Grb2"],"labels":["rate"],"values":["0.0198"]},
+	{"classes":["attribute","list"],"father_classes":["action","brk"],"path":["EGFR unbinds Grb2"],"labels":["rate"],"values":["2.5"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","pos"],"path":["pholation of Shc"],"labels":["rate"],"values":["1"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","neg"],"path":["depholation of Shc"],"labels":["rate"],"values":["1"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","pos"],"path":["pholation of EGFR@b"],"labels":["rate"],"values":["1"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","neg"],"path":["depholation of EGFR@b"],"labels":["rate"],"values":["1"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","pos"],"path":["pholation of EGFR@a"],"labels":["rate"],"values":["1"]},
+	{"classes":["attribute","list"],"father_classes":["action","mod","neg"],"path":["depholation of EGFR@a"],"labels":["rate"],"values":["1"]}
+],
+"flags":[
+	{"classes":["flag"],"father_classes":["key_res"],"path":["EGFR","a"],"labels":["phosphorylation"],"values":["u","p"]},
+	{"classes":["flag"],"father_classes":["key_res"],"path":["EGFR","b"],"labels":["phosphorylation"],"values":["u","p"]},
+	{"classes":["flag"],"father_classes":["key_res"],"path":["Shc","a"],"labels":["phosphorylation"],"values":["u","p"]},
+	{"classes":["flag"],"father_classes":["region"],"path":["Shc","PTB"],"labels":["phosphorylation"],"values":["u","p"]},
+	{"classes":["flag"],"father_classes":["region"],"path":["Grb2","SH2"],"labels":["phosphorylation"],"values":["u","p"]}
+],
+"actions":[
+	{"classes":["action","bnd"],"labels":["ligand binding"],
+	 "left":[{"ref":["agents",3]}],
+	 "right":[{"ref":["key_rs",2]}],
+	 "context":[{"ref":["key_rs",5]}
+			   ]
+	},
+	{"classes":["action","brk"],"labels":["ligand unbinding"],
+	 "left":[{"ref":["agents",3]}],
+	 "right":[{"ref":["key_rs",2]}],
+	 "context":[{"ref":["key_rs",5]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["EGFR dimerization"],
+	 "left":[{"ref":["key_rs",5]}],
+	 "right":[{"ref":["key_rs",5]}],
+	 "context":[{"ref":["key_rs",3]},
+				{"ref":["key_rs",4]},
+				{"ref":["actions",1]}			   
+				]
+	},
+	{"classes":["action","brk"],"labels":["EGFR unbind"],
+	 "left":[{"ref":["key_rs",5]}],
+	 "right":[{"ref":["key_rs",5]}],
+	 "context":[{"ref":["key_rs",3]},
+				{"ref":["key_rs",4]},
+				{"ref":["actions",1]}			   
+				]
+	},
+	{"classes":["action","bnd"],"labels":["Shc binds Grb2"],
+	 "left":[{"ref":["key_rs",6]}],
+	 "right":[{"ref":["key_rs",7]}],
+	 "context":[{"ref":["flags",2],"values":["p"]}
+			   ]
+	},
+	{"classes":["action","brk"],"labels":["Shc unbinds Grb2"],
+	 "left":[{"ref":["key_rs",6]}],
+	 "right":[{"ref":["key_rs",7]}],
+	 "context":[{"ref":["flags",2],"values":["p"]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["EGFR binds Grb2"],
+	 "left":[{"ref":["key_rs",0]}],
+	 "right":[{"ref":["key_rs",7]}],
+	 "context":[{"ref":["flags",0],"values":["p"]}
+	 			]
+	},
+	{"classes":["action","brk"],"labels":["EGFR unbinds Grb2"],
+	 "left":[{"ref":["key_rs",0]}],
+	 "right":[{"ref":["key_rs",7]}],
+	 "context":[{"ref":["flags",0],"values":["p"]}
+	 			]
+	},
+	{"classes":["action","bnd"],"labels":["EGFR binds Shc"],
+	 "left":[{"ref":["key_rs",1]}],
+	 "right":[{"ref":["regions",0]}],
+	 "context":[{"ref":["flags",1],"values":["p"]}
+	 			]
+	},
+	{"classes":["action","brk"],"labels":["EGFR unbinds Shc"],
+	 "left":[{"ref":["key_rs",1]}],
+	 "right":[{"ref":["regions",0]}],
+	 "context":[{"ref":["flags",1],"values":["p"]}
+	 			]
+	},
+	{"classes":["action","bnd"],"labels":["Grb binds Sos"],
+	 "left":[{"ref":["agents",4]}],
+	 "right":[{"ref":["regions",2]}],
+	 "context":[
+	 			]
+	 },
+	{"classes":["action","brk"],"labels":["Grb unbinds Sos"],
+	 "left":[{"ref":["agents",4]}],
+	 "right":[{"ref":["regions",2]}],
+	 "context":[
+	 			]
+	 },
+	{"classes":["action","bnd"],"labels":["EGFR internal binding"],
+	 "left":[{"ref":["key_rs",3]}],
+	 "right":[{"ref":["key_rs",4]}],
+	 "context":[{"ref":["actions",1]}
+	 			]
+	 },
+	{"classes":["action","brk"],"labels":["EGFR internal unbinding"],
+	 "left":[{"ref":["key_rs",3]}],
+	 "right":[{"ref":["key_rs",4]}],
+	 "context":[{"ref":["actions",1]}
+	 			]
+	 },
+	{"classes":["action","mod","pos"],"labels":["pholation of EGFR@a"],
+	 "left":[],
+	 "right":[{"ref":["flags",0],"values":["u"]}],
+	 "context":[{"ref":["actions",12]}
+			   ]
+	},
+	{"classes":["action","mod","pos"],"labels":["pholation of EGFR@b"],
+	 "left":[],
+	 "right":[{"ref":["flags",1],"values":["u"]}],
+	 "context":[{"ref":["actions",12]}
+			   ]
+	},
+	{"classes":["action","mod","neg"],"labels":["depholation of EGFR@a"],
+	 "left":[],
+	 "right":[{"ref":["flags",0],"values":["p"]}],
+	 "context":[
+			   ]
+	},
+	{"classes":["action","mod","neg"],"labels":["depholation of EGFR@b"],
+	 "left":[],
+	 "right":[{"ref":["flags",1],"values":["p"]}],
+	 "context":[
+			   ]
+	},
+	{"classes":["action","mod","pos"],"labels":["pholation of Shc"],
+	 "left":[],
+	 "right":[{"ref":["flags",2],"values":["u"]}],
+	 "context":[{"ref":["actions",8]}
+			   ]
+	},
+	{"classes":["action","mod","neg"],"labels":["depholation of Shc"],
+	 "left":[],
+	 "right":[{"ref":["flags",2],"values":["p"]}],
+	 "context":[
+			   ]
+	}
+]
+}
