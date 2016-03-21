@@ -1704,26 +1704,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		var ret="";
 		var st=[];
 		for(var i=0;i<side.length;i++){//put agents
-			st.push({a:side[i].a,site:{}});
+			var tmp_v =[];
+			var tmp_s=null;
+			if(typeof(side[i].v)!="undefined" && side[i].v!=null)//if this site has state, give him
+				tmp_v.push(side[i].v);
+			if(typeof(side[i].s)!="undefined" && side[i].s!=null)//if this site has binding, give him
+				tmp_s=side[i].s;
+			var s_l={};
+			s_l[side[i].e]={s:tmp_s,v:tmp_v};
+			st.push({a:side[i].a,site:s_l});
+				//console.log(st[j].site[side[i].e]);
+					
 		}
-		for(var j=0;j<st.length;j++){//for each agent
-			for(var i=0;i<side.length;i++){//find its sites
-				//console.log("begin2");
-				//console.log(st);
-				if(side[i].a==st[j].a){
-						//console.log("finded");
-						//console.log(side[i].e);
-						//console.log(st[j].site[side[i].e]);
-					if(typeof(st[j].site[side[i].e]) =="undefined" || st[j].site[side[i].e] == null)//if the site doesn't exist, create it
-						st[j].site[side[i].e]={v:[],s:null};
-						//console.log(st[j].site[side[i].e]);
-					if(typeof(side[i].v)!="undefined" && side[i].v!=null)//if this site has state, give him
-						st[j].site[side[i].e].v.push(side[i].v);
-					if(typeof(side[i].s)!="undefined" && side[i].s!=null)//if this site has binding, give him
-						st[j].site[side[i].e].s=side[i].s;
-				}
-			}
-		}/************************************/
+	
+		/************************************/
+		/************************************/
 		for(var i=0;i<ctx.length;i++){//find its sites
 			var exist=false;
 			for(var j=0;j<st.length;j++){//for each agent
