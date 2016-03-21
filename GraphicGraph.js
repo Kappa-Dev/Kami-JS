@@ -1679,14 +1679,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			rule_list[node.id]=[];
 		if(tmp_ctx.length>0){
 			for(var i=0;i<tmp_ctx.length;i++){//for each posible context : create a version of rule
-				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:s_rule.r});
+				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:crush(s_rule.r,node)});
 			}
 		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:crush(s_rule.r,node)});
 		console.log("final rule");
 		console.log(rule_list[node.id]);		
 	}
 	var crush = function(r,node){
-		if(node.classes[1]=="bnd"){
+		if(node.classes[1]=="bnd" && r[0].a==r[1].a){
+			console.log("crushing");
 			r[0].s=fullName(r[1].e)+"."+fullName(r[1].a);
 			return [r[0]];
 		}else return r;
@@ -1708,6 +1709,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var sToText = function(node,side,ctx){
 		var ret="";
 		var st=[];
+		console.log("on rule");
+		console.log(node.label.join(","));
 		for(var i=0;i<side.length;i++){//put agents
 			var tmp_v =[];
 			var tmp_s=null;
@@ -1741,14 +1744,22 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var j=0;j<st.length;j++){
 				if(st[j].a == ctx[i].a){
 					if(typeof(st[j].site[ctx[i].e])=='undefined' || st[j].site[ctx[i].e]==null){
+						console.log("site not existing");
+						console.log(ctx[i]);
 						var tmp_v =[];
 						var tmp_s=null;
 						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
 							tmp_v.push(ctx[i].v);
-						if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null)//if this site has binding, give him
+						if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null){//if this site has binding, give him
+							console.log("state existing !");
 							tmp_s=ctx[i].s;
+						}
 						st[j].site[ctx[i].e]={s:tmp_s,v:tmp_v};
+						console.log("create the site");
+						console.log(st[j].site[ctx[i].e]);
 					}else{
+						console.log("site existing");
+						console.log(ctx[i]);
 						var tmp_v =[];
 						var tmp_s=null;
 						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
@@ -1775,7 +1786,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				if(st[i].site[site_l[j]].v.length>0){
 					ret+="~";
 					ret+=st[i].site[site_l[j]].v.join("~");
-				}if(st[i].site[site_l[j]].s!=null && st[i].site[site_l[j]].s>0){
+				}if(st[i].site[site_l[j]].s!=null){
 					ret+="!"+st[i].site[site_l[j]].s;
 				}
 				if(j<site_l.length-1) ret+=",";
