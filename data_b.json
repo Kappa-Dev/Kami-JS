@@ -1,0 +1,93 @@
+{
+"version":2.0,
+"agents":[
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["EGFR"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Grb2"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Shc"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["RasGap"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Ras"],"values":[]},
+	{"classes":["agent"],"father_classes":[],"path":[],"labels":["Sos1"],"values":[]}
+],
+"regions":[
+	{"classes":["region"],"father_classes":["agent"],"path":["Grb2"],"labels":["Sh2"],"values":[]},
+	{"classes":["region"],"father_classes":[],"path":[],"labels":["Sh22"],"values":[]}
+],
+"key_rs":[
+	{"classes":["key_res"],"father_classes":["agent"],"path":["EGFR"],"labels":["1068"],"values":[]},
+	{"classes":["key_res"],"father_classes":["agent"],"path":["Shc"],"labels":["427"],"values":[]},
+	{"classes":["key_res"],"father_classes":["agent"],"path":["Ras"],"labels":["12"],"values":[]},
+	{"classes":["key_res"],"father_classes":["region"],"path":["Grb2","Sh2"],"labels":["1068"],"values":[]}
+],
+"attributes":[
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["EGFR","1068"],"labels":["aa"],"values":["y"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["Shc","427"],"labels":["aa"],"values":["y"]},
+	{"classes":["attribute","list"],"father_classes":["key_res"],"path":["Ras","12"],"labels":["aa"],"values":["g","d"]},
+	{"classes":["attribute","list"],"father_classes":["action","bnd"],"path":["bnd1"],"labels":["rate"],"values":[0.1]}
+],
+"flags":[
+	{"classes":["flag"],"father_classes":["key_res"],"path":["EGFR","1068"],"labels":["phos"],"values":["uphos","phos"]},
+	{"classes":["flag"],"father_classes":["key_res"],"path":["Shc","427"],"labels":["phos"],"values":["uphos","phos"]},
+	{"classes":["flag"],"father_classes":["agent"],"path":["EGFR"],"labels":["phos"],"values":["uphos","phos"]},
+	{"classes":["flag"],"father_classes":["agent"],"path":["Ras"],"labels":["gtp"],"values":["gdp","gtp"]}
+],
+"actions":[
+	{"classes":["action","bnd"],"labels":["bnd1"],
+	 "left":[{"ref":["agents",0]}],
+	 "right":[{"ref":["regions",0]}],
+	 "context":[{"ref":["flags",0],"values":["phos"]},
+				{"ref":["attributes",0],"values":["y"]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["bnd2"],
+	 "left":[{"ref":["agents",0]}],
+	 "right":[{"ref":["agents",2]}],
+	 "context":[{"ref":["flags",2],"values":["phos"]}]
+	},
+	{"classes":["action","bnd"],"labels":["bnd3"],
+	 "left":[{"ref":["agents",2]}],
+	 "right":[{"ref":["regions",0]}],
+	 "context":[{"ref":["flags",1],"values":["phos"]},
+				{"ref":["attributes",1],"values":["y"]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["bnd4"],
+	 "left":[{"ref":["agents",0]}],
+	 "right":[{"ref":["agents",3]}],
+	 "context":[{"ref":["flags",2],"values":["phos"]}]
+	},
+	{"classes":["action","mod","pos"],"labels":["mod1"],
+	 "left":[],
+	 "right":[{"ref":["flags",1],"values":["uphos"]}],
+	 "context":[{"ref":["flags",0],"values":["phos"]},
+				{"ref":["attributes",1],"values":["y"]},
+				{"ref":["actions",1]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["bnd5"],
+	 "left":[{"ref":["agents",3]}],
+	 "right":[{"ref":["regions",0]}],
+	 "context":[{"ref":["flags",3],"values":["gtp"]},
+				{"ref":["actions",3]}
+			   ]
+	},
+	{"classes":["action","mod","neg"],"labels":["mod2"],
+	 "left":[],
+	 "right":[{"ref":["flags",3],"values":["gtp"]}],
+	 "context":[{"ref":["attributes",2],"values":["g"]},
+				{"ref":["actions",5]}
+			   ]
+	},
+	{"classes":["action","bnd"],"labels":["bnd6"],
+	 "left":[{"ref":["agents",4]}],
+	 "right":[{"ref":["agents",5]}],
+	 "context":[]
+	},
+	{"classes":["action","mod","pos"],"labels":["mod3"],
+	 "left":[],
+	 "right":[{"ref":["flags",3],"values":["gdp"]}],
+	 "context":[{"ref":["flags",0],"values":["phos"]},
+				{"ref":["actions",7]}
+			   ]
+	}
+]
+}
