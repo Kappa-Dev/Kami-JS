@@ -1627,8 +1627,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			//console.log(tmp_rules);
 			//rule_list[node.id].push(tmp_rules);
 		}
-	}
-	
+	}	
 	var to_rule = function(c_act,node,rule_list){
 		//var ret={txt:"",right:null};
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
@@ -1712,33 +1711,32 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				tmp_s=side[i].s;
 			var s_l={};
 			s_l[side[i].e]={s:tmp_s,v:tmp_v};
-			st.push({a:side[i].a,site:s_l});
-				//console.log(st[j].site[side[i].e]);
-					
+			st.push({a:side[i].a,site:s_l});					
 		}
-	
 		/************************************/
 		/************************************/
 		for(var i=0;i<ctx.length;i++){//find its sites
-			var exist=false;
-			for(var j=0;j<st.length;j++){//for each agent
-				if(ctx[i].a==st[j].a) exist=true;//verify if this agent exist
-			}
-			if(!exist){//if it doesn't exist, check if he is bind to one of the side
-				if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null && ctx[i].s!=0){
-					for(var k=0;k<ctx.length;k++){
-						if(ctx[k].s == ctx[i].s && ctx[k].a!=ctx[i].a){
-							for(var l=0;l<st.length;l++){
-								if(st[l].a==ctx[k].a){
-									st.push({a:ctx[i].a,site:{}});//in this case, add it to each occurence
-								}
-							}
-						}
-					}
-				}else{//if it is not a bind, ad it one time
-				st.push({a:ctx[i].a,site:{}});
+			for(var j=0;j<st.length;j++){
+				if(typeof(st[j].site[ctx[i].e]) == 'undefined' && st[j].a==ctx[i].a){
+					st[j].site[ctx[i].e]={v:ctx[i].v,s:ctx[i].s};
 				}
 			}
+			var st_size=st.length;
+			var pos=[];
+			for(var j=0;j<st_size;j++){
+				if(ctx[i].a==st[j].a){
+					pos.push(j);
+				}
+			}
+			if(pos.length>0 && checkExist(st[j].site[ctx[i].e])){
+					var tmp_s={};
+					tmp_s[ctx[i].e]={s:ctx[i].s,v:[ctx[i].v]};
+					st.push({a:ctx[i].a,site:tmp_s});
+				}else if(ctx[i].a==st[j].a &&!checkExist(st[j].site[ctx[i].e])){
+					st[j].site[ctx[i].e]={s:ctx[i].s,v:[ctx[i].v]};
+				}
+			}
+			
 		}/****************************************/
 		for(var j=0;j<st.length;j++){//for each agent
 			for(var i=0;i<ctx.length;i++){//find its sites
