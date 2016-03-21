@@ -548,6 +548,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				   .style("display","initial");
 				d3.select("#update").property("disabled",false)
 					.style("display","initial");
+				d3.select("#export").property("disabled",false)
+					.style("display","initial");
 				d3.select("#replay").property("disabled",false)
 					.style("display","initial");
 				nugget_add=false;
@@ -647,7 +649,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					.classed("selected",function(d){ return layerG.nodes[layerG.nodesHash[d.id]].selected=true;});
 			}
 		}];
-		if(edition || nugget_add){
+		if(edition || nugget_add || lcg_view){//be carefull in lcg view !
 			menu.push({
 				title: "remove",
 				action: function(elm,d,i){
@@ -1383,23 +1385,33 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 			for(var c=0;c<tmp_node.context.length;c++){//add recursively all the element from the context
+
 				var tmp_ctx=nuggG.nodes[nuggG.nodesHash[tmp_node.context[c]]];
 				if(tmp_ctx.classes[0]=="agent"){
 					if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null){
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[],tmp_ctx.x,tmp_ctx.y);
 						convert_table[tmp_ctx.id]=[self.lastNode()];
 					}
+
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
 							if(convert_table[tmp_ctx.id].length==1 || tmp_node.classes[1]=="bnd"){
 								self.addNode(["key_res"],[],[convert_table[tmp_ctx.id][0]]);
 								convert_table[tmp_ctx.id].push(self.lastNode());
-							}for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
-								self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+							}if(tmp_node.classes[1]!="bnd"){
+								for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
+									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+									if(act_links[l].sourceID==tmp_ctx.id)
+										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
+									else
+										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
+								}
+							}else{
+								self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
 								if(act_links[l].sourceID==tmp_ctx.id)
-									self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
-								else
-									self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
+										self.addEdge([self.lastNode()],convert_table[act_links[l].targetID]);
+									else
+										self.addEdge([self.lastNode()],convert_table[act_links[l].sourceID]);
 							}
 						}
 					}	
@@ -1409,8 +1421,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						var tmp_agent_root=getRoot(tmp_ctx,nuggG);
 						if(typeof(convert_table[tmp_agent_root.id])=="undefined" || convert_table[tmp_agent_root.id]==null){
 							self.addNode(tmp_agent_root.classes.concat(),tmp_agent_root.label.concat(),[],tmp_agent_root.x,tmp_agent_root.y);
-							convert_table[tmp_agent_root.id]=self.lastNode();
-						}self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id]]);
+							convert_table[tmp_agent_root.id]=[self.lastNode()];
+						}self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id][0]]);
 						var tmp_kr=self.lastNode();
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[tmp_kr]);
 						convert_table[tmp_ctx.id]=self.lastNode();
@@ -1547,7 +1559,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+=observer;
 		kappa_code+="#### Initial conditions\n";
 		kappa_code+=quantities;
-		console.log(kappa_code);
 		var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
 		window.open(url, '_blank');
 		window.focus();
@@ -1558,8 +1569,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		var splitted_ctx=splitCtx(node);
 		var cannonical_action=[];
 		var rules=[];
-		//console.log("action");
-		//console.log(node);
 		if(splitted_ctx.left.length==0){//create a new rule for each combination of right node of the action
 			for(var j=0;j<splitted_ctx.right.length;j++){
 				if(splitted_ctx.right[j].v!=null && splitted_ctx.right[j].v.length>0 ){
@@ -1620,60 +1629,76 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		// translation into a correct rule format !
 		rule_list[node.id]=[];
 		for(var i=0;i<cannonical_action.length;i++){
-			//console.log(node);
-			//console.log(cannonical_action[i]);
 			to_rule(cannonical_action[i],node,rule_list);
-			//console.log(rule_list);
-			//console.log(tmp_rules);
-			//rule_list[node.id].push(tmp_rules);
 		}
 	}	
 	var to_rule = function(c_act,node,rule_list){
-		//var ret={txt:"",right:null};
+		console.log("fuck context");
+		console.log(node);
+		console.log(c_act);
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
-		console.log("das rule");
-		console.log(s_rule);
 		var tmp_ctx=[];//transformed context
+		console.log("treating ctx================================");
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
+			console.log(tmp_ctx);
 			if(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[1]!="binder"){
+				console.log("entering action");
 				if(!checkExist(rule_list[c_act.ctx[i].e])){
 					 genAction(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]],rule_list);
 				}
 				var accu=[];//context accumulator
+				console.log("accu");
+				console.log(accu);
+				console.log("working on");
+				console.log(c_act.ctx[i].e);
+				console.log(rule_list[c_act.ctx[i].e]);
 				for(var k=0;k<rule_list[c_act.ctx[i].e].length;k++){//pour chaque regle de l'action, créé une variation du context
-					//console.log("rule of action")
-						//console.log(rule_list[c_act.ctx[i].e]);
 					var expl_ctx=[];
 					if(tmp_ctx.length==0){
+						console.log("empty");
 						var tmp_clone=[];
 						for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
 							tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
 						}
 						expl_ctx.push(tmp_clone);
 					}else{
-					for(var j=0;j<tmp_ctx.length;j++){
-						var tmp_clone=cloneEl_l(tmp_ctx[j]);
-						for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
-							tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
+						console.log("tying to clone");
+						console.log(tmp_ctx);
+						for(var j=0;j<tmp_ctx.length;j++){
+							var tmp_clone=cloneEl_l(tmp_ctx[j]);
+							console.log("clone result");
+							console.log(tmp_clone);
+							console.log("trying to add");
+							console.log(rule_list[c_act.ctx[i].e][k].right);
+							for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
+								tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
+							}
+							console.log("the clone is coming back");
+							console.log(tmp_clone);
+							console.log("the attack of the clown");
+							expl_ctx.push(tmp_clone);
+							console.log(expl_ctx);
 						}
-						expl_ctx.push(tmp_clone);
 					}
-					}//create a copy of the context with the content of the right member of the action
+					console.log("failing");
+					console.log(expl_ctx);
+					//create a copy of the context with the content of the right member of the action
 					for(var j=0;j<expl_ctx.length;j++){
 						accu.push(expl_ctx[j]);
 					}
+					console.log("accu2");
+					console.log(accu);
 				}
 				tmp_ctx=accu;
 			}
 			else{//sinon ajoute cette variable à tous les contextes
+				console.log("entering other");
 				if(tmp_ctx.length==0)tmp_ctx.push([]);//pour le premier element du context : lui donne une liste vide
 				for(var j=0;j<tmp_ctx.length;j++)
 					tmp_ctx[j].push(shrinkEl(c_act.ctx[i]));
 			}
 		}
-		console.log("the context");
-		console.log(tmp_ctx);
 		//here the context is demultiplied with all the possible variation due to action in context
 		if(!checkExist(rule_list[node.id]))
 			rule_list[node.id]=[];
@@ -1681,15 +1706,14 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var i=0;i<tmp_ctx.length;i++){//for each posible context : create a version of rule
 				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:crush(s_rule.r,node)});
 			}
-		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:crush(s_rule.r,node)});
-		console.log("final rule");
-		console.log(rule_list[node.id]);		
+		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:crush(s_rule.r,node)});	
+		console.log("rule generated");
+		console.log(rule_list[node.id]);
 	}
-	var crush = function(r,node){
-		if(node.classes[1]=="bnd" ){//
-			console.log("crushing");
-			r[0].s=fullName(r[1].e)+"."+fullName(r[1].a);
-			return [r[0]];
+	var crush = function(r,node){//convert bind a(x!1), b(x!1) to a(x!x.b)
+		if(node.classes[1]=="bnd" ){
+			var tmp_res={a:r[0].a,e:r[0].e,s:fullName(r[1].e)+"."+fullName(r[1].a),v:null};
+			return [tmp_res];
 		}else return r;
 	}
 	var rToText = function(node,rule,ctx){
@@ -1707,10 +1731,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return ret;
 	}
 	var sToText = function(node,side,ctx){
+		console.log("to code");
+		console.log(node);
+		console.log(side);
+		console.log(ctx);
 		var ret="";
 		var st=[];
-		console.log("on rule");
-		console.log(node.label.join(","));
 		for(var i=0;i<side.length;i++){//put agents
 			var tmp_v =[];
 			var tmp_s=null;
@@ -1727,7 +1753,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		for(var i=0;i<ctx.length;i++){//add inexistent element from context to the rule
 			var exist=false;
 			for(var j=0;j<st.length;j++){
-				var gmn=getBackMyName(ctx[i].s);
+				var gmn=null;
+				if(typeof(ctx[i].s)!="undefined") gmn=getBackMyName(ctx[i].s);
 				exist= exist || st[j].a == ctx[i].a || (gmn!=null && gmn[0]==st[j].a);
 				if(st[j].a != ctx[i].a && gmn!=null && gmn[0]==st[j].a){
 					var new_ct=fullName(ctx[i].e)+"."+fullName(ctx[i].a);
@@ -1752,22 +1779,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var j=0;j<st.length;j++){
 				if(st[j].a == ctx[i].a){
 					if(typeof(st[j].site[ctx[i].e])=='undefined' || st[j].site[ctx[i].e]==null){
-						console.log("site not existing");
-						console.log(ctx[i]);
 						var tmp_v =[];
 						var tmp_s=null;
 						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
 							tmp_v.push(ctx[i].v);
 						if(typeof(ctx[i].s)!="undefined" && ctx[i].s!=null){//if this site has binding, give him
-							console.log("state existing !");
 							tmp_s=ctx[i].s;
 						}
 						st[j].site[ctx[i].e]={s:tmp_s,v:tmp_v};
-						console.log("create the site");
-						console.log(st[j].site[ctx[i].e]);
 					}else{
-						console.log("site existing");
-						console.log(ctx[i]);
 						var tmp_v =[];
 						var tmp_s=null;
 						if(typeof(ctx[i].v)!="undefined" && ctx[i].v!=null)//if this site has state, give him
@@ -1784,9 +1804,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 		}
-		
+		console.log("treating");
+			console.log(st);
 		//add the text version of the rule !
 		for(var i=0;i<st.length;i++){
+			
 			ret+=fullName(st[i].a)+"(";
 			var site_l=Object.keys(st[i].site);
 			for(var j=0;j<site_l.length;j++){
@@ -1810,9 +1832,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(tab.length<2) return null;
 		var site_n=tab[0].split("_");
 		var ag_n=tab[1].split("_");
-		console.log("My name !");
-		console.log(state);
-		console.log([ag_n[0],site_n[0]]);
 		return [ag_n[0],site_n[0]];
 	}
 	var fullName = function(id){
@@ -1822,7 +1841,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var cloneEl_l = function(el_l){
 		var ret=[];
 		for(var i=0;i<el_l.length;i++){
-			ret.push({e:el_l.e,v:el_l.v});
+			ret.push({a:el_l[i].a,e:el_l[i].e,v:el_l[i].v,s:el_l[i].s});
 		}
 		return ret;
 	}

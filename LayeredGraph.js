@@ -144,6 +144,15 @@ function LayeredGraph(){
 				this.removeParenting(tmp_son);
 				this.setFather(tmp_son,t_node);
 			}
+			for(var i=0;i<this.nodes.length;i++){
+				var cp=this.nodes[i].context.indexOf(s_node);
+				if(cp!=-1){
+					if(this.nodes[i].context.indexOf(t_node)==-1)
+						this.nodes[i].context[cp]=t_node;
+					else
+						this.nodes[i].context.splice(cp,1);
+				} 
+			}
 			this.nodes[this.nodesHash[t_node]].context=union(tmp_node.context,this.nodes[this.nodesHash[t_node]].context);
 			this.nodes[this.nodesHash[t_node]].label=union(tmp_node.label,this.nodes[this.nodesHash[t_node]].label);
 			this.nodes[this.nodesHash[t_node]].classes=union(tmp_node.classes,this.nodes[this.nodesHash[t_node]].classes);
