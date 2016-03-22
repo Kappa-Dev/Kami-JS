@@ -1,4 +1,3 @@
-Annoted knowledge representation translation into Kappa (Knowledge Aggregator and Model Instantiator);
 #files:
 D3 directory : contain the D3 library and a modified D3 context menu library.
 LayeredGraph.js : contain the definition of a layered graph.
