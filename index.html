@@ -46,7 +46,7 @@ window.onload = function () {
 };
 
 var loadJson = function(){
-	var data="data.json"; 
+	var data=null; 
 	var file=document.getElementById("import_f").files[0];
 	if(typeof(file)!="undefined" && file !=null && file !="") data=file;
 	else alert("No input file. Default datas loaded !");
@@ -67,11 +67,13 @@ var loadFile = function(data){
 		if(jsonformater==null)
 			jsonformater=new jSonFormatter(gGraph);
 		console.log("importing datas");
-		var ka = new FileReader();
-		ka.readAsDataURL(data);
-		ka.onloadend = function(e){
-			jsonformater.init(e.target.result);
-		}	
+		if(data!=null){
+			var ka = new FileReader();
+			ka.readAsDataURL(data);
+			ka.onloadend = function(e){
+				jsonformater.init(e.target.result);
+			}
+		}else jsonformater.init("data.json");
 	}
 };
 

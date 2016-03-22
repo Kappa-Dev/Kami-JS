@@ -198,14 +198,15 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var tick = function(){//show up new svg element only if there position datas have been computed
 		if(first_init || dynG.getForce().alpha()<=0.00501){
+			
+			s_node.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
+			s_action.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
+			s_binder.attr("cx",function(d) {return getNodeX(d);})
+				.attr("cy",function(d) {return getNodeY(d);});
 			s_link.attr("x1", function(d){return getNodeX(d.source);})
 				.attr("y1", function(d){return getNodeY(d.source);})
 				.attr("x2", function(d){return getNodeX(d.target);})
 				.attr("y2", function(d){return getNodeY(d.target);});
-			s_node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-			s_action.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-			s_binder.attr("cx",function(d) {return getNodeX(d);})
-				.attr("cy",function(d) {return getNodeY(d);});
 			first_init=true;
 		}
 	};
@@ -1190,7 +1191,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			{
 				title: "Unlock all",
 				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
+					d3.selectAll("g").classed("fixed",function(d){return d.fixed=false;});
 					update();
 				}
 			},{
