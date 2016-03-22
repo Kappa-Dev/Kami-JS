@@ -1,15 +1,15 @@
 #files:
-D3 directory : contain the D3 library and a modified D3 context menu library.
-LayeredGraph.js : contain the definition of a layered graph.
-DynamicGraph.js : add a force layout to the Graph : it is the file you need to modify if you want to change the behaviour of the graphical graph.
-GraphicGraph.js : add graphic UI and event listener for the layered graph. It also provide all the translation tool.
-jSonFormatter.js : give all the tool for importing and exporting Json file from and into the graph.
-kr.css : the css for Kami
-index.html : the main html frame from this tool.
-*.json : a bunch of examle.
-*.ka : an example of kappa code for sos_model.json
-lgpl-3.0.txt : the lgpl licence 
-ReadME : this file
+-D3 directory : contain the D3 library and a modified D3 context menu library.
+-LayeredGraph.js : contain the definition of a layered graph.
+-DynamicGraph.js : add a force layout to the Graph : it is the file you need to modify if you want to change the behaviour of the graphical graph.
+-GraphicGraph.js : add graphic UI and event listener for the layered graph. It also provide all the translation tool.
+-jSonFormatter.js : give all the tool for importing and exporting Json file from and into the graph.
+-kr.css : the css for Kami
+-index.html : the main html frame from this tool.
+-*.json : a bunch of examle.
+-*.ka : an example of kappa code for sos_model.json
+-lgpl-3.0.txt : the lgpl licence 
+-ReadME : this file
 
 #Demo :
 0/Run index.html
@@ -30,7 +30,7 @@ Kami is divided into 5 views.
 -The seconde one is the edition view (click : "Edit Kr"). You can access it from the KR view only and it allow to modify the KR in details. Notice that this view doesn't allow to add new nuggets of knowledge.
 -The third view is the Nugget View (click : "Add Nugget"). You can access it from the KR view only and it allow to modify nuggets and Add new ones. A nugget is mainly defined by an action and its dependencies.
 -The forth view is the LCG (click : "LCG"). You can access it from the KR view only and it require to select a non empty set of action you want to simulate. The LCG is a compilation of the sub-graph selected into a site graph.
-In the LCG View you can merge Nodes, export the graph and edit the attributes Values in order to défine which values will be used for the simulation.
+In the LCG View you can merge Nodes, export the graph and edit the attributes Values in order to dÃ©fine which values will be used for the simulation.
 -The last view is the Kappa view (click : "To Kappa"). You can access it only from the LCG view and if you want to have some observer, you need to select the agent you want to observe (with or without detail) and the action for which you want to see the right member.
 This view will open the kasim browser version with your code. you will need to define the initial quantity for each agent (and variation) and the rate for each action with no rate attribute.
 
