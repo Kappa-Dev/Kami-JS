@@ -88,11 +88,26 @@ circle.node {
 	fill:#ffa31a;
 	stroke:#000;
 }
-.node.selected_overlay{
+.node.alway{
 	stroke:#1496bb;
 }
+.action.alway{
+	stroke:#1496bb;
+}
+.action.existAlway{
+	stroke:#9900cc;
+}
+.node.exist{
+	stroke:#ff66cc;
+}
+.action.exist{
+	stroke:#ff66cc;
+}
+.node.selected_overlay{
+	fill:#ffa31a;
+}
 .action.selected_overlay{
-	stroke:#9933ff;
+	fill:#ffa31a;
 }
 label.hilighted{
 	fill:#ffa31a;

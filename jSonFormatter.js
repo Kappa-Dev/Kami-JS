@@ -193,14 +193,14 @@ function jSonFormatter(gGraph){
 			}
 			if(d.valued_context!=null && checkExist(d.valued_context[tmp_node.id])){
 				val+=",\"values\":[\""+d.valued_context[tmp_node.id].join("\",\"")+"\"]";
+			}if(d.apply_context!=null && checkExist(d.apply_context[tmp_node.id])){
+				val+=",\"application\":[\""+d.apply_context[tmp_node.id].join("\",\"")+"\"]";
 			}
 			left+="{\"ref\":[\""+tmp_cl+"\","+tmp_pos+"]"+val+"}";
 			if(i<l_left.length-1)left+=",";
 		}
 		return left;
 	}
-	
-	
 	var toText = function(d){
 		var names="";
 		var fclass="";
@@ -287,6 +287,12 @@ function jSonFormatter(gGraph){
 						vctx[dest_id]=js_node.left[i].values;
 					}
 					gGraph.addCtx(node_id,[dest_id],vctx);
+					var actx=null;
+					if(checkExist(js_node.left[i].application)){
+						actx={};
+						actx[dest_id]=js_node.left[i].application;
+					}
+					gGraph.addCtx(node_id,[dest_id],null,actx);
 				}
 			}
 		}if(checkExist(js_node.right)){
@@ -300,6 +306,12 @@ function jSonFormatter(gGraph){
 						vctx[dest_id]=js_node.right[i].values;
 					}
 					gGraph.addCtx(node_id,[dest_id],vctx);	
+					var actx=null;
+					if(checkExist(js_node.right[i].application)){
+						actx={};
+						actx[dest_id]=js_node.right[i].application;
+					}
+					gGraph.addCtx(node_id,[dest_id],null,actx);
 				}
 			}
 			
@@ -313,6 +325,12 @@ function jSonFormatter(gGraph){
 						vctx[dest_id]=js_node.context[i].values;
 					}
 					gGraph.addCtx(node_id,[dest_id],vctx);	
+					var actx=null;
+					if(checkExist(js_node.context[i].application)){
+						actx={};
+						actx[dest_id]=js_node.context[i].application;
+					}
+					gGraph.addCtx(node_id,[dest_id],null,actx);
 				}
 			}
 		}

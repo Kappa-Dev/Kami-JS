@@ -11,6 +11,7 @@ function Node(classes,id,x,y,fixed){
 	this.context=[];//alternatively a context for an action or a value list for a flag or an attribute
 	this.label=[];
 	this.valued_context=null;//the value for flag or attributes of a context
+	this.apply_context=null;//information about to who the context is applyed (all the occurence of the element or only one part)
 	if(typeof(x)!='undefined') this.x=x;//node coordinate
 	if(typeof(y)!='undefined') this.y=y;
 	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixed
@@ -62,6 +63,49 @@ function LayeredGraph(){
 				list.splice(i,1);
 		}
 	}
+	var fusACtx = function(context,old_vctx,new_vctx){//fusion of two applying context
+		var res={};
+		if(typeof(old_vctx)!="undefined" && old_vctx!=null && typeof(new_vctx)!="undefined" && new_vctx!=null ){
+			var o_keys = Object.keys(old_vctx);
+			var n_keys = Object.keys(new_vctx);
+			for(var i=0;i<o_keys.length;i++){
+				if(old_vctx[o_keys[i]]==null){
+					if(typeof(new_vctx[o_keys[i]])!='undefined' && new_vctx[o_keys[i]]!=null)
+						res[o_keys[i]]=new_vctx[o_keys[i]].concat();
+					else
+						res[o_keys[i]]=null;
+				}else {
+					if(typeof(new_vctx[o_keys[i]])=='undefined' || new_vctx[o_keys[i]]==null)
+						res[o_keys[i]]=old_vctx[o_keys[i]].concat();
+					else{
+						res[o_keys[i]]=[];
+						for(var j=0;j<old_vctx[o_keys[i]].length;j++){
+							if(old_vctx[o_keys[i]][j]=="E")
+								res[o_keys[i]].push(new_vctx[o_keys[i]][j]);
+							else
+								res[o_keys[i]].push(old_vctx[o_keys[i]][j]);
+						}
+					}
+				}
+			}
+			for(var i=0;i<n_keys.length;i++){
+				if(o_keys.indexOf(n_keys[i])==-1){
+					if(new_vctx[n_keys[i]]==null) res[n_keys[i]]=null;
+					else res[n_keys[i]]=new_vctx[n_keys[i]].concat();
+				}
+			}
+		}else if((typeof(old_vctx)=="undefined" || old_vctx==null) && typeof(new_vctx)!="undefined" && new_vctx!=null )
+			res=dumpACtx(new_vctx);
+		else if(typeof(old_vctx)!="undefined" && old_vctx!=null && (typeof(new_vctx)=="undefined" || new_vctx==null) )
+			res=dumpACtx(old_vctx);
+		else return null;
+		var r_keys=Object.keys(res);
+		for(var i=0;i<r_keys.length;i++){
+			if(context.indexOf(r_keys[i])==-1)
+				delete(res[r_keys[i]]);
+		}
+		return res;
+	}
 	var fusVCtx = function(context,old_vctx,new_vctx){//fusion of two valued context for actions
 		var res={};
 		if(old_vctx!=null && new_vctx!=null ){
@@ -89,6 +133,16 @@ function LayeredGraph(){
 		}
 		return res;
 	}
+	var dumpACtx = function(vtcx){
+		if(typeof(vctx)=="undefined" || vtcx==null) return null;
+		var res={};
+		var key =Object.keys(vtcx);
+		for(var i=0;i<key.length;i++){
+			if(vtcx[key[i]]==null) res[key[i]]=null;
+			else res[key[i]]=vtcx[key[i]].concat();
+		}
+		return res;
+	}
 	var dumpVCtx = function(vtcx){
 		if(vtcx==null) return null;
 		var res={};
@@ -99,6 +153,9 @@ function LayeredGraph(){
 	}
 	this.copyVCtx = function copyVCtx(vctx){
 		return dumpVCtx(vctx);
+	}
+	this.copyACtx = function copyACtx(vctx){
+		return dumpACtx(vctx);
 	}
 	this.mergeDiff = function mergeDiff(s_node,t_node){//merge two existing nodes : a source node to a specific target node (by ID) : source become the target
 		if(this.nodes[this.nodesHash[s_node]].classes.join(",")!=this.nodes[this.nodesHash[t_node]].classes.join(",")){
@@ -156,8 +213,10 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[t_node]].context=union(tmp_node.context,this.nodes[this.nodesHash[t_node]].context);
 			this.nodes[this.nodesHash[t_node]].label=union(tmp_node.label,this.nodes[this.nodesHash[t_node]].label);
 			this.nodes[this.nodesHash[t_node]].classes=union(tmp_node.classes,this.nodes[this.nodesHash[t_node]].classes);
-			if(this.nodes[this.nodesHash[t_node]].classes[0]=="action")
+			if(this.nodes[this.nodesHash[t_node]].classes[0]=="action"){
 				this.nodes[this.nodesHash[t_node]].valued_context=fusVCtx(this.nodes[this.nodesHash[t_node]].context,this.nodes[this.nodesHash[t_node]].valued_context,tmp_node.valued_context);
+				this.nodes[this.nodesHash[t_node]].apply_context=fusACtx(this.nodes[this.nodesHash[t_node]].context,this.nodes[this.nodesHash[t_node]].apply_context,tmp_node.apply_context);
+			}
 			this.removeNode(s_node);
 		}			
 	};
@@ -174,12 +233,14 @@ function LayeredGraph(){
 			this.nodes[this.nodesHash[node.id]].y=node.y;
 			this.nodes[this.nodesHash[node.id]].fixed=node.fixed;
 			this.nodes[this.nodesHash[node.id]].valued_context=node.valued_context;
+			this.nodes[this.nodesHash[node.id]].apply_context=node.apply_context;
 		}else{
 			this.nodes[this.nodesHash[node.id]].classes=union(node.classes,this.nodes[this.nodesHash[node.id]].classes);
 			this.nodes[this.nodesHash[node.id]].sons=union(node.sons,this.nodes[this.nodesHash[node.id]].sons);
 			this.nodes[this.nodesHash[node.id]].context=union(node.context,this.nodes[this.nodesHash[node.id]].context);
 			this.nodes[this.nodesHash[node.id]].label=union(node.label,this.nodes[this.nodesHash[node.id]].label);
 			this.nodes[this.nodesHash[node.id]].valued_context=fusVCtx(this.nodes[this.nodesHash[node.id]].context,node.valued_context,this.nodes[this.nodesHash[node.id]].valued_context);
+			this.nodes[this.nodesHash[node.id]].apply_context=fusACtx(this.nodes[this.nodesHash[node.id]].context,node.apply_context,this.nodes[this.nodesHash[node.id]].apply_context);
 		}
 	};
 	this.addNode = function addNode(nodeClasses,nodeID,nodeX,nodeY,nodefixed){//add a new node not existing yet, else do nothing
@@ -303,13 +364,19 @@ function LayeredGraph(){
 			}
 		}
 	};
-	this.addCtx = function addCtx(nodeID,ctx_el_l,vctx){//add a list of elements to a context and if needed, the specific value for flag and attributes of the context
+	this.addCtx = function addCtx(nodeID,ctx_el_l,vctx,actx){//add a list of elements to a context and if needed, the specific value for flag and attributes of the context
 		if(typeof(this.nodesHash[nodeID])=='undefined'){
 			console.log("addCtx : the node "+nodeID+"doesn't exist");
 			return;
 		}
+		console.log("add ctx");
+		console.log(nodeID);
+		console.log(ctx_el_l);
+		console.log(vctx);
+		console.log(actx);
 		this.nodes[this.nodesHash[nodeID]].context=union(this.nodes[this.nodesHash[nodeID]].context,ctx_el_l);
 		this.nodes[this.nodesHash[nodeID]].valued_context=fusVCtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].valued_context,vctx);
+		this.nodes[this.nodesHash[nodeID]].apply_context=fusACtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].apply_context,actx);
 	};
 	this.rmCtx = function rmCtx(nodeID,ctx_el_l){//remove a list of elements from a context
 		if(typeof(this.nodesHash[nodeID])=='undefined'){
@@ -322,6 +389,7 @@ function LayeredGraph(){
 		if(ctx_el_l.length==0)
 			this.nodes[this.nodesHash[nodeID]].context=[];
 		this.nodes[this.nodesHash[nodeID]].valued_context=fusVCtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].valued_context,null);
+		this.nodes[this.nodesHash[nodeID]].apply_context=fusACtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].apply_context,null);
 	};
 	this.addLabel = function addLabel(nodeID,lbl_el_l){//add a list of elements to a label
 		if(typeof(this.nodesHash[nodeID])=='undefined'){

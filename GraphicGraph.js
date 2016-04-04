@@ -286,9 +286,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			stack(layerG,layerG.setFather,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].father]);//put fathers
 			stack(layerG,layerG.setFather,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].father]);
 			stack(layerG,layerG.addLabel,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].label.concat()]);//put label and context
-			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[old_nodeID]].valued_context)]);
+			stack(layerG,layerG.addCtx,[old_nodeID,layerG.nodes[layerG.nodesHash[old_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[old_nodeID]].valued_context),layerG.copyACtx(layerG.nodes[layerG.nodesHash[old_nodeID]].apply_context)]);
 			stack(layerG,layerG.addLabel,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].label.concat()]);
-			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[new_nodeID]].valued_context)]);
+			stack(layerG,layerG.addCtx,[new_nodeID,layerG.nodes[layerG.nodesHash[new_nodeID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[new_nodeID]].valued_context),layerG.copyACtx(layerG.nodes[layerG.nodesHash[new_nodeID]].apply_context)]);
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[new_nodeID]].classes,new_nodeID]);//add the old and new nodes
 			stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[old_nodeID]].classes,old_nodeID]);
 			stack(layerG,layerG.removeNode,[old_nodeID]);//remove the merged node
@@ -312,7 +312,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(layerG.nodes[layerG.nodesHash[nID]].father!=null)
 			stack(layerG,layerG.setFather,[nID,layerG.nodes[layerG.nodesHash[nID]].father]);
 		stack(layerG,layerG.addLabel,[nID,layerG.nodes[layerG.nodesHash[nID]].label.concat()]);
-		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[nID]].valued_context)]);
+		stack(layerG,layerG.addCtx,[nID,layerG.nodes[layerG.nodesHash[nID]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[nID]].valued_context),layerG.copyACtx(layerG.nodes[layerG.nodesHash[nID]].apply_context)]);
 		stack(layerG,layerG.addNode,[layerG.nodes[layerG.nodesHash[nID]].classes.concat(),nID]);
 		layerG.removeNode(nID);
 		update();			
@@ -364,17 +364,17 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		layerG.removeParenting(son);
 		update();	
 	};
-	this.addCtx = function addCtx(id,ctx,vctx){//add a context to a specific node
+	this.addCtx = function addCtx(id,ctx,vctx,actx){//add a context to a specific node
 		dynG.getForce().stop();
 		var tmp_l=layerG.nodes[layerG.nodesHash[id]].context.length;
-		layerG.addCtx(id,ctx,vctx);
+		layerG.addCtx(id,ctx,vctx,actx);
 		if(layerG.nodes[layerG.nodesHash[id]].context.length > tmp_l)
 				stack(layerG,layerG.rmCtx,[id,ctx]);
 		update();	
 	};
 	this.rmCtx = function rmCtx(id,ctx){//remove a context from a specific node
 		dynG.getForce().stop();
-		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context)]);
+		stack(layerG,layerG.addCtx,[id,layerG.nodes[layerG.nodesHash[id]].context.concat(),layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context),layerG.copyACtx(layerG.nodes[layerG.nodesHash[id]].apply_context)]);
 		layerG.rmCtx(id,ctx);
 		update();	
 	};
@@ -383,6 +383,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.getCtxV = function getCtxV(id){//get a specific node context values
 		return layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
+	};
+	this.getCtxA = function getCtxA(id){//get a specific node context values
+		return layerG.copyACtx(layerG.nodes[layerG.nodesHash[id]].apply_context);
 	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
@@ -601,6 +604,20 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var i=0;i<d.context.length;i++){
 				var ctx_el=d3.selectAll("g").filter(function(e){return e.id==d.context[i];});
 				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
+					if(typeof(d.apply_context)!="undefined" && d.apply_context!=null){
+						var tmp_node=ctx_el.datum();
+						if(checkExist(d.apply_context[tmp_node.id])){
+							if(d.apply_context[tmp_node.id][0]=="E" && ((d.apply_context[tmp_node.id].length>1 && d.apply_context[tmp_node.id][1]=="E") || d.apply_context[tmp_node.id].length==1) ){
+								ctx_el.classed("exist",true);
+							}else if(d.apply_context[tmp_node.id].length>1 && d.apply_context[tmp_node.id][0]!=d.apply_context[tmp_node.id][1])
+								ctx_el.classed("existAlway",true);
+						}else{
+							ctx_el.classed("alway",true);	
+						}
+					}
+					else{
+						ctx_el.classed("alway",true);	
+					}
 				if(d3.event.shiftKey && d.valued_context!=null && (ctx_el.classed("attribute") || ctx_el.classed("flag") )){
 					var tmp_node=ctx_el.datum();
 					var tmp_id;
@@ -630,9 +647,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			d3.select(".n_tooltip").style("visibility","hidden")
 								.text("");
-			for(var i=0;i<d.context.length;i++)
-				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false);	
-			
+			for(var i=0;i<d.context.length;i++){
+				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false)
+																				 .classed("exist",false)
+																				 .classed("existAlway",false)
+																				 .classed("alway",false);	
+				
+			}
 		}
 		d3.select(".s_tooltip").style("visibility","hidden")
 								.text("");
@@ -941,6 +962,57 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			});
 		}
+		if(nugget_add && !d3.selectAll("g.selected").filter(function(dd){return d3.select(d3.event.target.parentNode).datum().context.indexOf(dd.id)!=-1;}).empty()){//edition of the element special context
+			menu.push(
+			{
+				title: "specify element application",
+				action:function(elm,d,i){
+					var selected=d3.selectAll("g.selected").filter(function(dd){return d.context.indexOf(dd.id)!=-1;});
+					var ret={};
+					selected.each(function(d2){
+						ctx_mode=true;
+						var el = d3.select(this);
+						//el.classed("hilighted",true);
+						var frm = svg.append("foreignObject");
+							var inp = frm.attr("x", getNodeX(d2)-50)
+											.attr("y", getNodeY(d2)-45-d2.toInt())
+											.attr("width", 100)
+											.attr("height", 50)
+											.append("xhtml:form")
+											.append("input")
+												.attr("id",function(){return "i_"+d2.id;})
+												.attr("value", function() {if(typeof(d.apply_context)!="undefined" && d.apply_context!=null && checkExist(d.apply_context[d2.id]))
+																				return d.apply_context[d2.id].join(",");
+																			else return "";
+												})
+												.attr("style", "width: 294px;")
+												.on("focus",function(){
+													d3.select(this).on("keypress",function(){
+														d3.event.stopPropagation();
+														//d3.event.preventDefault();
+														var txt = inp.node().value;
+														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
+															var tmp_obj={};
+															console.log(txt);
+															
+															tmp_obj[d2.id]=txt.split(",");
+															self.addCtx(d.id,[],null,tmp_obj);
+															console.log(tmp_obj);
+															d3.select(this.parentNode.parentNode).remove();
+															if(svg.selectAll("input").empty()){
+																ctx_mode=false;
+																d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+															}
+														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
+															d3.event.preventDefault();
+														}
+													});
+												})
+												.on("blur",function() {d3.select(this).on("keypress",null);});
+					});
+				}
+			});
+		}
 		if(nugget_add && !d3.selectAll("g.selected").empty()){//in nugget mode, allow to link elements to the action
 			var selected_elt=d3.select(d3.event.target.parentNode);
 			var tmp_child=null;
@@ -955,7 +1027,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								selected.each(function(d2){
 									if(d2.classes[0]!="action" && d2.classes[0]!="attribute" && d2.classes[0]!="flag"){
 										self.addEdge(d.sons[i],d2.id);
-										self.addCtx(d.id,[d2.id])
+										self.addCtx(d.id,[d2.id]);
 									}else console.log("can't link two action or flags or attributes : put it in context instead");
 								});
 								selected.classed("selected",function(d){return d.selected=false;});
@@ -1080,9 +1152,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								el.classed("hilighted",true);
 								var frm = svg.append("foreignObject");
 								var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-45-d2.toInt())
+											.attr("y", getNodeY(d2)-12)
 											.attr("width", 100)
-											.attr("height", 50)
+											.attr("height", 25)
 											.append("xhtml:form")
 											.append("label")
 												.classed("hilighted",true)
@@ -1095,7 +1167,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 												.on("focus",function(){
 													d3.select(this).on("keypress",function(){
 														d3.event.stopPropagation();
-														//d3.event.preventDefault();
+														d3.event.preventDefault();
 														var txt = inp.node().value;
 														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
 															var tmp_obj={};
@@ -1304,7 +1376,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			return;
 		}
 		if(d3.event.ctrlKey){
-			d3.select(this).classed("fixed", d.fixed = false);
+			d3.select(this).classed("fixed", d.fixed = !d.fixed);
 		}
 		if(d3.event.shiftKey && (edition || nugget_add || kr_show || lcg_view)){
 			if(d3.select(this).classed("selected"))
@@ -1317,6 +1389,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(!edition && !nugget_add && !lcg_view) return;
         var el = d3.select(this);
         var frm = svg.append("foreignObject");
+	
         var inp = frm
             .attr("x", getNodeX(d)-100)
             .attr("y", getNodeY(d)-12)
@@ -1371,7 +1444,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]]);
 					convert_table[tmp_son.id]=self.lastNode();
 					if(checkExist(tmp_son.context))
-						self.addCtx(convert_table[tmp_son.id],tmp_son.context.concat(),null);
+						self.addCtx(convert_table[tmp_son.id],tmp_son.context.concat(),null,layerG.copyACtx(tmp_son.apply_context));
 				}else{
 					self.addParent(convert_table[tmp_node.sons[s]],convert_table[tmp_node.id]);
 				}if(nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]].classes[0]=="action"){
@@ -1401,14 +1474,14 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								convert_table[tmp_ctx.id].push(self.lastNode());
 							}if(tmp_node.classes[1]!="bnd"){
 								for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
-									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null,layerG.copyACtx(tmp_node.apply_context));
 									if(act_links[l].sourceID==tmp_ctx.id)
 										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
 									else
 										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
 								}
 							}else{
-								self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
+								self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null,layerG.copyACtx(tmp_node.apply_context));
 								if(act_links[l].sourceID==tmp_ctx.id)
 										self.addEdge([self.lastNode()],convert_table[act_links[l].targetID]);
 									else
@@ -1427,7 +1500,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						var tmp_kr=self.lastNode();
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[tmp_kr]);
 						convert_table[tmp_ctx.id]=self.lastNode();
-						self.addCtx(convert_table[tmp_ctx.id],tmp_ctx.context.concat(),null);		
+						self.addCtx(convert_table[tmp_ctx.id],tmp_ctx.context.concat(),null,layerG.copyACtx(tmp_ctx.apply_context));		
 					}
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
@@ -1439,11 +1512,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						vctx={};
 						vctx[convert_table[tmp_ctx.id]]=tmp_node.valued_context[tmp_ctx.id].concat();
 					}
-					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],vctx);	
+					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],vctx,layerG.copyACtx(tmp_node.apply_context));	
 				}
 				if(tmp_ctx.classes[0]=="action" && tmp_ctx.classes[1]!="binder"){
 					addLcgAction(tmp_ctx,convert_table);
-					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],null);
+					self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id]],null,layerG.copyACtx(tmp_node.apply_context));
 				}
 				if(tmp_ctx.classes[0]=="region" || tmp_ctx.classes[0]=="key_res"){
 					var tmp_agent_root=getRoot(tmp_ctx,nuggG);
@@ -1459,7 +1532,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								if(checkedRegion.indexOf(tmp_ctx.id)==-1){
 									self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id]]);
 									convert_table[tmp_ctx.id].push(self.lastNode());
-									self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null);
+									self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null,layerG.copyACtx(tmp_node.apply_context));
 									checkedRegion.push(tmp_ctx.id);
 								}
 								if(act_links[l].sourceID==tmp_ctx.id)
@@ -1469,7 +1542,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							}
 							else if(tmp_node.classes[1]!="bnd" ){
 								for(var i=0;i<convert_table[tmp_ctx.id].length;i++){
-									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null);
+									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null,layerG.copyACtx(tmp_node.apply_context));
 									if(act_links[l].sourceID==tmp_ctx.id)
 										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
 									else
@@ -1546,6 +1619,24 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		//var
 		var initial_val="";
 		var observer="";
+		var select_act=svg.selectAll("g").filter(".selected").filter(".action").data();
+		var select_ag=svg.selectAll("g").filter(".selected").filter(".agent").data();
+		for(var i=0;i<select_act.length;i++){
+			for(var j=0;j<rule_list[select_act[i].id].length;j++){
+			observer+="%obs: '"+select_act[i].id+"_"+j+"' |";
+			var side_r=rule_list[select_act[i].id][j].right;
+			console.log(rule_list[select_act[i].id][j].right);
+			observer+=fullName(side_r[0].a)+"("+fullName(side_r[0].e);
+			if(typeof(side_r[0].v)!="undefined" && side_r[0].v!=null)
+				observer+="~"+side_r[0].v;
+			if(typeof(side_r[0].s)!="undefined" && side_r[0].s!=null)
+				observer+="!"+side_r[0].s;
+			observer+=")";
+			observer+="|\n";
+			}
+		}for(var i=0;i<select_ag.length;i++){
+			observer+="%obs: '"+select_ag[i].id+"' |"+fullName(select_ag[i].id)+"() |\n";
+		}
 		//init
 		var quantities="";
 		var tkey=Object.keys(ag_name_var_l);
@@ -1634,67 +1725,40 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 	}	
 	var to_rule = function(c_act,node,rule_list){
-		console.log("fuck context");
-		console.log(node);
-		console.log(c_act);
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
 		var tmp_ctx=[];//transformed context
-		console.log("treating ctx================================");
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
-			console.log(tmp_ctx);
 			if(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[1]!="binder"){
-				console.log("entering action");
 				if(!checkExist(rule_list[c_act.ctx[i].e])){
 					 genAction(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]],rule_list);
 				}
 				var accu=[];//context accumulator
-				console.log("accu");
-				console.log(accu);
-				console.log("working on");
-				console.log(c_act.ctx[i].e);
-				console.log(rule_list[c_act.ctx[i].e]);
 				for(var k=0;k<rule_list[c_act.ctx[i].e].length;k++){//pour chaque regle de l'action, créé une variation du context
 					var expl_ctx=[];
 					if(tmp_ctx.length==0){
-						console.log("empty");
 						var tmp_clone=[];
 						for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
 							tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
 						}
 						expl_ctx.push(tmp_clone);
 					}else{
-						console.log("tying to clone");
-						console.log(tmp_ctx);
 						for(var j=0;j<tmp_ctx.length;j++){
 							var tmp_clone=cloneEl_l(tmp_ctx[j]);
-							console.log("clone result");
-							console.log(tmp_clone);
-							console.log("trying to add");
-							console.log(rule_list[c_act.ctx[i].e][k].right);
 							for(var rr=0;rr<rule_list[c_act.ctx[i].e][k].right.length;rr++){
 								tmp_clone.push(rule_list[c_act.ctx[i].e][k].right[rr]);
 							}
-							console.log("the clone is coming back");
-							console.log(tmp_clone);
-							console.log("the attack of the clown");
 							expl_ctx.push(tmp_clone);
-							console.log(expl_ctx);
 						}
 					}
-					console.log("failing");
-					console.log(expl_ctx);
 					//create a copy of the context with the content of the right member of the action
 					for(var j=0;j<expl_ctx.length;j++){
 						accu.push(expl_ctx[j]);
 					}
-					console.log("accu2");
-					console.log(accu);
 				}
 				tmp_ctx=accu;
 			}
 			else{//sinon ajoute cette variable à tous les contextes
-				console.log("entering other");
 				if(tmp_ctx.length==0)tmp_ctx.push([]);//pour le premier element du context : lui donne une liste vide
 				for(var j=0;j<tmp_ctx.length;j++)
 					tmp_ctx[j].push(shrinkEl(c_act.ctx[i]));
@@ -1708,8 +1772,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				rule_list[node.id].push({txt:rToText(node,s_rule,tmp_ctx[i]),right:crush(s_rule.r,node)});
 			}
 		}else rule_list[node.id].push({txt:rToText(node,s_rule,[]),right:crush(s_rule.r,node)});	
-		console.log("rule generated");
-		console.log(rule_list[node.id]);
 	}
 	var crush = function(r,node){//convert bind a(x!1), b(x!1) to a(x!x.b)
 		if(node.classes[1]=="bnd" ){
@@ -1732,10 +1794,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return ret;
 	}
 	var sToText = function(node,side,ctx){
-		console.log("to code");
-		console.log(node);
-		console.log(side);
-		console.log(ctx);
 		var ret="";
 		var st=[];
 		for(var i=0;i<side.length;i++){//put agents
@@ -1805,8 +1863,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 		}
-		console.log("treating");
-			console.log(st);
 		//add the text version of the rule !
 		for(var i=0;i<st.length;i++){
 			
@@ -1914,5 +1970,161 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		return ret;
 	}
+	//get a list of initial value for input,a list of label for radio and a list of label for checkbox, and the label of the menu also take the the presence of ok and cancel button
+	//take the coordinate of the box, its side and 
+	var inputMenu = function(input_list,radio_list,check_list,label,ok,cancel,x,y,side,callfun){
+		
+	}
+	/*
+	var margin = {top: 20, right: 10, bottom: 20, left: 10};
+var width = 800 - margin.left - margin.right;
+var height = 480 - margin.top - margin.bottom;
+var svg = d3.select('body')
+            .append('svg')
+            	.attr({
+               'width': width + margin.left + margin.right,
+               'height': height + margin.top + margin.bottom
+            	})
+            .append('g')
+            	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+svg.append('rect')
+      .attr({
+      'width': width * 0.8,
+      'height': height * 0.8,
+      'x': width * 0.1,
+      'y': height * 0.1,
+      'fill': '#F8F8F8'
+      });
+var foWidth = 300;
+var anchor = {'w': width/3, 'h': height/3};
+var t = 50, k = 15;
+var tip = {'w': (3/4 * t), 'h': k};
+svg.append('circle')
+       .attr({
+       'r': 50,
+       'cx': anchor.w,
+       'cy': anchor.h,
+       'fill': '#7413E8',
+       'opacity': 0.35
+       })
+       .data([{x:anchor.w,y:anchor.h,r:50}])
+       .on('mouseover', function(){
+       		inputMenu("test",["txt1","txt2"],["radio1","radio2"],["check1","check2"],true,true,"right",cback,d3.select(this).datum());
+       });
+var cback = function(d){
+	console.log(d);
+}
+var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d){
+	d3.event.stopPropagation();
+	d3.event.preventDefault();
+		var fo=svg.append("foreignObject")
+							.attr("width", 100);
+    var form=fo.append("xhtml:form")
+    					 .attr("width",100)
+               .attr("id","_inputform")
+    form.classed("inputMenu",true);
+		if(label!=null && label!=""){
+    	form.append("label").text(label);
+    }
+    if(input_l!=null){
+    	for(var i=0;i<input_l.length;i++)
+      	form.append("input").attr("value",input_l[i]).attr("width",90).classed("inputMenus",true);
+    }
+    if(radio_l!=null){
+    	for(var i=0;i<radio_l.length;i++){
+      	form.append("input")
+   		  	.attr({
+        		type: "radio",
+        		class: "inputMenur",
+        		name: "inputMenuRadio",
+        		value: i
+    }).property("checked", i==0);
+    		form.append("label").text(" "+radio_l[i]);
+        form.append("html","<br />");
+      }
+    }if(check_l!=null){
+    	for(var i=0;i<check_l.length;i++){
+      form.append("input")
+   		  	.attr({
+        		type: "checkbox",
+        		class: "inputMenuc",
+        		name: "inputMenuCheck",
+        		value: i
+    }).property("checked", i==0);
+    		form.append("label").text(" "+check_l[i]);
+        form.append("html","<br />");
+      }	
+    }if(ok){
+    	form.append("input")
+      		.attr({
+          	type:"button",
+            class:"inputMenu",
+            id:"inputMenuOk",
+            value:"Ok"
+          }).on('click',function(){
+          var textv,radiov,checkv;
+          textv=[];
+          form.selectAll(".inputMenus").each(function(){textv.push(d3.select(this).node().value);});
+          radiov=form.select('input[name="inputMenuRadio"]:checked').node().value;
+          checkv=[];
+          form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(d3.select(this).property("value"));});
+          svg.select("foreignObject").remove();
+          return callback({line:textv,radio:radiov,check:checkv});
+          });
+    }if(cancel){
+    	form.append("input")
+      		.attr({
+          	type:"button",
+            class:"inputMenu",
+            id:"inputMenuCL",
+            value:"Cancel"
+          }).on('click',function(){
+          	svg.select("foreignObject").remove();
+            return callback({});
+          });
+    }
+    var foHeight = document.getElementById("_inputform").getBoundingClientRect().height;
+
+    fo.attr({
+        'height': foHeight,
+        'x': function(){if(pos=="left") return d.x-d.r-100; else if(pos=="right") return d.x+d.r; else return d.x-50},
+        'y': function(){if(pos=='top') return d.y-foHeight-d.r; else if(pos=="bot") return d.y+d.r;else return d.y-foHeight/2}
+       });
+d3.select(svg).insert('polygon', '.inputMenu').attr({
+'points': "0,0 0," + foHeight + " 100," + foHeight + " 100,0 0,0 0,0 0,0",
+              'height': foHeight,
+              'width': 100,
+              'fill': '#D8D8D8', 
+              'opacity': 0.75,
+              'transform': 'translate(' + (d.x) + ',' + (d.y) + ')'
+                        });
+}                
+
+
+            form.inputMenu {
+                padding: 10px;
+                color: #4A22FF;
+                background:#99ccff;
+            }
+            .lead {
+                font-style: italic;
+            }
+            p {
+                margin: 5px 0px;
+            }
+            polygon {
+                pointer-events: none;
+            }
+        
+		
+		
+		     <title>
+            SVG foreignObject tooltips in D3
+        </title>
+
+<body></body>
+
+
+*/
 	
 };

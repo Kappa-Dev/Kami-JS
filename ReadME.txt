@@ -38,6 +38,7 @@ This view will open the kasim browser version with your code. you will need to d
 -Undo : put kami in the last state : WORK IN PROGRESS
 -update : update the current view with all the new things added
 -shift + click allow you to select a specific element.
+-ctrl + click allow to unlock a locked node or lock an unlocked one.
 -passing over an element give you it class at the botom left
 -passing over an action overlay its context in blue and purple
 -passing over other nodes give you information about it in the top left
