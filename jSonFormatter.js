@@ -339,7 +339,7 @@ function jSonFormatter(gGraph){
 		
 		
 	};
-	var sublist = function(l,sidx,eidx){//get the surlist of l from sidx to eidx
+	var sublist = function(l,sidx,eidx){//get the sublist of l from sidx to eidx
 		var ret=[];
 		if(eidx>=l.length){
 			console.log("unable to sublist, endpoint fixed to list length-1");
@@ -376,9 +376,4 @@ function jSonFormatter(gGraph){
 		console.log("unable to find a class");		
 		return null;	
 	};
-
-
-	
-	
-
 }
