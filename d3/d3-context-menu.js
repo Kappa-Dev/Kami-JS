@@ -14,7 +14,6 @@ d3.contextMenu = function (menu, openCallback) {
 	// this gets executed when a contextmenu event occurs
 	return function(data, index) {	
 		var elm = this;
-
 		d3.selectAll('.d3-context-menu').html('');
 		var list = d3.selectAll('.d3-context-menu').append('ul');
 		list.selectAll('li').data(menu).enter()
@@ -23,9 +22,25 @@ d3.contextMenu = function (menu, openCallback) {
 				return d.title;
 			})
 			.on('click', function(d, i) {
-				d.action(elm, data, index);
-				d3.select('.d3-context-menu').style('display', 'none');
-			});
+				if(typeof(d.action)!='undefined'){
+					d.action(elm, data, index);
+					d3.select('.d3-context-menu').style('display', 'none');
+				}
+			})
+			.on('mouseenter',function(d,i){
+				if(typeof(d.child)!='undefined' && d.child.length>0){
+					d3.select(this).append('ul').selectAll('li').data(d.child).enter()
+						.append('li')
+						.html(function(d){ return d.title;})
+						.on('click',function(d,i){
+							d.action(elm,data,index);
+							d3.select('.d3-context-menu').style('display', 'none');
+						})
+				}
+			})
+			.on('mouseleave',function(d,i){
+				(list).selectAll('li').selectAll('ul').style('display', 'none');
+			})
 
 		// the openCallback allows an action to fire before the menu is displayed
 		// an example usage would be closing a tooltip
@@ -38,5 +53,6 @@ d3.contextMenu = function (menu, openCallback) {
 			.style('display', 'block');
 
 		d3.event.preventDefault();
+		d3.event.stopPropagation();
 	};
 };

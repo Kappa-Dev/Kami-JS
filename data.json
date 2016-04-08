@@ -1,0 +1,61 @@
+{"version":2.0,
+ "agents":[
+{"classes":["agent"],"father_classes":[],"path":[],"labels":["ag1","EGFR","thirdname"],"values":[],"x":1079.186639471502,"y":380.39062006268944},
+{"classes":["agent"],"father_classes":[],"path":[],"labels":["n9"],"values":[],"x":814.9232094272054,"y":259.98032249310677},
+{"classes":["agent"],"father_classes":[],"path":[],"labels":["toto"],"values":[],"x":1112,"y":164.25}
+],
+ "regions":[
+{"classes":["region"],"father_classes":["agent"],"path":["ag1"],"labels":["reg1"],"values":[],"x":1086.1421571038968,"y":424.8426786272348},
+{"classes":["region"],"father_classes":["agent"],"path":["ag1"],"labels":["reg2"],"values":[],"x":1031.8431858324207,"y":373.1879907833184},
+{"classes":["region"],"father_classes":["agent"],"path":["n9"],"labels":["n10"],"values":[],"x":828.471432808917,"y":214.54737820979298}
+],
+ "key_rs":[
+{"classes":["key_res"],"father_classes":["agent"],"path":["n9"],"labels":["n11"],"values":[],"x":853.0157627883849,"y":257.9418608676233},
+{"classes":["key_res"],"father_classes":["agent"],"path":["toto"],"labels":["kk"],"values":[],"x":1146.28208548276,"y":149.61668969495784}
+],
+ "attributes":[
+{"classes":["attribute","list"],"father_classes":["agent"],"path":["n9"],"labels":["n13"],"values":["y","k","u"],"x":826.5226765954574,"y":292.0184436357584},
+{"classes":["attribute","list"],"father_classes":["key_res"],"path":["toto","kk"],"labels":["kkl"],"values":["a","b","c"],"x":1142.649290858815,"y":125.51966011362576}
+],
+ "flags":[
+{"classes":["flag"],"father_classes":["agent"],"path":["n9"],"labels":["n12"],"values":["false","true"],"x":783.9299188023426,"y":283.4414918109773},
+{"classes":["flag"],"father_classes":["region"],"path":["ag1","reg1"],"labels":["f"],"values":["true","false","blob"],"x":1108.2515997313697,"y":444.63790613168436}
+],
+ "actions":[
+{"classes":["action","bnd"],"labels":["bnd1"],
+"left":[{"ref":["regions",0]}],
+"right":[{"ref":["regions",0]}],
+"context":[],
+"x":1179.0529987376403,"y":453.538107008549},
+{"classes":["action","bnd"],"labels":["bnd2"],
+"left":[{"ref":["regions",1]}],
+"right":[{"ref":["regions",1]}],
+"context":[{"ref":["actions",0]}],
+"x":889.3036349090398,"y":525.0854514712901},
+{"classes":["action","bnd"],"labels":["bind"],
+"left":[{"ref":["regions",2]}],
+"right":[{"ref":["regions",1]}],
+"context":[{"ref":["attributes",0],"values":["y","k"]},{"ref":["flags",0],"values":["true"]}],
+"x":935.4973141125442,"y":209.61602964441516},
+{"classes":["action","mod","pos"],"labels":["mod+"],
+"left":[],
+"right":[{"ref":["flags",0],"values":["false"]}],
+"context":[],
+"x":629.1083157992045,"y":293.0344445698958},
+{"classes":["action","mod","neg"],"labels":["mod-"],
+"left":[],
+"right":[{"ref":["flags",0],"values":["true"]}],
+"context":[],
+"x":643.1507855136282,"y":216.52573521618876},
+{"classes":["action","mod","neg"],"labels":["mod-"],
+"left":[],
+"right":[{"ref":["flags",1],"values":["false","blob"]}],
+"context":[],
+"x":1227,"y":320.23333740234375},
+{"classes":["action","bnd"],"labels":["bind"],
+"left":[{"ref":["key_rs",1]}],
+"right":[{"ref":["regions",0]}],
+"context":[{"ref":["flags",1],"values":["false","blob"]},{"ref":["attributes",1],"values":["a","b"]}],
+"x":1260,"y":194.25}
+]
+}
