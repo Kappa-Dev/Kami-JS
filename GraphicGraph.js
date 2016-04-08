@@ -993,11 +993,9 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														var txt = inp.node().value;
 														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
 															var tmp_obj={};
-															console.log(txt);
 															
 															tmp_obj[d2.id]=txt.split(",");
 															self.addCtx(d.id,[],null,tmp_obj);
-															console.log(tmp_obj);
 															d3.select(this.parentNode.parentNode).remove();
 															if(svg.selectAll("input").empty()){
 																ctx_mode=false;
@@ -1436,16 +1434,29 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var addLcgAction = function(tmp_node,convert_table){//for a specific action, add all the needed node in the LCG
 		var possible_target=[tmp_node.id];//possible target for edges
 		if(typeof(convert_table[tmp_node.id])=="undefined" || convert_table[tmp_node.id]==null){
+			console.log("creating node");
+			console.log(tmp_node);
 			self.addNode(tmp_node.classes.concat(),tmp_node.label.concat(),[],tmp_node.x,tmp_node.y);
 			convert_table[tmp_node.id]=self.lastNode();
+			console.log(layerG.nodes[layerG.nodesHash[self.lastNode()]]);
+			console.log(convert_table);
 			for(var s=0;s<tmp_node.sons.length;s++){//add all the action sons in the lcg
 				if(typeof(convert_table[tmp_node.sons[s]])=="undefined" || convert_table[tmp_node.sons[s]]==null){
+					console.log("son not existing");
 					var tmp_son=nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]];
+					console.log(tmp_son);
 					self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]]);
 					convert_table[tmp_son.id]=self.lastNode();
+					console.log(layerG.nodes[layerG.nodesHash[self.lastNode()]]);
+					console.log(convert_table);
 					if(checkExist(tmp_son.context))
 						self.addCtx(convert_table[tmp_son.id],tmp_son.context.concat(),null,layerG.copyACtx(tmp_son.apply_context));
 				}else{
+					console.log("node exist : adding parenting");
+					console.log(layerG.nodes[layerG.nodesHash[convert_table[tmp_node.sons[s]]]]);
+					console.log(convert_table[tmp_node.sons[s]]);
+					console.log(convert_table[tmp_node.id]);
+					console.log(convert_table);
 					self.addParent(convert_table[tmp_node.sons[s]],convert_table[tmp_node.id]);
 				}if(nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]].classes[0]=="action"){
 					possible_target.push(tmp_node.sons[s]);
@@ -1530,7 +1541,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null || tmp_node.classes[1]=="bnd"){
 								if(convert_table[tmp_ctx.id]=="undefined" || convert_table[tmp_ctx.id]==null) convert_table[tmp_ctx.id]=[];
 								if(checkedRegion.indexOf(tmp_ctx.id)==-1){
-									self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id]]);
+									self.addNode(["key_res"],[],[convert_table[tmp_agent_root.id][0]]);
 									convert_table[tmp_ctx.id].push(self.lastNode());
 									self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null,layerG.copyACtx(tmp_node.apply_context));
 									checkedRegion.push(tmp_ctx.id);
@@ -1553,11 +1564,13 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}	
 				}
 			}
-		}	
+		}
+		layerG.log();
+		console.log(convert_table);
 	}
 	var getRoot = function(node,lg){//get the root node of a slecific node "node" in a specific grap "lg"
 		var tmp_node=node;
-		while(tmp_node.father!=null){
+		while(typeof tmp_node.father!= "undefined" && tmp_node.father!=null){
 			tmp_node=lg.nodes[lg.nodesHash[tmp_node.father]];
 		}
 		return tmp_node;
@@ -1625,7 +1638,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			for(var j=0;j<rule_list[select_act[i].id].length;j++){
 			observer+="%obs: '"+select_act[i].id+"_"+j+"' |";
 			var side_r=rule_list[select_act[i].id][j].right;
-			console.log(rule_list[select_act[i].id][j].right);
 			observer+=fullName(side_r[0].a)+"("+fullName(side_r[0].e);
 			if(typeof(side_r[0].v)!="undefined" && side_r[0].v!=null)
 				observer+="~"+side_r[0].v;
@@ -1972,48 +1984,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	//get a list of initial value for input,a list of label for radio and a list of label for checkbox, and the label of the menu also take the the presence of ok and cancel button
 	//take the coordinate of the box, its side and 
-	var inputMenu = function(input_list,radio_list,check_list,label,ok,cancel,x,y,side,callfun){
-		
-	}
-	/*
-	var margin = {top: 20, right: 10, bottom: 20, left: 10};
-var width = 800 - margin.left - margin.right;
-var height = 480 - margin.top - margin.bottom;
-var svg = d3.select('body')
-            .append('svg')
-            	.attr({
-               'width': width + margin.left + margin.right,
-               'height': height + margin.top + margin.bottom
-            	})
-            .append('g')
-            	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-svg.append('rect')
-      .attr({
-      'width': width * 0.8,
-      'height': height * 0.8,
-      'x': width * 0.1,
-      'y': height * 0.1,
-      'fill': '#F8F8F8'
-      });
-var foWidth = 300;
-var anchor = {'w': width/3, 'h': height/3};
-var t = 50, k = 15;
-var tip = {'w': (3/4 * t), 'h': k};
-svg.append('circle')
-       .attr({
-       'r': 50,
-       'cx': anchor.w,
-       'cy': anchor.h,
-       'fill': '#7413E8',
-       'opacity': 0.35
-       })
-       .data([{x:anchor.w,y:anchor.h,r:50}])
-       .on('mouseover', function(){
-       		inputMenu("test",["txt1","txt2"],["radio1","radio2"],["check1","check2"],true,true,"right",cback,d3.select(this).datum());
-       });
-var cback = function(d){
-	console.log(d);
-}
 var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d){
 	d3.event.stopPropagation();
 	d3.event.preventDefault();
@@ -2090,41 +2060,18 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
         'x': function(){if(pos=="left") return d.x-d.r-100; else if(pos=="right") return d.x+d.r; else return d.x-50},
         'y': function(){if(pos=='top') return d.y-foHeight-d.r; else if(pos=="bot") return d.y+d.r;else return d.y-foHeight/2}
        });
-d3.select(svg).insert('polygon', '.inputMenu').attr({
+/*d3.select(svg).insert('polygon', '.inputMenu').attr({
 'points': "0,0 0," + foHeight + " 100," + foHeight + " 100,0 0,0 0,0 0,0",
               'height': foHeight,
               'width': 100,
               'fill': '#D8D8D8', 
               'opacity': 0.75,
               'transform': 'translate(' + (d.x) + ',' + (d.y) + ')'
-                        });
+                        });*/
 }                
 
 
-            form.inputMenu {
-                padding: 10px;
-                color: #4A22FF;
-                background:#99ccff;
-            }
-            .lead {
-                font-style: italic;
-            }
-            p {
-                margin: 5px 0px;
-            }
-            polygon {
-                pointer-events: none;
-            }
-        
-		
-		
-		     <title>
-            SVG foreignObject tooltips in D3
-        </title>
-
-<body></body>
 
 
-*/
 	
 };

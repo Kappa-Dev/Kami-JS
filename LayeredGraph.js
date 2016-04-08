@@ -369,11 +369,6 @@ function LayeredGraph(){
 			console.log("addCtx : the node "+nodeID+"doesn't exist");
 			return;
 		}
-		console.log("add ctx");
-		console.log(nodeID);
-		console.log(ctx_el_l);
-		console.log(vctx);
-		console.log(actx);
 		this.nodes[this.nodesHash[nodeID]].context=union(this.nodes[this.nodesHash[nodeID]].context,ctx_el_l);
 		this.nodes[this.nodesHash[nodeID]].valued_context=fusVCtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].valued_context,vctx);
 		this.nodes[this.nodesHash[nodeID]].apply_context=fusACtx(this.nodes[this.nodesHash[nodeID]].context,this.nodes[this.nodesHash[nodeID]].apply_context,actx);

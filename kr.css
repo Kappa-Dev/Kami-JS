@@ -1,3 +1,19 @@
+ form.inputMenu {
+	padding: 10px;
+    color: #4A22FF;
+    background:#99ccff;
+}
+.lead {
+    font-style: italic;
+}
+p {
+    margin: 5px 0px;
+}
+polygon {
+    pointer-events: none;
+}
+        
+		
 rect.selection {
     stroke          : gray;
     stroke-dasharray: 4px;
