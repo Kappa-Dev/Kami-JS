@@ -201,14 +201,39 @@ function LayerGraph(n,e){
             }
         };
         this.addContext = function addContext(c){
-            if(context)
-        }
+            var k_l;
+            if(typeof c != 'undefined' && c!=null) k_l=Object.keys(c);
+            else{ console.log("undefined or null context for addContext call"); return; }
+            if(k_l.length==0){
+                console.log("empty context for addContext call");
+                return;
+            }
+            for(var i=0;i<k_l.length;i++){
+                if(typeof context[k_l[i]]!= 'undefined' && context[k_l[i]]!=null){
+                    console.log(k_l[i]+" is already present in the context of this action : "+id);
+                }else{
+                    if(typeof c[k_l[i]] != 'undefined' && c[k_l[i]]!=null && c[k_l[i]].length>0)
+                        context[k_l[i]]=c[k_l[i]].concat();
+                    else context[k_l[i]]=[];
+                }
+            }
+        };//notice that in order to add:rm specific value from a context we need to remove the key and add a new one !
+        this.rmContext = function rmContext(c){
+            var k_l=Object.keys(c);
+            for(var i=0;i<k_l.length;i++){
+                if(typeof context[k_l[i]]!='undefined' && typeof context[k_l[i]]!=null)
+                    delete context[k_l[i]];
+            }
+        };//notice that in order to add:rm specific value from a context we need to remove the key and add a new one !
 	}
 	function Edge(i,o){//i and o are id of nodes
 		var id = EDGECOUNT++;
 		var input=i;
 		var output=o;
-	};
+        this.getInput = function getInput(){ return input;};
+        this.getOutput = function getOutput(){return output;};
+        this.getId= function getId(){return id;};
+	}
 	
 	this.init = function init(){
 		for(var i=0;i<nodes.length;i++){
