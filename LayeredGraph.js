@@ -2,7 +2,46 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
+//layeredgraph class
+function LayeredGraph(nodes,edges){
+    function Stack(f_id, fun_list, idx){
+        var id=f_id;
+        this.stack=[];
+        if(typeof(fun_list)!= 'undefined')
+            this.stack=fun_list;
+        this.idx=0;
+        if(typeof(idx)!='undefined' && idx<this.stack.length && idx>0)
+            this.idx=idx;
+        this.undo = function(redo){
+            if(idx>=0){
+                this.stack.push(redo);
+                var fun=this.stack[idx--];
+                fun.f.apply(fun.o,fun.p);
+            }else console.log("stack empty for "+f_id);
+        }
+        this.redo = function(){
+            if(idx<this.stack.length-1){
+                var fun=this.stack[++idx];
+                fun.f.apply(fun.o,fun.p);
+            }else console.log("no redo for "+f_id);
+        }
+        this.add = function(undo){
+            this.stack.push(undo);
+            idx=this.stack.length-1;
+        }
+    }
+    function Node(type, id, uid, labels,values, father,sons,linked,stack){
+
+    }
+    function Action(type,id,nid,labels,context,attr_l, left, right, stack){
+
+    }
+    function Edge(type,id,input,output){
+
+    }
+}
 //node definition
+
 function Node(classes,id,x,y,fixed){
 	this.classes=classes;//the node class
 	this.id=id;//the node id
