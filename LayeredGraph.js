@@ -30,15 +30,6 @@ function LayeredGraph(nodes,edges){
             idx=this.stack.length-1;
         }
     }
-    function Node(type, id, uid, labels,values, father,sons,linked,stack){
-
-    }
-    function Action(type,id,nid,labels,context,attr_l, left, right, stack){
-
-    }
-    function Edge(type,id,input,output){
-
-    }
 }
 //node definition
 

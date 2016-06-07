@@ -2,7 +2,7 @@ var INTERNAL_ID=0;
 function LayerGraph(n,e){
 	var NODECOUNT = 0;
 	var EDGECOUNT = 0;
-	var layerId = INTERNAL_ID++;
+	var layerId = "l_"+INTERNAL_ID++;
 	var initialized = false;
 	var n_ById={};//Bijective function
 	var e_ById={};//Bijective function
@@ -39,9 +39,9 @@ function LayerGraph(n,e){
             }
             return res;
         }
-    };//add a list of element to an ordered list.
+    };//Perform union between two ordered.
 	function Component(t,l,u){//t is a type l is a label and u is an uid.
-		var id = NODECOUNT++;
+		var id = "n_"+NODECOUNT++;
 		var type = t;
 		var uid = u || null;
 		var labels = l || [];
@@ -114,9 +114,9 @@ function LayerGraph(n,e){
                     values.splice(idx,1);
             }
         };
-	}
+	}//define components node != action nodes
 	function Action(t,c,n){//t is a type, c is a context and n is a name
-		var id = NODECOUNT++;
+		var id = "a_"+NODECOUNT++;
 		var type = t;
 		var name = n || type;
 		var sons = [];
@@ -225,16 +225,15 @@ function LayerGraph(n,e){
                     delete context[k_l[i]];
             }
         };//notice that in order to add:rm specific value from a context we need to remove the key and add a new one !
-	}
+	}// define action nodes != component nodes
 	function Edge(i,o){//i and o are id of nodes
-		var id = EDGECOUNT++;
+		var id = "e_"+EDGECOUNT++;
 		var input=i;
 		var output=o;
         this.getInput = function getInput(){ return input;};
         this.getOutput = function getOutput(){return output;};
         this.getId= function getId(){return id;};
-	}
-	
+	}// define edges
 	this.init = function init(){
 		for(var i=0;i<nodes.length;i++){
 			n_ById[nodes[i].getId()]=nodes[i];
@@ -256,5 +255,80 @@ function LayerGraph(n,e){
 			e_ProjectionByInput[edges[i].getInput()] = edges[i].getId();
 			e_ProjectionByOutput[edges[i].getOutput()] = edges[i].getId();
 		}
-	};
+	};//create a new layer graph with nodes and edges
+    this.getNodeIdList = function getNodeIdList(){//return the list of node id
+        return Object.keys(n_ById);
+    };
+    this.getComponent = function getComponent(id){//return a specific component given its ID
+        return n_ById[id];
+    };
+    this.getAction = function getAction(id){// return a specific action given its ID
+            return n_ById[id];
+    };
+    var addComponent = function(t,l,f,v,u){
+        var compo = new Component(t,l,u);
+        //if(f!=null) {
+            compo.setFather(f);
+            n_ById[f].addSons([compo.getId()]);
+        //}
+        compo.addValues(v);
+        compo.setUid(u);
+        n_ById[compo.getId()]=compo;
+        if(l!=null && l.length>0){
+            for(var i=0;i<l.length;i++){
+                if(typeof n_ProjectionByLabel[l[i]]=='undefined' || n_ProjectionByLabel[l[i]]==null)
+                    n_ProjectionByLabel[l[i]]=[];
+                    n_ProjectionByLabel[l[i]].push(compo.getId());
+            }
+        }
+        if(typeof u!= 'undefined' && u!=null){
+            if(typeof n_ProjectionByUid[u]!= 'undefined' || n_ProjectionByUid[u]!=null)
+                console.log("the node "+compo.getId()+" as an Uid "+u+" witch already exist for the node "+n_ProjectionByUid[u]);
+            else n_ProjectionByUid[u]=compo.getId();
+        }
+
+    };//add a new component to the layer graph
+    var addAction = function(t,c,n){
+        var act = new Action(t,c,n);
+        n_ById[act.getId()]=act;
+        if(n!=null){
+            if(typeof n_ProjectionByLabel[n]=='undefined' || n_ProjectionByLabel[n]==null)
+                n_ProjectionByLabel[n]=[];
+            n_ProjectionByLabel[n].push(act.getId());
+        }
+    };//add a new action to the layer graph
+    this.addGene = function addGene(l,u){
+        addComponent("gen",l,null,null,u);
+    };//functions for i/o adding specific nodes !
+    this.addRegion = function addRegion(l,f,u){
+        addComponent("reg",l,f,null,u);
+    };
+    this.addKeyres = function addKeyres(l,f){
+        addComponent("key",l,f,null,null);
+    };
+    this.addFlag = function addFlag(l,f,v){
+        addComponent("fla",l,f,v,null);
+    };
+    this.addAttribute = function addAttribute(l,f,v){
+        addComponent("att",l,f,v,null);
+    }
+    this.addBind = function addBind(c,n){
+        addAction("bnd",c,n);
+    };
+    this.addBreak = function addBreak(c,n){
+        addAction("brk",c,n);
+    };
+    this.addModPos = function addModPos(c,n){
+        addAction("mod+",c,n);
+    };
+    this.addModNeg = function addModNeg(c,n){
+        addAction("mod-",c,n);
+    };
+    this.addSyn = function addSyn(c,n){
+        addAction("syn",c,n);
+    };
+    this.addDeg = function addDeg(c,n){
+        addAction("deg",c,n);
+    };//end of i/o function for adding nodes !
+    
 }
