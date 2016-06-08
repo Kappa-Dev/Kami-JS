@@ -9,7 +9,7 @@ function jSonFormatter(gGraph){
 	var force=false;
 	var refNode={};
 	var count=0;
-	var sublist = function(list,start,end){//return a new list containing the value from start to end(excluded)
+	/*var sublist = function(list,start,end){//return a new list containing the value from start to end(excluded)
 		var ret=[];
 		if(start==null) start =0;
 		if(end==null) end=list.length;
@@ -17,7 +17,7 @@ function jSonFormatter(gGraph){
 			ret.push(list[i]);
 		}
 		return ret;
-	}
+	};*/
 	this.init = function init(filename){//import a layered graph from a json file
 		name=filename;
 		count=gGraph.lastNode();
@@ -121,7 +121,7 @@ function jSonFormatter(gGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="]\n}";
 		return output;
-	}
+	};
 	var toTextAct = function(d,a,r,k,att,f,act,out){
 		var names="";
 		var left="";
@@ -153,7 +153,7 @@ function jSonFormatter(gGraph){
 		ctx+=strConvert(l_ctx,d,a,r,k,att,f,act,out);
 		act[d.id]=count++;
 		return out+"{\"classes\":[\""+d.classes.join("\",\"")+"\"],\"labels\":[\""+names+"\"],\n\"left\":["+left+"],\n\"right\":["+right+"],\n\"context\":["+ctx+"],\n\"x\":"+d.px+",\"y\":"+d.py+"},\n";
-	}
+	};
 	var strConvert = function (l_left,d,a,r,k,att,f,act,out){
 		var left="";
 		for(var i=0;i<l_left.length;i++){
@@ -200,7 +200,7 @@ function jSonFormatter(gGraph){
 			if(i<l_left.length-1)left+=",";
 		}
 		return left;
-	}
+	};
 	var toText = function(d){
 		var names="";
 		var fclass="";
@@ -350,7 +350,7 @@ function jSonFormatter(gGraph){
 		}
 		return ret;
 	};
-	var findPathClass = function(total_p_s,path_size,endclass,pre_endclass){//find the class of a specific element of a path given the path size, the element position, the class of thelast element of the path and the class of its previous element
+	var findPathClass = function(total_p_s,path_size,endclass,pre_endclass){//find the class of a specific element of a path given the path size, the element position, the class of the last element of the path and the class of its previous element
 		if((endclass[0]=="flag" || endclass[0]=="attribute") && pre_endclass[0]=="region"){
 			if(path_size==2) return pre_endclass;
 			if(path_size==1) return ["agent"];
