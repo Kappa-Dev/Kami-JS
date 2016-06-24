@@ -1,8 +1,13 @@
-//layered_graph.js
-//author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
-//this file is under Gnu LGPL licence
-//this file is part of the Executable Knowledge project
-//node definition
+/* *********************
+ *	layered_graph.js
+ *	author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
+ *	this file is under Gnu LGPL licence
+ *	this file is part of the Executable Knowledge project
+ * ********************** */
+ 
+/* ******************* *
+ *   node definition   *
+ * ******************* */
 function Node(classes,id,x,y,fixed){
 	this.classes=classes;//the node class
 	this.id=id;//the node id
