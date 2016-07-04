@@ -567,14 +567,14 @@ function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges
 		force=d3.layout.force();
 		force.nodes(nodes)
 		.links(links)
-		.linkDistance(function(d){if(kami.getEdge(d.id).getType()!='parent') return 100; else return (nodeSize(kami.getNode(d.source).getType())+nodeSize(kami.getNode(d.target).getType()))})
-		.linkStrength(function(d){if(kami.getEdge(d.id).getType()!='parent') return 0.7; else return 5})
-		.charge(function(d){if(kami.getNode(d.id).getType()[0]=='action' && kami.getNode(d.id).getType()[1]!='input' && kami.getNode(d.id).getType()[1]!='output' ) return -300; else return -600})
+		.linkDistance(function(d){if(kami.getType(d.id)[0]!='parent') return 100; else return (nodeSize(kami.getType(d.source))+nodeSize(kami.getType(d.target)))})
+		.linkStrength(function(d){if(kami.getType(d.id)[0]!='parent') return 0.7; else return 5})
+		.charge(function(d){if(kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]!='input' && kami.getType(d.id)[1]!='output' ) return -300; else return -600})
 		.chargeDistance(function(d){
-			if((kami.getNode(d.id).getType()[0]=='action' && kami.getNode(d.id).getType()[1]!='input' && kami.getNode(d.id).getType()[1]!='output') || (kami.getNode(d.id).getType()[0]=='action' && kami.getNode(d.id).getType()[1]=='agent')) 
+			if((kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]!='input' && kami.getType(d.id)[1]!='output') || (kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]=='agent')) 
 				return 100;
 			else 
-				return nodeSize(kami.getNode(d.id).getType());
+				return nodeSize(kami.getType(d.id));
 			})
 		.size([width, height]);
 		first_init=false;
@@ -637,14 +637,16 @@ function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges
 	this.wakeUp = function wakeUp(val){//speed up tick function
 		force.start();
 		if(!(typeof(val)!="undefined" && val!=null && !val))
-			d3.selectAll("g.agent").classed("fixed",false);
-			d3.selectAll("g.action").classed("fixed",false);
+			//d3.selectAll("g.agent").classed("fixed",false);
+			//d3.selectAll("g.action").classed("fixed",false);
+			d3.selectAll("g.node").classed("fixed",false);
 		for(var i=0;i<300;i++){
 			force.tick();
 		}
 		if(first_init){
-			d3.selectAll("g.agent").classed("fixed",true);
-			d3.selectAll("g.action").classed("fixed",true);
+			//d3.selectAll("g.agent").classed("fixed",true);
+			//d3.selectAll("g.action").classed("fixed",true);
+			d3.selectAll("g.node").classed("fixed",true);
 		}
 		first_init=true;
 	};
@@ -654,12 +656,12 @@ function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges
 			.data(kami.getEdges(), function(d) { return d.id; });
         edges.enter().insert("line","g")
 			.classed("edge",true)//type can be 'link','parent','posinfl','neginfl','rw_rule'
-            .classed("link",function(d){return kami.getType(d.id)=="link"})
-			.classed("parent",function(d){return kami.getType(d.id)=="parent"})
-			.classed("influence",function(d){return kami.getType(d.id)=="posinfl" || kami.getType(d.id)=="neginfl"})
-			.classed("posinfl",function(d){return kami.getType(d.id)=="posinfl"})
-			.classed("neginfl",function(d){return kami.getType(d.id)=="neginfl"})
-			.classed("rw_rule",function(d){return kami.getType(d.id)=="rw_rule"});
+            .classed("link",function(d){return kami.getType(d.id)[0]=="link"})
+			.classed("parent",function(d){return kami.getType(d.id)[0]=="parent"})
+			.classed("influence",function(d){return kami.getType(d.id)[0]=="posinfl" || kami.getType(d.id)[0]=="neginfl"})
+			.classed("posinfl",function(d){return kami.getType(d.id)[0]=="posinfl"})
+			.classed("neginfl",function(d){return kami.getType(d.id)[0]=="neginfl"})
+			.classed("rw_rule",function(d){return kami.getType(d.id)[0]=="rw_rule"});
 		d3.selectAll(".link").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
 		d3.selectAll(".influence").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
 		d3.selectAll(".rw_rule").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
@@ -728,33 +730,42 @@ function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges
 		if(first_init || force.alpha()<=0.00501){
 			//tick for nodes
 			nodes.attr("transform", function(d) {
-				if(kami.getType(d.id)[0]!="action" && kami.getType(d.id)[1]!="input" && kami.getType(d.id)[1]!="output"){
+				if(kami.getType(d.id)[0]!="action" || (kami.getType(d.id)[1]!="input" && kami.getType(d.id)[1]!="output")){
 					d.x=Math.max(nodeSize(kami.getType(d.id)), Math.min(width - nodeSize(kami.getType(d.id)), d.x));
 					d.y=Math.max(nodeSize(kami.getType(d.id)), Math.min(height - nodeSize(kami.getType(d.id)), d.y));
-					if()
 					return "translate(" + d.x + "," + d.y + ")"; 
 					if(kami.getType(d.id)[0]=="action"){
 						var in_out=kami.getSons(d.id);
 						var mult_in=false;
 						var mult_out=false;
-						for(var i=0;i<in_out.length;i++){
+						for(var i=0;i<in_out.length;i++){//see for optimisation : hypothesis : actions have few attributes ! force the position of input/output of actions.
 							if(kami.getType(in_out[i])[0]!="attribute"){
-								if(kami.getType(in_out[i])[1]=="input" && mult_in){
-									
+								if((kami.getType(in_out[i])[1]=="input" && !mult_in) || (kami.getType(in_out[i])[1]=="output" && mult_out)){//the first input is on the left 
+									d.x=nodes[nodesHash[kami.getFather(d.id)]].x-nodeSize(kami.getType(kami.getFather(d.id)));
+									mult_in=true;
+								}if((kami.getType(in_out[i])[1]=="input" && mult_in) || (kami.getType(in_out[i])[1]=="output" && !mult_out)){//the first output is on the right
+									d.x=nodes[nodesHash[kami.getFather(d.id)]].x+nodeSize(kami.getType(kami.getFather(d.id)));
+									mult_out=true;
+								}
+									d.y=nodes[nodesHash[kami.getFather(d.id)]].y-(nodeSize(kami.getType(kami.getFather(d.id)))/2)
 							}
-						d.x=nodes[nodesHash[kami.getFather(d.id)]].x-nodeSize(kami.getType(kami.getFather(d.id)))
-						d.y=nodes[nodesHash[kami.getFather(d.id)]].y-(nodeSize(kami.getType(kami.getFather(d.id)))/2)
+						
+						}
 					}
 				}
 			});
 			//tick for edges
 			edges.attr("x1", function(d){return nodes[nodesHash[d.source]].x;})
-				.attr("y1", function(d){return nodes[nodesHash[d.source]].y;})
-				.attr("x2", function(d){return nodes[nodesHash[d.target]].x;})
-				.attr("y2", function(d){return nodes[nodesHash[d.target]].y;});
+				 .attr("y1", function(d){return nodes[nodesHash[d.source]].y;})
+				 .attr("x2", function(d){return nodes[nodesHash[d.target]].x;})
+				 .attr("y2", function(d){return nodes[nodesHash[d.target]].y;});
 			first_init=true;
+		}else{//fixe all node when in stable state.
+			d3.selectAll("g.node").classed("fixed",true);
 		}
 	};
+	
+	
 }
 function Kami(container){//kami output : no access to node/edges, only there meta datas !
 	var DEFAULT_UID =0;//default uid counter (every node has a uid, protein have specific uid called up_id)
@@ -786,50 +797,49 @@ function Kami(container){//kami output : no access to node/edges, only there met
 		ng_undo_redo=new UndoRedoStack();
 		ag_undo_redo=new UndoRedoStack();
 		setState(currentView);//change the current view
-		guiShow();//create the svg and show everything !
-		initLayout()//start the layout graph.
-		startLayout();
-		listenerInit();
-		update();
+		//guiShow();//create the svg and show everything !
+		//initLayout()//start the layout graph.
+		//startLayout();
+		//listenerInit();
+		//update();
 	};
-	var setState = function(st){//set Kami to a specific state (this change the current layer and ifluence the element of the menu witch are shown)
-		if(currentView==st)
-			return;
-		switch(st){
-			case "NUV":
-			if(current_nugget ==-1)
-				currentLayer=nugget_graph;
-				
-			break;
-			case "AGV":
-			break;
-			case "LCG":
-			break;
-			case "KPV":
-			break;
-			default:
-			throw "unknow state !";
+	this.getNodes = function getNodes(nugg){
+		if(!nugg)
+			return currentLayer.getNodes();
+		else return nugget_graph.getNodeByNugget(nugg);
+	};
+	this.getEdges = function getEdges(nugg){
+		if(!nugg)
+			return currentLayer.getEdges();
+		else 
+			return nugget_graph.getEdgeByNugget(nugg);
+	};
+	this.getType = function getType(id,nugg){
+		if(id.split('_')[0]=='e'){
+			if(nugg)
+				return nugget_graph.getEdge(id).getType();//return a unique value in a tab
+			else
+				return currentLayer.getEdge(id).getType();//return a unique value in a tab
 		}
-	}
-	var initLGui = function(){
-		
+		else {
+			if(nugg)
+				return nugget_graph.getNode(id).getType();//return a unique value in a tab
+			else
+				return currentLayer.getNode(id).getType();//return a unique value in a tab
+		}
 	};
-	var guiShow = function(){//generate if needed and show the current layerGraph
-		
+	this.getLabel = function getLabel(id,nugg){
+		if(nugg)
+			return nugget_graph.getNode(id).getLabels();
+		else	
+			return currentLayer.getNode(id).getLabels();
+	};
+	this.getValue = function getValue(id,nugg){
+		if(nugg)
+			return nugget_graph.getNode(id).getValues();
+		else
+			return currentLayer.getNode(id).getValues();
 	}
-	var listenerInit = function(){//add all the listener to html elements !
-		
-	}
-	var update = function(delta){//core function that update the UI according to graph modification. if delta is defined, it will only update from delta, !!!! else, it will regenerate the full graph !!!! (time consuming process !);
-		
-	}
-	var initLayout = function(){//initialize the force layout.
-		
-	}
-	var startLayout = function(){//start the force layout (may be not used)
-		
-	}
-	
 
 	
 } 
