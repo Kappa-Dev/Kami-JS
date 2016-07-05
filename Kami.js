@@ -787,6 +787,9 @@ function Kami(container_name){
     var current_state="ACG";
     var current_lg=act_graph;
     var svg=null;
+	var cmdParser = function(cmd){
+		
+	}
 
 
 }
