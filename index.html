@@ -56,8 +56,53 @@
     rel.log();
     rel.rmR(['n1','n2'],['n3','n5']);
     rel.log();
-    console.log("mod(y->t)".split(/\(|\)/));
+    var cmdToNode = function(node_text){
+        var lvl=0;
+        var pos=0;
+        var token="";
+        var ret=new Tree("root",null);
+        var current_node=ret;
+        for(var i=0;i<node_text.length;i++){
+            var next_c = node_text.charAt(i);
 
+            if(next_c!='(' && next_c!=',' && next_c!=')') {
+                token += next_c;
+            }
+            else if(next_c==','){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+            }
+            else if(next_c=='('){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+                current_node=current_node.sons[current_node.sons.length-1];
+            }
+            else if(next_c==')'){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+                current_node=current_node.fth;
+            }
+        }
+        if(token!="") {//flush the last token
+            current_node.addSon(token);
+        }
+        return ret;
+    };
+    console.log(cmdToNode("Agent(reg(.key(~fl(x,y)),.key2)),Ag2"));
+    function Tree(label,fth){
+        this.label=label;
+        this.sons=[];
+        this.fth=fth;
+        this.addSon = function addSon(label){
+            this.sons.push(new Tree(label,this));
+        };
+    }
 	
 </script>
 </head> 

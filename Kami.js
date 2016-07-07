@@ -688,6 +688,9 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
     this.getTarget = function getTarget(id){
         return getEdge(id).getTarget();
     };
+    this.getLastNodeId = function getLastNodeId(){
+        return 'n_'+(NODE_ID-1);
+    }
 }
 function Relation(){
     var antecedent_to_image={};//hashtable : key : antecedent, values : images
@@ -777,8 +780,17 @@ function Relation(){
         }
     };
 }
+function Tree(label,fth){//simple tree structure
+    this.label=label;
+    this.sons=[];
+    this.fth=fth;
+    this.addSon = function addSon(label){
+        this.sons.push(new Tree(label,this));
+    };
+}
 function Kami(container_name){
     var NUGGET_ID=0;
+    var UID=0;
     var nugg_graph=new LayerGraph();
     var ngg_R_acg=new Relation();
     var act_graph=new LayerGraph();
@@ -787,11 +799,103 @@ function Kami(container_name){
     var current_state="ACG";
     var current_lg=act_graph;
     var svg=null;
-	var cmdParser = function(cmd){
-		
-	}
+    this.init = function init(){//generate svg+menu
+        
+    };
+	var cmdParser = function(cmd){//parse command lines : [tar[@ctx]] act tar[@ctx]; cmd lines
+		var cmd_l=cmd.split(/;\n+/);
+		for(var i=0;i<cmd_l.length-1;i++){
+            var cmd_ct=cmd_l[i].split(" ");
+            var ct=[];
+            var tar={'left':[],'right':[]};
+            var act=null;
+            if(cmd_ct.length<3){
+                var nodes=cmd_ct[1].split('@');
+                if(nodes.length>1)
+                    ct.concat(nodeParse(nodes[1]));
+                tar.left.concat(nodeParse(nodes[0]));
+                act=parseAction(cmd_ct[0]);
+            }else if(cmd_ct.length==3){
+                var nodes=cmd_ct[0].split('@');
+                if(nodes.length>1)
+                    ct.concat(nodeParse(nodes[1]));
+                tar.left.concat(nodeParse(nodes[0]));
+                act=parseAction(cmd_ct[1]);
+                nodes=cmd_ct[2].split('@');
+                if(nodes.length>1)
+                    ct.concat(nodeParse(nodes[1]));
+                tar.right.concat(nodeParse(nodes[0]));
+            }
+            cmdToNode(ct);
+            cmdToNode(tar.left);
+            cmdToNode(tar.right);
+            cmdToAct(act,tar);
+            nuggetProjection("ng_"+NUGGET_ID);//update ngg_R_acg and act_graph
+            NUGGET_ID++;
+        }
+	};
+    var cmdToNode = function(node_text){
+        var tree=cmdToTree(node_text);
+        treeToNode(tree);
+    };
+    var cmdToTree = function(node_text){//return a tree structure corresponding to a specific sentence
+        var token="";
+        var ret=new Tree("root",null);
+        var current_node=ret;
+        for(var i=0;i<node_text.length;i++){
+            var next_c = node_text.charAt(i);
+
+            if(next_c!='(' && next_c!=',' && next_c!=')') {
+                token += next_c;
+            }
+            else if(next_c==','){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+            }
+            else if(next_c=='('){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+                current_node=current_node.sons[current_node.sons.length-1];
+            }
+            else if(next_c==')'){
+                if(token!="") {
+                    current_node.addSon(token);
+                    token = "";
+                }
+                current_node=current_node.fth;
+            }
+        }
+        if(token!="") {//flush the last token
+            current_node.addSon(token);
+        }
+        return ret;
+    };
+    var treeToNode = function(tree){
+        for(var i=0;i<tree.sons.length;i++){
+            switch(tree.sons[i].label.charAt(0)){
+                case '.':
+                    nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],checkUid(tree.sons.label.substr(1)));
+                    var n_fth=nugg_graph.getNodeByLabels([tree.label.substr(1)])
+                    if(fullListCheck(n_fth)){
+                        if(n_fth.length==1)
+                            nugg_graph.addEdge(t,ng,i,o);
+                        else
+                            console.log("multiple possible root for "+tree.label.substr(1)+", please specify an Uid");
+
+                    }
 
 
+            }
+        }
+    }
+    var cmdToAct = function(act,target_nodes){
+
+    };
+    
 }
 
 function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges and listener from the kami object.
