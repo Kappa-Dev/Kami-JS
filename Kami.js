@@ -832,6 +832,7 @@ function Kami(container_name){
             cmdToAct(act,tar);
             nuggetProjection("ng_"+NUGGET_ID);//update ngg_R_acg and act_graph
             NUGGET_ID++;
+			uiUpdate();//update the GUI
         }
 	};
     var cmdToNode = function(node_text){
@@ -878,7 +879,8 @@ function Kami(container_name){
         for(var i=0;i<tree.sons.length;i++){
             switch(tree.sons[i].label.charAt(0)){
                 case '.':
-                    nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],checkUid(tree.sons.label.substr(1)));
+					var node_uid=checkUid(tree.sons.label.substr(1),act_graph);//find if the label is an uid or if the label correspond to one
+                    nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],node_uid);
                     var n_fth=nugg_graph.getNodeByLabels([tree.label.substr(1)])
                     if(fullListCheck(n_fth)){
                         if(n_fth.length==1)
