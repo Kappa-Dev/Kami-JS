@@ -7,105 +7,20 @@
 <meta name="keywords" content="Kappa,knowledge representation">
 <meta name="author" content="Adrien Basso-Blandin">
 <meta http-equiv="Cache-Control" content="no-store" />
-<link rel="stylesheet" type="text/css" href="kr.css">
+<link rel="stylesheet" type="text/css" href="kami.css">
 <script src="d3/d3.min.js"></script>
 <script src="d3/d3-context-menu.js"></script>
 <script src="Kami.js"></script>
 <script>
-	var showtime = new Kami("body");
-	var lg= new LayerGraph();
-	lg.addNode(['component','agent'],['ng_0'],['ag1']);
-	lg.addNode(['component','agent'],['ng_0'],['ag1']);
-	lg.addNode(['component','agent'],['ng_1'],['ag2']);
-	lg.addNode(['component','flag'],['ng_0'],['fl1']);
-	lg.addNode(['component','flag'],['ng_1'],['fl1']);
-	lg.addNode(['component','region'],['ng_1'],['reg1']);
-	lg.addNode(['action','bnd'],['ng_0'],['bnd1']);
-	lg.addEdge('parent',['ng_0'],'n_3','n_0');
-	lg.addEdge('link',['ng_0'],'n_0','n_6');
-	lg.addEdge('link',['ng_0'],'n_1','n_6');
-	lg.addEdge('parent',['ng_1'],'n_4','n_2');
-	lg.addEdge('parent',['ng_1'],'n_5','n_2');
-	lg.log();
-	lg.logStack();
-	//lg.undo();
-	//lg.localUndo('ng_0');
-	//lg.log();
-	//lg.localUndo('ng_0');
-	//lg.log();
-    lg.undoNugget('ng_0');
-	//st.stack(lg.addEdge('parent',['ng_0'],'n_5','n_1'));
-	//console.log(st.redo());
-	//console.log(st.localRedo('ng_1'));
-	//lg.clearLocal('ng_0');
-	lg.log();
-    lg.logStack();
-    lg.redoNugget('ng_0');
-    lg.log();
-    lg.logStack();
-    var rel = new Relation();
-    rel.addR(['n1','n2'],['n3','n4','n5']);
-    rel.log();
-    rel.addR(['n6'],['n7','n8','n5']);
-    rel.log();
-    rel.addR(['n1','n2'],['n9']);
-    rel.log();
-    rel.rmAnt('n1');
-    rel.log();
-    rel.rmIm('n5');
-    rel.log();
-    rel.rmR(['n1','n2'],['n3','n5']);
-    rel.log();
-    var cmdToNode = function(node_text){
-        var lvl=0;
-        var pos=0;
-        var token="";
-        var ret=new Tree("root",null);
-        var current_node=ret;
-        for(var i=0;i<node_text.length;i++){
-            var next_c = node_text.charAt(i);
-
-            if(next_c!='(' && next_c!=',' && next_c!=')') {
-                token += next_c;
-            }
-            else if(next_c==','){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-            }
-            else if(next_c=='('){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-                current_node=current_node.sons[current_node.sons.length-1];
-            }
-            else if(next_c==')'){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-                current_node=current_node.fth;
-            }
-        }
-        if(token!="") {//flush the last token
-            current_node.addSon(token);
-        }
-        return ret;
-    };
-    console.log(cmdToNode("Agent(reg(.key(~fl(x,y)),.key2)),Ag2"));
-    function Tree(label,fth){
-        this.label=label;
-        this.sons=[];
-        this.fth=fth;
-        this.addSon = function addSon(label){
-            this.sons.push(new Tree(label,this));
-        };
+	var showtime;
+    window.onload = function () {
+        showtime = new Kami("main-container");
+        showtime.init();
     }
-	
 </script>
 </head> 
 <body>
+<div id="main-container">
+    </div>
 </body>
 </html>

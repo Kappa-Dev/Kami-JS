@@ -690,6 +690,9 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
     };
     this.getLastNodeId = function getLastNodeId(){
         return 'n_'+(NODE_ID-1);
+    };
+    this.getLastEdgeId = function getLastEdgeId(){
+        return 'e_'+(EDGE_ID-1);
     }
 }
 function Relation(){
@@ -788,7 +791,7 @@ function Tree(label,fth){//simple tree structure
         this.sons.push(new Tree(label,this));
     };
 }
-function Kami(container_name){
+function Kami(){//define the full workflow object
     var NUGGET_ID=0;
     var UID=0;
     var nugg_graph=new LayerGraph();
@@ -796,109 +799,141 @@ function Kami(container_name){
     var act_graph=new LayerGraph();
     var acg_R_lcg=new Relation();
     var lcg =new LayerGraph();
-    var current_state="ACG";
-    var current_lg=act_graph;
-    var svg=null;
-    this.init = function init(){//generate svg+menu
-        
-    };
-	var cmdParser = function(cmd){//parse command lines : [tar[@ctx]] act tar[@ctx]; cmd lines
-		var cmd_l=cmd.split(/;\n+/);
-		for(var i=0;i<cmd_l.length-1;i++){
-            var cmd_ct=cmd_l[i].split(" ");
-            var ct=[];
-            var tar={'left':[],'right':[]};
-            var act=null;
-            if(cmd_ct.length<3){
-                var nodes=cmd_ct[1].split('@');
-                if(nodes.length>1)
-                    ct.concat(nodeParse(nodes[1]));
-                tar.left.concat(nodeParse(nodes[0]));
-                act=parseAction(cmd_ct[0]);
-            }else if(cmd_ct.length==3){
-                var nodes=cmd_ct[0].split('@');
-                if(nodes.length>1)
-                    ct.concat(nodeParse(nodes[1]));
-                tar.left.concat(nodeParse(nodes[0]));
-                act=parseAction(cmd_ct[1]);
-                nodes=cmd_ct[2].split('@');
-                if(nodes.length>1)
-                    ct.concat(nodeParse(nodes[1]));
-                tar.right.concat(nodeParse(nodes[0]));
-            }
-            cmdToNode(ct);
-            cmdToNode(tar.left);
-            cmdToNode(tar.right);
-            cmdToAct(act,tar);
-            nuggetProjection("ng_"+NUGGET_ID);//update ngg_R_acg and act_graph
-            NUGGET_ID++;
-			uiUpdate();//update the GUI
-        }
-	};
-    var cmdToNode = function(node_text){
-        var tree=cmdToTree(node_text);
-        treeToNode(tree);
-    };
-    var cmdToTree = function(node_text){//return a tree structure corresponding to a specific sentence
-        var token="";
-        var ret=new Tree("root",null);
-        var current_node=ret;
-        for(var i=0;i<node_text.length;i++){
-            var next_c = node_text.charAt(i);
-
-            if(next_c!='(' && next_c!=',' && next_c!=')') {
-                token += next_c;
-            }
-            else if(next_c==','){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-            }
-            else if(next_c=='('){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-                current_node=current_node.sons[current_node.sons.length-1];
-            }
-            else if(next_c==')'){
-                if(token!="") {
-                    current_node.addSon(token);
-                    token = "";
-                }
-                current_node=current_node.fth;
-            }
-        }
-        if(token!="") {//flush the last token
-            current_node.addSon(token);
-        }
-        return ret;
-    };
-    var treeToNode = function(tree){
-        for(var i=0;i<tree.sons.length;i++){
-            switch(tree.sons[i].label.charAt(0)){
-                case '.':
-					var node_uid=checkUid(tree.sons.label.substr(1),act_graph);//find if the label is an uid or if the label correspond to one
-                    nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],node_uid);
-                    var n_fth=nugg_graph.getNodeByLabels([tree.label.substr(1)])
-                    if(fullListCheck(n_fth)){
-                        if(n_fth.length==1)
-                            nugg_graph.addEdge(t,ng,i,o);
-                        else
-                            console.log("multiple possible root for "+tree.label.substr(1)+", please specify an Uid");
-
-                    }
-
-
-            }
-        }
-    }
-    var cmdToAct = function(act,target_nodes){
+    var current_ng_id='ng_0';
+    var selected_nodes=[];
+    var projected_nuggets=[];
+    var current_state="NGG";
+    var current_layer=nugg_graph;
+    this.addNugget(){
 
     };
+    this.setCurrentNg(ng_id)
+
+
+    var setState = function(st){
+        console.log("call to setstate");
+        if(st==current_state){
+            console.log("state already in "+st+" state, skiping command");
+            return;
+        }
+        switch(st){
+            case "ACG":
+                current_state="ACG";
+                break;
+            case "NGG":
+                current_state="NGG";
+                break;
+            case "LCG":
+                current_state="LCG";
+                break;
+            case "KPV":
+                current_state="KPV";
+                break;
+        }
+    };
+
+
     
 }
+
+
+
+var cmdParser = function(cmd){//parse command lines : [tar[@ctx]] act tar[@ctx]; cmd lines
+    var cmd_l=cmd.split(/;\n+/);
+    for(var i=0;i<cmd_l.length-1;i++){
+        var cmd_ct=cmd_l[i].split(" ");
+        var ct=[];
+        var tar={'left':[],'right':[]};
+        var act=null;
+        if(cmd_ct.length<3){
+            var nodes=cmd_ct[1].split('@');
+            if(nodes.length>1)
+                ct.concat(nodeParse(nodes[1]));
+            tar.left.concat(nodeParse(nodes[0]));
+            act=parseAction(cmd_ct[0]);
+        }else if(cmd_ct.length==3){
+            var nodes=cmd_ct[0].split('@');
+            if(nodes.length>1)
+                ct.concat(nodeParse(nodes[1]));
+            tar.left.concat(nodeParse(nodes[0]));
+            act=parseAction(cmd_ct[1]);
+            nodes=cmd_ct[2].split('@');
+            if(nodes.length>1)
+                ct.concat(nodeParse(nodes[1]));
+            tar.right.concat(nodeParse(nodes[0]));
+        }
+        cmdToNode(ct);
+        cmdToNode(tar.left);
+        cmdToNode(tar.right);
+        cmdToAct(act,tar);
+        nuggetProjection("ng_"+NUGGET_ID);//update ngg_R_acg and act_graph
+        NUGGET_ID++;
+        uiUpdate();//update the GUI
+    }
+};
+var cmdToNode = function(node_text){
+    var tree=cmdToTree(node_text);
+    treeToNode(tree);
+};
+var cmdToTree = function(node_text){//return a tree structure corresponding to a specific sentence
+    var token="";
+    var ret=new Tree("root",null);
+    var current_node=ret;
+    for(var i=0;i<node_text.length;i++){
+        var next_c = node_text.charAt(i);
+
+        if(next_c!='(' && next_c!=',' && next_c!=')') {
+            token += next_c;
+        }
+        else if(next_c==','){
+            if(token!="") {
+                current_node.addSon(token);
+                token = "";
+            }
+        }
+        else if(next_c=='('){
+            if(token!="") {
+                current_node.addSon(token);
+                token = "";
+            }
+            current_node=current_node.sons[current_node.sons.length-1];
+        }
+        else if(next_c==')'){
+            if(token!="") {
+                current_node.addSon(token);
+                token = "";
+            }
+            current_node=current_node.fth;
+        }
+    }
+    if(token!="") {//flush the last token
+        current_node.addSon(token);
+    }
+    return ret;
+};
+var treeToNode = function(tree){
+    for(var i=0;i<tree.sons.length;i++){
+        switch(tree.sons[i].label.charAt(0)){
+            case '.':
+                var node_uid=checkUid(tree.sons.label.substr(1),act_graph);//find if the label is an uid or if the label correspond to one
+                nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],node_uid);
+                var n_fth=nugg_graph.getNodeByLabels([tree.label.substr(1)])
+                if(fullListCheck(n_fth)){
+                    if(n_fth.length==1)
+                        nugg_graph.addEdge(t,ng,i,o);
+                    else
+                        console.log("multiple possible root for "+tree.label.substr(1)+", please specify an Uid");
+
+                }
+
+
+        }
+    }
+}
+var cmdToAct = function(act,target_nodes){
+
+};
+
 
 function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges and listener from the kami object.
 	var nodes=n || [];
@@ -1120,82 +1155,7 @@ function graphicGui(s,n,e,k,c){//a graphic Gui use a svg caneva, nodes and edges
 	
 	
 }
-function Kami(container){//kami output : no access to node/edges, only there meta datas !
-	var DEFAULT_UID =0;//default uid counter (every node has a uid, protein have specific uid called up_id)
-	var NUGGET_ID = 0;//unique id for nuggets
-	var nugget_main_act=null;//nuggets main actions
-	var current_nugget =-1;//the idx of the current edited nugget
-	var nugget_graph = null;//layerGraph of all the nuggets (each nugget is a "composante connexe")
-	var nodes_to_cg_projection = null;//projection from nodes to contact graph : key:node id in cg, value (nodes id list in nodes list)
-	var action_graph = null;//layergraph of the contact graph projection of nuggets
-	var ag_to_lcg_projection =null;//projection from nodes to LCG : key: node id in lcg, value :node id list in nodes list
-	var lcg = null;//layerGraph of the LCG
-	var currentLayer = null;//the currently used layer graph for the UI representation.
-	var currentView = null//current view : AGV : action graph, NUV : nugget editor, LCG : lcg view, KPV : kappa view
-	var ng_undo_redo=null;//undo redo stack for nuggets
-	var ag_undo_redo=null;//undo redo stack for action graph
-	var graph_layout=null;//dynamic graph layout (force layout)
-	this.init = function init(){
-		DEFAULT_UID =0;
-		NUGGET_ID = 0;
-		nugget_main_act={};
-		current_nugget =-1;
-		nugget_graph = new LayerGraph();
-		nodes_to_cg_projection = {};
-		action_graph = new LayerGraph();
-		ag_to_lcg_projection ={};
-		lcg = new LayerGraph();
-		currentLayer = action_graph;
-		currentView = "AGV"
-		ng_undo_redo=new UndoRedoStack();
-		ag_undo_redo=new UndoRedoStack();
-		setState(currentView);//change the current view
-		//guiShow();//create the svg and show everything !
-		//initLayout()//start the layout graph.
-		//startLayout();
-		//listenerInit();
-		//update();
-	};
-	this.getNodes = function getNodes(nugg){
-		if(!nugg)
-			return currentLayer.getNodes();
-		else return nugget_graph.getNodeByNugget(nugg);
-	};
-	this.getEdges = function getEdges(nugg){
-		if(!nugg)
-			return currentLayer.getEdges();
-		else 
-			return nugget_graph.getEdgeByNugget(nugg);
-	};
-	this.getType = function getType(id,nugg){
-		if(id.split('_')[0]=='e'){
-			if(nugg)
-				return nugget_graph.getEdge(id).getType();//return a unique value in a tab
-			else
-				return currentLayer.getEdge(id).getType();//return a unique value in a tab
-		}
-		else {
-			if(nugg)
-				return nugget_graph.getNode(id).getType();//return a unique value in a tab
-			else
-				return currentLayer.getNode(id).getType();//return a unique value in a tab
-		}
-	};
-	this.getLabel = function getLabel(id,nugg){
-		if(nugg)
-			return nugget_graph.getNode(id).getLabels();
-		else	
-			return currentLayer.getNode(id).getLabels();
-	};
-	this.getValue = function getValue(id,nugg){
-		if(nugg)
-			return nugget_graph.getNode(id).getValues();
-		else
-			return currentLayer.getNode(id).getValues();
-	}
 
-	
-} 
 
 /*
 TODO
