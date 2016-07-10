@@ -1,6 +1,24 @@
-svg {
-    height: 100%;
-    max-width: 100%;
+#graph{
+    position: absolute;
+    top:30px;
+    left: 0;
+    height: auto;
+    width: 100%;
+}
+.svg_container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #ff0000;
 }
 html, body {
     width: 100%;
@@ -12,21 +30,34 @@ html, body {
     height: auto;
     width: 100%;
 }
-#menu{
+#menu_container{
     position: absolute;
     top:0;
     left: 0;
-    height: 4%;
+    height: 30px;
     max-width: 100%;
     background: #ffe;
 }
-#graph{
+.n_tooltip{
+    padding: 5px 15px;
+    margin: 3px 25px;
+    border-radius: 25px;
+    vertical-align: top;
+    text-align: left;
+    z-index: 10;
+    background: #1496bb;
+    top: 30px;
+    left: 10px;
+    color: #fff;
+    display: block;
     position: absolute;
-    top:30;
-    height: 96%;
-    max-width: 100%;
-    bottom: 0;
-    left:0;
-    right:0;
-    background: #eee;
+    width: 150px;
+    overflow : hidden;
 }
+.s_tooltip{
+    bottom: 20px;
+    left: 10px;
+    position: absolute;
+    height: 25px;
+}
+

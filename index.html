@@ -11,16 +11,20 @@
 <script src="d3/d3.min.js"></script>
 <script src="d3/d3-context-menu.js"></script>
 <script src="Kami.js"></script>
+<script src="KamiGui.js"></script>
 <script>
 	var showtime;
+    var kami;
     window.onload = function () {
-        showtime = new Kami("main-container");
+        kami = new Kami();
+        kami.addNode(["component","agent"],[],["test"],[],"u_0");
+        kami.addNode(["component","agent"],[],["test"],[],"u_1");
+        kami.addNode(["component","agent"],[],["test2"],[],"u_3");
+        showtime = new KamiGui(kami,null);
         showtime.init();
     }
 </script>
 </head> 
 <body>
-<div id="main-container">
-    </div>
 </body>
 </html>
