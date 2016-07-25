@@ -1,5 +1,5 @@
-function KamiGui(k,c){
-    var kami=k || new Kami();
+function KamiGui(c){
+    var kami= new Kami();
     var container;
     if(c) container='#'+c;
     else  container = "body";
@@ -60,6 +60,17 @@ function KamiGui(k,c){
             "attribute":null
         }
     };
+    var rectNodes = function(){//may return an array of all node type that need to be rectangulare, the other will be round
+        var ret=[];
+        var val=Object.keys(defined_node_type.node);
+        for(var i=0;i<val.length;i++){
+            if(typeof defined_edge_type.edge[val[i]] =="object"){
+                console.log("object");
+
+            }
+
+        }
+    }
     //******************************************************
     // ************ end of configuration section ***********
     
