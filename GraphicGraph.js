@@ -69,7 +69,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.log = function log(){//output layerGraph data
 		layerG.log();
 	};
-	this.init = function init(){//init the graphic graph
+	//init the graphic graph
+	this.init = function init(){
 		//defining graph representation size
 		width=document.getElementById(containerID).getBoundingClientRect().width;
 		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth	
@@ -102,7 +103,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.style("visibility","hidden");
 		//dynG.getForce().start();
 	};
-	var update = function(){//update all the SVG elements
+	//update all the SVG elements
+	var update = function(){
 		//links svg representation
 		dynG.init();
 		svg.append("svg:defs").selectAll("marker")
@@ -196,7 +198,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		dynG.getForce().start();	
 		//layerG.log();
 	};
-	var tick = function(){//show up new svg element only if there position datas have been computed
+	//show up new svg element only if there position datas have been computed
+	var tick = function(){
 		if(first_init || dynG.getForce().alpha()<=0.00501){
 			
 			s_node.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
@@ -360,7 +363,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.rmParent = function rmParent(son){//idem for removing parenting
 		dynG.getForce().stop();
-		stack(layerG,layerG.setFather,[son,layerG.nodes[son].father]);
+		//stack(layerG,layerG.setFather,[son,layerG.nodes[son].father]);
 		layerG.removeParenting(son);
 		update();	
 	};
@@ -417,11 +420,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return ret;	
 	};
 	var stack = function(obj,fun,param){//add an element to the undo stack
-		rewriter.push({f:fun,o:obj,p:param});
+		/*rewriter.push({f:fun,o:obj,p:param});
 		d3.select("#undo").property("disabled",false)
-							.style("display","initial");
+							.style("display","initial");*/
 	};
 	this.unStack = function unStack(){//remove element from the undo stack and apply it !
+		/*
 		if(rewriter.length==0){
 			console.log("stack empty");
 			d3.select("#undo").property("disabled",true)
@@ -433,18 +437,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(fun.f == layerG.addLabel){
 			d3.select(fun.p[0]).select("text").text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
 		}
-		update();
+		update();*/
 	};
 	this.unStackAll = function unStackAll(){//undo all the stack
+		/*
 		while(rewriter.length>0)
 			this.unStack();
 		d3.select("#undo").property("disabled",true)
-							 .style("display","none");
+							 .style("display","none");*/
 	};
 	this.clearStack = function clearStack(){//clear the undo stack
+		/*
 		rewriter=[];
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
+							 */
 	};
 	this.save = function save(){//save the current graph (clear the undo stack and set it to modified)
 		this.clearStack();
@@ -776,7 +783,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						if(lbl!="") self.addCtx(d.id,lbl.split(","));
 					}
 				});
-			}			
+			}if((evt_trg.classed("attribute") || evt_trg.classed("flag") || evt_trg.classed("region") || evt_trg.classed("key_res")) && !d3.select("g.selected").empty()&& correctParenting(evt_trg,d3.select("g.selected"))){
+				menu.push({
+					title: "Change Parent",
+					action: function(elm,d,i){
+						console.log(d);
+						console.log(d.id);
+						console.log(d.father);
+						console.log(d3.select("g.selected").datum());
+						console.log(d3.select("g.selected").datum().id);
+						if(d.father)
+							self.rmParent(d.id);
+						self.addParent(d.id,d3.select("g.selected").datum().id);
+					}
+				});
+			}
 			menu.push({
 				title: "Remove",
 				action: function(elm,d,i){
@@ -806,27 +827,20 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				});
 			}
-			/*if(d3.selectAll("g.selected").size()==1){
-				menu.push(
-				{
-					title: "Add influence from Selected",
-					child:[
-					{
-						title:"Positive",
-						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
-						}
-					},{
-						title:"Negative",
-						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
-						}
-					}]
-				});
-			}*/
+
 		}
 		return menu;
 	}
+	var correctParenting = function(d3el_son,d3el_father){
+		if(d3el_son.classed("region"))
+			return d3el_father.classed("agent");
+		if(d3el_son.classed("flag") || d3el_son.classed("attribute"))
+			return d3el_father.classed("agent") || d3el_father.classed("region") ||  d3el_father.classed("key_res");
+		if(d3el_son.classed("key_res"))
+			return d3el_father.classed("agent") || d3el_father.classed("region");
+		return false;
+
+	};
 	var binderCtMenu = function(){//handling right click on action binders
 		var menu;
 		if(ctx_mode){
@@ -1383,7 +1397,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				d3.select(this).classed("selected", d.selected = true);
 		}	
 	};
-	var clickText = function(d){//click on labels
+	//click on labels
+	var clickText = function(d){
 		if(!edition && !nugget_add && !lcg_view) return;
         var el = d3.select(this);
         var frm = svg.append("foreignObject");
