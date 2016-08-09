@@ -724,7 +724,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						title:"list",
 						action: function(elm,d,i){
 							var lbl=window.prompt("define attribute labels","");
-							var values=window.prompt("define attribute values","true,false");
+							var values=window.prompt("define attribute values","vrai,faux");
 							if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
 							else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
 							if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -749,7 +749,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title: "Add Flag",
 					action: function(elm,d,i){
 						var lbl=window.prompt("define flag labels","");
-						var values=window.prompt("define flag values","true,false");
+						var values=window.prompt("define flag values","vrai,faux");
 						if(lbl=="")self.addNode(["flag"],[],[d.id]);
 						else self.addNode(["flag"],lbl.split(","),[d.id]);
 						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -869,7 +869,22 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						else{
 							ctx_mode=true;
 							var el = d3.select(this);
-							el.classed("hilighted",true);
+							var tab=d2.context;
+							var ret = inputMenu("attribute of : "+d2.id,null,tab,null,true,false,'center',function(cb){
+								if(cb.radio){
+								var tmp_obj={};
+												tmp_obj[d2.id]=cb.radio;
+												for(var i=0;i<tmp_obj[d2.id].length;i++){
+													if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+														self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+												}
+												self.addCtx(d.father,[d2.id],tmp_obj);
+												self.addEdge(d.id,d2.id);
+												if(svg.selectAll("input").empty())ctx_mode=false;
+								}
+							},d2);
+							//blabla time
+							/*el.classed("hilighted",true);
 							var frm = svg.append("foreignObject");
 							var inp = frm.attr("x", getNodeX(d2)-50)
 								.attr("y", getNodeY(d2)-45-d2.toInt())
@@ -906,7 +921,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 											}
 										});
 									})
-									.on("blur",function() {d3.select(this).on("keypress",null);});
+									.on("blur",function() {d3.select(this).on("keypress",null);});*/
 						}
 					});
 					selected.classed("selected",function(d){return d.selected=false;});
@@ -941,7 +956,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"list",
 					action: function(elm,d,i){
 						var lbl=window.prompt("define attribute labels","");
-						var values=window.prompt("define attribute values","true,false");
+						var values=window.prompt("define attribute values","vrai,faux");
 						if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
 						else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
 						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -986,8 +1001,19 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					selected.each(function(d2){
 						ctx_mode=true;
 						var el = d3.select(this);
+						var tab;
+						if(typeof(d.apply_context)!="undefined" && d.apply_context!=null && checkExist(d.apply_context[d2.id]))
+							tab = d.apply_context[d2.id];
+						else
+							tab=null;
+						var ret = inputMenu("attribute of : "+d2.id,null,null,tab,true,false,'center',function(cb){
+							if(cb.check){
+								self.addCtx(d.id,[],null,cb.check);
+							}
+						},d2);
+		
 						//el.classed("hilighted",true);
-						var frm = svg.append("foreignObject");
+						/*var frm = svg.append("foreignObject");
 							var inp = frm.attr("x", getNodeX(d2)-50)
 											.attr("y", getNodeY(d2)-45-d2.toInt())
 											.attr("width", 100)
@@ -1020,7 +1046,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														}
 													});
 												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 					});
 				}
 			});
@@ -1080,6 +1106,22 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 									else{
 										ctx_mode=true;
 										var el = d3.select(this);
+										var tab=d2.context;
+								var ret = inputMenu("value of : "+d2.id,null,tab,null,true,false,'center',function(cb){
+									
+									if(cb.radio){
+										var tmp_obj={};
+										tmp_obj[d2.id]=txt.split(",");
+										for(var i=0;i<tmp_obj[d2.id].length;i++){
+											if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+										}
+										self.addCtx(d.id,[d2.id],tmp_obj);
+										self.addEdge(binder_id,d2.id);
+										if(svg.selectAll("input").empty())ctx_mode=false;
+									}
+								},d2);
+										/*
 										el.classed("hilighted",true);
 										var frm = svg.append("foreignObject");
 										var inp = frm.attr("x", getNodeX(d2)-50)
@@ -1117,7 +1159,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														}
 													});
 												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 									}
 									selected.classed("selected",function(d){return d.selected=false;});
 								});
@@ -1161,7 +1203,23 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							else{
 								ctx_mode=true;
 								var el = d3.select(this);
-								el.classed("hilighted",true);
+								var tab=d2.context;
+								var t2=null;
+								
+								var ret = inputMenu("values of : "+d2.id,null,null,tab,true,false,'center',function(cb){
+									if(cb.check){
+										var tmp_obj={};
+										tmp_obj[d2.id]=cb.check;
+										for(var i=0;i<tmp_obj[d2.id].length;i++){
+											if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+										}
+										self.addCtx(d.id,[d2.id],tmp_obj);
+										if(svg.selectAll("input").empty())ctx_mode=false;
+									}
+								},d2);
+								//casablah !!!
+								/*el.classed("hilighted",true);
 								var frm = svg.append("foreignObject");
 								var inp = frm.attr("x", getNodeX(d2)-50)
 											.attr("y", getNodeY(d2)-12)
@@ -1197,7 +1255,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														}
 													});
 												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 											
 							}
 					} });
@@ -1401,42 +1459,17 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var clickText = function(d){
 		if(!edition && !nugget_add && !lcg_view) return;
         var el = d3.select(this);
-        var frm = svg.append("foreignObject");
-	
-        var inp = frm
-            .attr("x", getNodeX(d)-100)
-            .attr("y", getNodeY(d)-12)
-            .attr("width", 200)
-            .attr("height", 25)
-            .append("xhtml:form")
-                    .append("input")
-                        .attr("value", function() {
-                            this.focus();
-                            return d.label.join(",");
-                        })
-                        .attr("style", "width: 294px;")
-                        .on("blur", function() {//change node label on focus lost : may be removed
-                            var txt = inp.node().value;
-							layerG.rmLabel(d.id,[]);
-							if(txt!=null && txt!="")
-								layerG.addLabel(d.id,txt.split(","));
-                            svg.select("foreignObject").remove();
-							el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
-                        })
-                        .on("keypress", function() {
-                            var e = d3.event;
-                            if (e.keyCode == 13){
-                                if (e.stopPropagation)
-                                  e.stopPropagation();
-								  e.preventDefault();
-								var txt = inp.node().value;
-                                layerG.rmLabel(d.id,[]);
-								if(txt!=null && txt!="")
-									layerG.addLabel(d.id,txt.split(","));
-                                svg.select("foreignObject").remove();
-								el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
-                            }
-                        });
+		var lab=d.label;
+		if(typeof d.label=='undefined' || d.label==null || d.label.length==0)
+			lab=[""];
+		var ret = inputMenu("name",lab,null,null,true,true,'center',function(cb){
+			if(cb.line){
+				layerG.rmLabel(d.id,[]);
+				layerG.addLabel(d.id,cb.line);
+				el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
+			}
+		},d);
+		
 	};
 	var lcgConvert = function(id_list){//convert a list of action into a LCG
 		var convert_table={};
@@ -2049,10 +2082,14 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
           }).on('click',function(){
           var textv,radiov,checkv;
           textv=[];
+		  if(input_l)
           form.selectAll(".inputMenus").each(function(){textv.push(d3.select(this).node().value);});
-          radiov=form.select('input[name="inputMenuRadio"]:checked').node().value;
-          checkv=[];
-          form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(d3.select(this).property("value"));});
+		  if(radio_l)
+          radiov=[radio_l[form.select('input[name="inputMenuRadio"]:checked').node().value]];
+          if(check_l){
+		  checkv=[];
+          form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(check_l[d3.select(this).property("value")]);});
+		  }
           svg.select("foreignObject").remove();
           return callback({line:textv,radio:radiov,check:checkv});
           });
