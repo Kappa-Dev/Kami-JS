@@ -844,7 +844,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var binderCtMenu = function(){//handling right click on action binders
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
@@ -934,7 +934,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var actCtMenu = function(){//handling right click on actions
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		// by default an action can only be moved around
@@ -1011,42 +1011,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 								self.addCtx(d.id,[],null,cb.check);
 							}
 						},d2);
-		
-						//el.classed("hilighted",true);
-						/*var frm = svg.append("foreignObject");
-							var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-45-d2.toInt())
-											.attr("width", 100)
-											.attr("height", 50)
-											.append("xhtml:form")
-											.append("input")
-												.attr("id",function(){return "i_"+d2.id;})
-												.attr("value", function() {if(typeof(d.apply_context)!="undefined" && d.apply_context!=null && checkExist(d.apply_context[d2.id]))
-																				return d.apply_context[d2.id].join(",");
-																			else return "";
-												})
-												.attr("style", "width: 294px;")
-												.on("focus",function(){
-													d3.select(this).on("keypress",function(){
-														d3.event.stopPropagation();
-														//d3.event.preventDefault();
-														var txt = inp.node().value;
-														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-															var tmp_obj={};
-															
-															tmp_obj[d2.id]=txt.split(",");
-															self.addCtx(d.id,[],null,tmp_obj);
-															d3.select(this.parentNode.parentNode).remove();
-															if(svg.selectAll("input").empty()){
-																ctx_mode=false;
-																d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
-															}
-														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-															d3.event.preventDefault();
-														}
-													});
-												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 					});
 				}
 			});
@@ -1111,7 +1075,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 									
 									if(cb.radio){
 										var tmp_obj={};
-										tmp_obj[d2.id]=txt.split(",");
+										tmp_obj[d2.id]=cb.radio;
 										for(var i=0;i<tmp_obj[d2.id].length;i++){
 											if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
 												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
@@ -1121,45 +1085,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 										if(svg.selectAll("input").empty())ctx_mode=false;
 									}
 								},d2);
-										/*
-										el.classed("hilighted",true);
-										var frm = svg.append("foreignObject");
-										var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-45-d2.toInt())
-											.attr("width", 100)
-											.attr("height", 50)
-											.append("xhtml:form")
-											.append("label")
-												.classed("hilighted",true)
-												.attr("for",function(){return "i_"+d2.id;})
-												.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
-											.append("input")
-												.attr("id",function(){return "i_"+d2.id;})
-												.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
-												.attr("style", "width: 294px;")
-												.on("focus",function(){
-													d3.select(this).on("keypress",function(){
-														d3.event.stopPropagation();
-														//d3.event.preventDefault();
-														var txt = inp.node().value;
-														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-															var tmp_obj={};
-															tmp_obj[d2.id]=txt.split(",");
-															for(var i=0;i<tmp_obj[d2.id].length;i++){
-																if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
-																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
-															}
-															self.addCtx(d.id,[d2.id],tmp_obj);
-															self.addEdge(binder_id,d2.id);
-															d3.select(this.parentNode.parentNode).remove();
-															el.classed("hilighted",false);
-															if(svg.selectAll("input").empty())ctx_mode=false;
-														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-															d3.event.preventDefault();
-														}
-													});
-												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 									}
 									selected.classed("selected",function(d){return d.selected=false;});
 								});
@@ -1326,7 +1251,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		menu = [
@@ -1442,7 +1367,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var clickHandler = function(d) {//handling click on a node or an action 
 		d3.event.stopPropagation();
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return;
 		}
 		if(d3.event.ctrlKey){
@@ -2033,8 +1958,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	//get a list of initial value for input,a list of label for radio and a list of label for checkbox, and the label of the menu also take the the presence of ok and cancel button
 	//take the coordinate of the box, its side and 
 var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d){
-	d3.event.stopPropagation();
-	d3.event.preventDefault();
+	//d3.event.stopPropagation();
+	//d3.event.preventDefault();
 		var fo=svg.append("foreignObject")
 							.attr("width", 100);
     var form=fo.append("xhtml:form")
@@ -2045,8 +1970,34 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
     	form.append("label").text(label);
     }
     if(input_l!=null){
-    	for(var i=0;i<input_l.length;i++)
-      	form.append("input").attr("value",input_l[i]).attr("width",90).classed("inputMenus",true);
+    	for(var i=0;i<input_l.length;i++) {
+			var inp=form.append("input").attr("value", input_l[i]).attr("width", 90).classed("inputMenus", true);
+			if(input_l.length==1){
+				inp.on("focus",function(){
+					inp.on("keypress", function() {
+						//console.log("keypressed");
+						var e = d3.event;
+						if (e.keyCode == 13) {
+							d3.event.stopPropagation();
+							d3.event.preventDefault();
+							var textv,radiov,checkv;
+							textv=[];
+							if(input_l)
+								form.selectAll(".inputMenus").each(function(){textv.push(d3.select(this).node().value);});
+							if(radio_l)
+								radiov=[radio_l[form.select('input[name="inputMenuRadio"]:checked').node().value]];
+							if(check_l){
+								checkv=[];
+								form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(check_l[d3.select(this).property("value")]);});
+							}
+							fo.remove();
+							return callback({line:textv,radio:radiov,check:checkv});
+						}
+					});
+				});
+				inp.on("blur",function(){inp.on("keypress",null);});
+			}
+		}
     }
     if(radio_l!=null){
     	for(var i=0;i<radio_l.length;i++){
@@ -2080,6 +2031,8 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
             id:"inputMenuOk",
             value:"Ok"
           }).on('click',function(){
+			d3.event.stopPropagation();
+			d3.event.preventDefault();
           var textv,radiov,checkv;
           textv=[];
 		  if(input_l)
@@ -2090,7 +2043,7 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
 		  checkv=[];
           form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(check_l[d3.select(this).property("value")]);});
 		  }
-          svg.select("foreignObject").remove();
+          fo.remove();
           return callback({line:textv,radio:radiov,check:checkv});
           });
     }if(cancel){
@@ -2101,7 +2054,8 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
             id:"inputMenuCL",
             value:"Cancel"
           }).on('click',function(){
-          	svg.select("foreignObject").remove();
+          	fo.remove();
+          	//svg.select("foreignObject").remove();
             return callback({});
           });
     }
