@@ -883,45 +883,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 												if(svg.selectAll("input").empty())ctx_mode=false;
 								}
 							},d2);
-							//blabla time
-							/*el.classed("hilighted",true);
-							var frm = svg.append("foreignObject");
-							var inp = frm.attr("x", getNodeX(d2)-50)
-								.attr("y", getNodeY(d2)-45-d2.toInt())
-								.attr("width", 100)
-								.attr("height", 50)
-								.append("xhtml:form")
-								.append("label")
-									.classed("hilighted",true)
-									.attr("for",function(){return "i_"+d2.id;})
-									.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
-								.append("input")
-									.attr("id",function(){return "i_"+d2.id;})
-									.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
-									.attr("style", "width: 294px;")
-									.on("focus",function(){
-										d3.select(this).on("keypress",function(){
-											d3.event.stopPropagation();
-											//d3.event.preventDefault();
-											var txt = inp.node().value;
-											if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-												var tmp_obj={};
-												tmp_obj[d2.id]=txt.split(",");
-												for(var i=0;i<tmp_obj[d2.id].length;i++){
-													if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
-														self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
-												}
-												self.addCtx(d.father,[d2.id],tmp_obj);
-												self.addEdge(d.id,d2.id);
-												d3.select(this.parentNode.parentNode).remove();
-												el.classed("hilighted",false);
-												if(svg.selectAll("input").empty())ctx_mode=false;
-											}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-												d3.event.preventDefault();
-											}
-										});
-									})
-									.on("blur",function() {d3.select(this).on("keypress",null);});*/
+
 						}
 					});
 					selected.classed("selected",function(d){return d.selected=false;});
