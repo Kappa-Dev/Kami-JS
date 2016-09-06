@@ -178,6 +178,9 @@ function Node(i,t,n,l,v,u){
 	this.clone = function clone(){
 		return new Node(id,type.concat(),nuggets.concat(),labels.concat(),values.concat(),uid);
 	};
+	this.copy = function copy(i){
+		return new Node(i,type.concat(),nuggets.concat(),labels.concat(),values.concat(),uid);
+	};
 }
 function Edge(ii,t,n,i,o){
 	var id=ii;
@@ -230,7 +233,10 @@ function Edge(ii,t,n,i,o){
 	};
 	this.clone = function clone(){
 		return new Edge(id,type,nuggets.concat(),source,target);
-	}
+	};
+	this.copy = function copy(i){
+		return new Edge(i,type,nuggets.concat(),source,target);
+	};
 }
 function UndoRedoStack(){//generic implementation of undo redo as graph rw rules
     var undo_stack =[];//a stack of undo
@@ -682,6 +688,11 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
     this.getUid = function getUid(id){
         return getNode(id).getUid();
     };
+    this.copy = function copy(id){
+    	if(idT(id)=='e') return getEdge(id).copy('e_'+EDGE_ID++);
+		else if (idT(id)=='n') return getNode(id).copy('n_'+NODE_ID++);
+			else console.error("undefined id type : "+idT(id));
+	}
     this.getSource = function getSource(id){
         return getEdge(id).getSource();
     };
@@ -693,7 +704,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
     };
     this.getLastEdgeId = function getLastEdgeId(){
         return 'e_'+(EDGE_ID-1);
-    }
+    };
 }
 function Relation(){
     var antecedent_to_image={};//hashtable : key : antecedent, values : images
@@ -791,6 +802,26 @@ function Tree(label,fth){//simple tree structure
         this.sons.push(new Tree(label,this));
     };
 }
+function Nugget(i,n,c){
+	var name = n || i;
+	var id = i;
+	var comments= c || "";
+	var visible = true;
+	this.getName = function getName(){ return name;};
+	this.getId = function getId(){ return id;};
+	this.getComment = function getComment(){ return comments;};
+	this.isVisible = function isVisible(){ return visible;};
+	this.setName = function setName(n){ name=n;};
+	this.setComment = function setComment(c){comments = c;};
+	this.show = function show(){ visible=true;};
+	this.hide = function hide(){visible=false;};
+	this.log = function log(){
+		console.log("Nugget "+id);
+		console.log("name : "+name);
+		console.log("comment : "+comments);
+		console.log("visible : "+visible);
+	};
+}
 function Kami() {//define the full workflow object
 	var NUGGET_ID = 0;
 	var UID = 0;
@@ -799,6 +830,7 @@ function Kami() {//define the full workflow object
 	var act_graph = new LayerGraph();
 	var acg_R_lcg = new Relation();
 	var lcg = new LayerGraph();
+	var nuggets ={};
 	var current_ng_id = 'ng_0';
 	var selected_nodes = [];
 	var projected_nuggets = [];
@@ -1180,9 +1212,9 @@ switch de vue
 projection (from nugget to action graph)
 compilation (use only action graph) 
 traduction (use lcg+nugget)
-attention: un noeud de nugget peut au final correspondre à de multiple noeud dans le lcg !, il peut aussi avoir disparu, inversement un noeud du lcg peut correspondre à plusieur noeud dans les nuggets !
+attention: un noeud de nugget peut au final correspondre a de multiple noeud dans le lcg !, il peut aussi avoir disparu, inversement un noeud du lcg peut correspondre a plusieur noeud dans les nuggets !
 regle Kappa : on prend les action du LCG et les noeuds du LCG et on regarde les nuggets qui les mentionnent.
 */
-//notes : créer tout les flag en kappa avec un state default : ask user.
+//notes : creer tout les flag en kappa avec un state default : ask user.
 //also ask for default rates.
 //penser que label des agent strictement differents ! si un label en commun alors c'est le meme agent !

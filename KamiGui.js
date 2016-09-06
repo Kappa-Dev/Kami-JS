@@ -12,68 +12,7 @@ function KamiGui(c){
     var svg;
     var force_layout;
     var view_state=null;
-    // ******************* configuration section ******************
-    //This part may be modified to fit user's expectation of graph.
-    // ************************************************************
-    var defined_edge_type={
-        "edge":{
-            "link":'arrowed',
-            "parent":null,
-            "posinfl":'arrowed',
-            "neginfl":'arrowed',
-            "rw_rule":'arrowed'
-        }
-    };
-    var arrowedEdges = function(){//may return an array of all edge type that need an arrow
-        var ret=[];
-        var val=Object.keys(defined_edge_type.edge);
-        for(var i=0;i<val.length;i++){
-            if(defined_edge_type.edge[val[i]]=="arrowed")
-                ret.push(val[i]+"_end");
-        }
-        return ret;
-    };
-    var defined_node_type={
-        "node":{
-            "component":{
-                "agent":null,
-                "region":null,
-                "keyres":null,
-                "flag":null
-            },
-            "action":{
-                "bnd":'rect',
-                "brk":'rect',
-                "mod":'rect',
-                "modPos":'rect',
-                "modNeg":'rect',
-                "syn":'rect',
-                "deg":'rect',
-                "input":null,
-                "output":null
-            },
-            "super":{
-                "family":null,
-                "set":null,
-                "process":null
-            },
-            "attribute":null
-        }
-    };
-    var rectNodes = function(){//may return an array of all node type that need to be rectangulare, the other will be round
-        var ret=[];
-        var val=Object.keys(defined_node_type.node);
-        for(var i=0;i<val.length;i++){
-            if(typeof defined_edge_type.edge[val[i]] =="object"){
-                console.log("object");
 
-            }
-
-        }
-    }
-    //******************************************************
-    // ************ end of configuration section ***********
-    
     this.init = function init(){
         width  = d3.select(container).node().getBoundingClientRect().width;
         height = d3.select(container).node().getBoundingClientRect().height;//menu is 30px heigth
@@ -117,6 +56,9 @@ function KamiGui(c){
         menu.append("input").attr({type:"button",id:"redo",value:"redo"}).classed("menu_input",true).classed("NGG",true).classed("ACG",true).classed("LCG",true).on('click',redo);
         menu.append("input").attr({type:"button",id:"replay",value:"Reset Graph position"}).classed("menu_input",true).classed("NGG",true).classed("ACG",true).classed("LCG",true).on('click',wakeUp);
     };
+    var initSideMenu = function(){
+        var sideMenu=d3.select("#main_container")
+    }
     var initSvg = function() {
         d3.select("#main_container").append("div")
             .attr("id","graph");
