@@ -28,7 +28,8 @@ function Node(classes,id,x,y,fixed){
 	};
 }; 
 //edge definition
-function Edge(node1,node2,e_class){//node1 and node2 are objects
+function Edge(node1,node2,e_class){
+	//node1 and node2 are objects
 	this.source=node1;
 	this.target=node2;
 	this.sourceID=node1.id;
@@ -45,7 +46,7 @@ function LayeredGraph(){
 		this.nodes=[];//liste des noeud
 		this.links=[];//liste des arcs
 	}
-	var union = function(list1,list2){// effectue l'union de deux listes sans redondances
+	var union = function(list1,list2){
 		var tmp=[];
 		for(var i=0;i<list2.length;i++)
 			tmp.push(list2[i]);
@@ -57,13 +58,15 @@ function LayeredGraph(){
 		}
 		return tmp;
 	};
-	var remove = function(l_el,list){//remove an element from a list : if the element doesn't exist, do nothing !
+	//remove an element from a list : if the element doesn't exist, do nothing !
+	var remove = function(l_el,list){
 		for(var i=0;i<list.length;i++){
 			if(list[i]==l_el)
 				list.splice(i,1);
 		}
 	}
-	var fusACtx = function(context,old_vctx,new_vctx){//fusion of two applying context
+	//fusion of two applying context
+	var fusACtx = function(context,old_vctx,new_vctx){
 		var res={};
 		if(typeof(old_vctx)!="undefined" && old_vctx!=null && typeof(new_vctx)!="undefined" && new_vctx!=null ){
 			var o_keys = Object.keys(old_vctx);
@@ -106,7 +109,8 @@ function LayeredGraph(){
 		}
 		return res;
 	}
-	var fusVCtx = function(context,old_vctx,new_vctx){//fusion of two valued context for actions
+	//fusion of two valued context for actions
+	var fusVCtx = function(context,old_vctx,new_vctx){
 		var res={};
 		if(old_vctx!=null && new_vctx!=null ){
 			var o_keys = Object.keys(old_vctx);
@@ -351,7 +355,7 @@ function LayeredGraph(){
 	};
 	this.removeParenting = function removeParenting(son){//remove the parent link between a son and its father
 		if(typeof(this.nodesHash[son])=='undefined')
-			console.log(son+" is undefined");
+			console.log("the son"+son+" is undefined");
 		else if(this.nodes[this.nodesHash[son]].father==null)
 			console.log("father is undefined");
 		else{

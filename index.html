@@ -21,10 +21,10 @@ window.onload = function () {
 	var dropZone = document.getElementById('graph');
     dropZone.addEventListener('dragover', handleDragOver, false);
     dropZone.addEventListener('drop', handleFileSelect, false);
-	gGraph = new GraphicGraph('graph');
-	gGraph.init();
-	jsonformater=new jSonFormatter(gGraph);
-	gGraph.addNode(["agent"],["ag1","EGFR","thirdname"],[]);
+	gGraph = null;//new GraphicGraph('graph');
+	//gGraph.init();
+	//jsonformater=new jSonFormatter(gGraph);
+	/*gGraph.addNode(["agent"],["ag1","EGFR","thirdname"],[]);
 	gGraph.addNode(["region"],["reg1"],["n0"]);
 	gGraph.addNode(["region"],["reg2"],["n0"]);
 	gGraph.addNode(["action","bnd"],["bnd1"],[]);
@@ -38,8 +38,8 @@ window.onload = function () {
 	gGraph.addEdge("n2","n7");
 	gGraph.addEdge("n2","n8");
 	gGraph.addCtx("n3",["n1"]);
-	gGraph.addCtx("n4",["n2","n3"]);
-	gGraph.wakeUp();
+	gGraph.addCtx("n4",["n2","n3"]);*/
+	//gGraph.wakeUp();
 	//gGraph.mergeNode("n0","n1");
 	//console.log(gGraph.findByName(["brk1"],["action","bnd"],[]));
 	

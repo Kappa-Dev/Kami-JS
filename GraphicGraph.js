@@ -69,7 +69,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.log = function log(){//output layerGraph data
 		layerG.log();
 	};
-	this.init = function init(){//init the graphic graph
+	//init the graphic graph
+	this.init = function init(){
 		//defining graph representation size
 		width=document.getElementById(containerID).getBoundingClientRect().width;
 		height =document.getElementById(containerID).getBoundingClientRect().height-30;//menu is 30px heigth	
@@ -102,7 +103,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.style("visibility","hidden");
 		//dynG.getForce().start();
 	};
-	var update = function(){//update all the SVG elements
+	//update all the SVG elements
+	var update = function(){
 		//links svg representation
 		dynG.init();
 		svg.append("svg:defs").selectAll("marker")
@@ -196,7 +198,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		dynG.getForce().start();	
 		//layerG.log();
 	};
-	var tick = function(){//show up new svg element only if there position datas have been computed
+	//show up new svg element only if there position datas have been computed
+	var tick = function(){
 		if(first_init || dynG.getForce().alpha()<=0.00501){
 			
 			s_node.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
@@ -360,7 +363,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.rmParent = function rmParent(son){//idem for removing parenting
 		dynG.getForce().stop();
-		stack(layerG,layerG.setFather,[son,layerG.nodes[son].father]);
+		//stack(layerG,layerG.setFather,[son,layerG.nodes[son].father]);
 		layerG.removeParenting(son);
 		update();	
 	};
@@ -417,11 +420,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return ret;	
 	};
 	var stack = function(obj,fun,param){//add an element to the undo stack
-		rewriter.push({f:fun,o:obj,p:param});
+		/*rewriter.push({f:fun,o:obj,p:param});
 		d3.select("#undo").property("disabled",false)
-							.style("display","initial");
+							.style("display","initial");*/
 	};
 	this.unStack = function unStack(){//remove element from the undo stack and apply it !
+		/*
 		if(rewriter.length==0){
 			console.log("stack empty");
 			d3.select("#undo").property("disabled",true)
@@ -433,18 +437,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		if(fun.f == layerG.addLabel){
 			d3.select(fun.p[0]).select("text").text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
 		}
-		update();
+		update();*/
 	};
 	this.unStackAll = function unStackAll(){//undo all the stack
+		/*
 		while(rewriter.length>0)
 			this.unStack();
 		d3.select("#undo").property("disabled",true)
-							 .style("display","none");
+							 .style("display","none");*/
 	};
 	this.clearStack = function clearStack(){//clear the undo stack
+		/*
 		rewriter=[];
 		d3.select("#undo").property("disabled",true)
 							 .style("display","none");
+							 */
 	};
 	this.save = function save(){//save the current graph (clear the undo stack and set it to modified)
 		this.clearStack();
@@ -717,7 +724,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						title:"list",
 						action: function(elm,d,i){
 							var lbl=window.prompt("define attribute labels","");
-							var values=window.prompt("define attribute values","true,false");
+							var values=window.prompt("define attribute values","vrai,faux");
 							if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
 							else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
 							if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -742,7 +749,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title: "Add Flag",
 					action: function(elm,d,i){
 						var lbl=window.prompt("define flag labels","");
-						var values=window.prompt("define flag values","true,false");
+						var values=window.prompt("define flag values","vrai,faux");
 						if(lbl=="")self.addNode(["flag"],[],[d.id]);
 						else self.addNode(["flag"],lbl.split(","),[d.id]);
 						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -776,7 +783,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						if(lbl!="") self.addCtx(d.id,lbl.split(","));
 					}
 				});
-			}			
+			}if((evt_trg.classed("attribute") || evt_trg.classed("flag") || evt_trg.classed("region") || evt_trg.classed("key_res")) && !d3.select("g.selected").empty()&& correctParenting(evt_trg,d3.select("g.selected"))){
+				menu.push({
+					title: "Change Parent",
+					action: function(elm,d,i){
+						console.log(d);
+						console.log(d.id);
+						console.log(d.father);
+						console.log(d3.select("g.selected").datum());
+						console.log(d3.select("g.selected").datum().id);
+						if(d.father)
+							self.rmParent(d.id);
+						self.addParent(d.id,d3.select("g.selected").datum().id);
+					}
+				});
+			}
 			menu.push({
 				title: "Remove",
 				action: function(elm,d,i){
@@ -806,31 +827,24 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				});
 			}
-			/*if(d3.selectAll("g.selected").size()==1){
-				menu.push(
-				{
-					title: "Add influence from Selected",
-					child:[
-					{
-						title:"Positive",
-						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
-						}
-					},{
-						title:"Negative",
-						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
-						}
-					}]
-				});
-			}*/
+
 		}
 		return menu;
 	}
+	var correctParenting = function(d3el_son,d3el_father){
+		if(d3el_son.classed("region"))
+			return d3el_father.classed("agent");
+		if(d3el_son.classed("flag") || d3el_son.classed("attribute"))
+			return d3el_father.classed("agent") || d3el_father.classed("region") ||  d3el_father.classed("key_res");
+		if(d3el_son.classed("key_res"))
+			return d3el_father.classed("agent") || d3el_father.classed("region");
+		return false;
+
+	};
 	var binderCtMenu = function(){//handling right click on action binders
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
@@ -855,44 +869,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						else{
 							ctx_mode=true;
 							var el = d3.select(this);
-							el.classed("hilighted",true);
-							var frm = svg.append("foreignObject");
-							var inp = frm.attr("x", getNodeX(d2)-50)
-								.attr("y", getNodeY(d2)-45-d2.toInt())
-								.attr("width", 100)
-								.attr("height", 50)
-								.append("xhtml:form")
-								.append("label")
-									.classed("hilighted",true)
-									.attr("for",function(){return "i_"+d2.id;})
-									.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
-								.append("input")
-									.attr("id",function(){return "i_"+d2.id;})
-									.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
-									.attr("style", "width: 294px;")
-									.on("focus",function(){
-										d3.select(this).on("keypress",function(){
-											d3.event.stopPropagation();
-											//d3.event.preventDefault();
-											var txt = inp.node().value;
-											if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-												var tmp_obj={};
-												tmp_obj[d2.id]=txt.split(",");
+							var tab=d2.context;
+							var ret = inputMenu("attribute of : "+d2.id,null,tab,null,true,false,'center',function(cb){
+								if(cb.radio){
+								var tmp_obj={};
+												tmp_obj[d2.id]=cb.radio;
 												for(var i=0;i<tmp_obj[d2.id].length;i++){
 													if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
 														self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
 												}
 												self.addCtx(d.father,[d2.id],tmp_obj);
 												self.addEdge(d.id,d2.id);
-												d3.select(this.parentNode.parentNode).remove();
-												el.classed("hilighted",false);
 												if(svg.selectAll("input").empty())ctx_mode=false;
-											}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-												d3.event.preventDefault();
-											}
-										});
-									})
-									.on("blur",function() {d3.select(this).on("keypress",null);});
+								}
+							},d2);
+
 						}
 					});
 					selected.classed("selected",function(d){return d.selected=false;});
@@ -905,7 +896,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var actCtMenu = function(){//handling right click on actions
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		// by default an action can only be moved around
@@ -927,7 +918,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"list",
 					action: function(elm,d,i){
 						var lbl=window.prompt("define attribute labels","");
-						var values=window.prompt("define attribute values","true,false");
+						var values=window.prompt("define attribute values","vrai,faux");
 						if(lbl=="")self.addNode(["attribute","list"],[],[d.id]);
 						else self.addNode(["attribute","list"],lbl.split(","),[d.id]);
 						if(values=="")self.addCtx(layerG.nodes[layerG.nodes.length-1].id,["t","f"]);
@@ -972,41 +963,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					selected.each(function(d2){
 						ctx_mode=true;
 						var el = d3.select(this);
-						//el.classed("hilighted",true);
-						var frm = svg.append("foreignObject");
-							var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-45-d2.toInt())
-											.attr("width", 100)
-											.attr("height", 50)
-											.append("xhtml:form")
-											.append("input")
-												.attr("id",function(){return "i_"+d2.id;})
-												.attr("value", function() {if(typeof(d.apply_context)!="undefined" && d.apply_context!=null && checkExist(d.apply_context[d2.id]))
-																				return d.apply_context[d2.id].join(",");
-																			else return "";
-												})
-												.attr("style", "width: 294px;")
-												.on("focus",function(){
-													d3.select(this).on("keypress",function(){
-														d3.event.stopPropagation();
-														//d3.event.preventDefault();
-														var txt = inp.node().value;
-														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-															var tmp_obj={};
-															
-															tmp_obj[d2.id]=txt.split(",");
-															self.addCtx(d.id,[],null,tmp_obj);
-															d3.select(this.parentNode.parentNode).remove();
-															if(svg.selectAll("input").empty()){
-																ctx_mode=false;
-																d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
-															}
-														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-															d3.event.preventDefault();
-														}
-													});
-												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+						var tab;
+						if(typeof(d.apply_context)!="undefined" && d.apply_context!=null && checkExist(d.apply_context[d2.id]))
+							tab = d.apply_context[d2.id];
+						else
+							tab=null;
+						var ret = inputMenu("attribute of : "+d2.id,null,null,tab,true,false,'center',function(cb){
+							if(cb.check){
+								self.addCtx(d.id,[],null,cb.check);
+							}
+						},d2);
 					});
 				}
 			});
@@ -1066,44 +1032,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 									else{
 										ctx_mode=true;
 										var el = d3.select(this);
-										el.classed("hilighted",true);
-										var frm = svg.append("foreignObject");
-										var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-45-d2.toInt())
-											.attr("width", 100)
-											.attr("height", 50)
-											.append("xhtml:form")
-											.append("label")
-												.classed("hilighted",true)
-												.attr("for",function(){return "i_"+d2.id;})
-												.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
-											.append("input")
-												.attr("id",function(){return "i_"+d2.id;})
-												.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
-												.attr("style", "width: 294px;")
-												.on("focus",function(){
-													d3.select(this).on("keypress",function(){
-														d3.event.stopPropagation();
-														//d3.event.preventDefault();
-														var txt = inp.node().value;
-														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-															var tmp_obj={};
-															tmp_obj[d2.id]=txt.split(",");
-															for(var i=0;i<tmp_obj[d2.id].length;i++){
-																if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
-																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
-															}
-															self.addCtx(d.id,[d2.id],tmp_obj);
-															self.addEdge(binder_id,d2.id);
-															d3.select(this.parentNode.parentNode).remove();
-															el.classed("hilighted",false);
-															if(svg.selectAll("input").empty())ctx_mode=false;
-														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-															d3.event.preventDefault();
-														}
-													});
-												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+										var tab=d2.context;
+								var ret = inputMenu("value of : "+d2.id,null,tab,null,true,false,'center',function(cb){
+									
+									if(cb.radio){
+										var tmp_obj={};
+										tmp_obj[d2.id]=cb.radio;
+										for(var i=0;i<tmp_obj[d2.id].length;i++){
+											if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+										}
+										self.addCtx(d.id,[d2.id],tmp_obj);
+										self.addEdge(binder_id,d2.id);
+										if(svg.selectAll("input").empty())ctx_mode=false;
+									}
+								},d2);
 									}
 									selected.classed("selected",function(d){return d.selected=false;});
 								});
@@ -1147,7 +1090,23 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 							else{
 								ctx_mode=true;
 								var el = d3.select(this);
-								el.classed("hilighted",true);
+								var tab=d2.context;
+								var t2=null;
+								
+								var ret = inputMenu("values of : "+d2.id,null,null,tab,true,false,'center',function(cb){
+									if(cb.check){
+										var tmp_obj={};
+										tmp_obj[d2.id]=cb.check;
+										for(var i=0;i<tmp_obj[d2.id].length;i++){
+											if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
+												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
+										}
+										self.addCtx(d.id,[d2.id],tmp_obj);
+										if(svg.selectAll("input").empty())ctx_mode=false;
+									}
+								},d2);
+								//casablah !!!
+								/*el.classed("hilighted",true);
 								var frm = svg.append("foreignObject");
 								var inp = frm.attr("x", getNodeX(d2)-50)
 											.attr("y", getNodeY(d2)-12)
@@ -1183,7 +1142,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 														}
 													});
 												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});
+												.on("blur",function() {d3.select(this).on("keypress",null);});*/
 											
 							}
 					} });
@@ -1254,7 +1213,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var svgMenu = function(){//svg right click menu : nugget view allow to add nugget (actions), edit view allow to modify the kr
 		var menu;
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return [];
 		}
 		menu = [
@@ -1370,7 +1329,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var clickHandler = function(d) {//handling click on a node or an action 
 		d3.event.stopPropagation();
 		if(ctx_mode){
-			window.alert("Please fill all values for the action context");
+			window.alert("Please fill all forms");
 			return;
 		}
 		if(d3.event.ctrlKey){
@@ -1383,45 +1342,21 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				d3.select(this).classed("selected", d.selected = true);
 		}	
 	};
-	var clickText = function(d){//click on labels
+	//click on labels
+	var clickText = function(d){
 		if(!edition && !nugget_add && !lcg_view) return;
         var el = d3.select(this);
-        var frm = svg.append("foreignObject");
-	
-        var inp = frm
-            .attr("x", getNodeX(d)-100)
-            .attr("y", getNodeY(d)-12)
-            .attr("width", 200)
-            .attr("height", 25)
-            .append("xhtml:form")
-                    .append("input")
-                        .attr("value", function() {
-                            this.focus();
-                            return d.label.join(",");
-                        })
-                        .attr("style", "width: 294px;")
-                        .on("blur", function() {//change node label on focus lost : may be removed
-                            var txt = inp.node().value;
-							layerG.rmLabel(d.id,[]);
-							if(txt!=null && txt!="")
-								layerG.addLabel(d.id,txt.split(","));
-                            svg.select("foreignObject").remove();
-							el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
-                        })
-                        .on("keypress", function() {
-                            var e = d3.event;
-                            if (e.keyCode == 13){
-                                if (e.stopPropagation)
-                                  e.stopPropagation();
-								  e.preventDefault();
-								var txt = inp.node().value;
-                                layerG.rmLabel(d.id,[]);
-								if(txt!=null && txt!="")
-									layerG.addLabel(d.id,txt.split(","));
-                                svg.select("foreignObject").remove();
-								el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
-                            }
-                        });
+		var lab=d.label;
+		if(typeof d.label=='undefined' || d.label==null || d.label.length==0)
+			lab=[""];
+		var ret = inputMenu("name",lab,null,null,true,true,'center',function(cb){
+			if(cb.line){
+				layerG.rmLabel(d.id,[]);
+				layerG.addLabel(d.id,cb.line);
+				el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
+			}
+		},d);
+		
 	};
 	var lcgConvert = function(id_list){//convert a list of action into a LCG
 		var convert_table={};
@@ -1985,8 +1920,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	//get a list of initial value for input,a list of label for radio and a list of label for checkbox, and the label of the menu also take the the presence of ok and cancel button
 	//take the coordinate of the box, its side and 
 var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d){
-	d3.event.stopPropagation();
-	d3.event.preventDefault();
+	//d3.event.stopPropagation();
+	//d3.event.preventDefault();
 		var fo=svg.append("foreignObject")
 							.attr("width", 100);
     var form=fo.append("xhtml:form")
@@ -1997,8 +1932,34 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
     	form.append("label").text(label);
     }
     if(input_l!=null){
-    	for(var i=0;i<input_l.length;i++)
-      	form.append("input").attr("value",input_l[i]).attr("width",90).classed("inputMenus",true);
+    	for(var i=0;i<input_l.length;i++) {
+			var inp=form.append("input").attr("value", input_l[i]).attr("width", 90).classed("inputMenus", true);
+			if(input_l.length==1){
+				inp.on("focus",function(){
+					inp.on("keypress", function() {
+						//console.log("keypressed");
+						var e = d3.event;
+						if (e.keyCode == 13) {
+							d3.event.stopPropagation();
+							d3.event.preventDefault();
+							var textv,radiov,checkv;
+							textv=[];
+							if(input_l)
+								form.selectAll(".inputMenus").each(function(){textv.push(d3.select(this).node().value);});
+							if(radio_l)
+								radiov=[radio_l[form.select('input[name="inputMenuRadio"]:checked').node().value]];
+							if(check_l){
+								checkv=[];
+								form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(check_l[d3.select(this).property("value")]);});
+							}
+							fo.remove();
+							return callback({line:textv,radio:radiov,check:checkv});
+						}
+					});
+				});
+				inp.on("blur",function(){inp.on("keypress",null);});
+			}
+		}
     }
     if(radio_l!=null){
     	for(var i=0;i<radio_l.length;i++){
@@ -2032,13 +1993,19 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
             id:"inputMenuOk",
             value:"Ok"
           }).on('click',function(){
+			d3.event.stopPropagation();
+			d3.event.preventDefault();
           var textv,radiov,checkv;
           textv=[];
+		  if(input_l)
           form.selectAll(".inputMenus").each(function(){textv.push(d3.select(this).node().value);});
-          radiov=form.select('input[name="inputMenuRadio"]:checked').node().value;
-          checkv=[];
-          form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(d3.select(this).property("value"));});
-          svg.select("foreignObject").remove();
+		  if(radio_l)
+          radiov=[radio_l[form.select('input[name="inputMenuRadio"]:checked').node().value]];
+          if(check_l){
+		  checkv=[];
+          form.selectAll('input[name="inputMenuCheck"]:checked').each(function(){checkv.push(check_l[d3.select(this).property("value")]);});
+		  }
+          fo.remove();
           return callback({line:textv,radio:radiov,check:checkv});
           });
     }if(cancel){
@@ -2049,7 +2016,8 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
             id:"inputMenuCL",
             value:"Cancel"
           }).on('click',function(){
-          	svg.select("foreignObject").remove();
+          	fo.remove();
+          	//svg.select("foreignObject").remove();
             return callback({});
           });
     }

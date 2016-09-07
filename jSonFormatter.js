@@ -2,10 +2,10 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
-function jSonFormatter(gGraph){
+function jSonFormatter(jGraph){
 	var name=null;
 	var json=null;
-	var gGraph=gGraph;
+	var gGraph=jGraph;
 	var force=false;
 	var refNode={};
 	var count=0;
@@ -17,7 +17,7 @@ function jSonFormatter(gGraph){
 			ret.push(list[i]);
 		}
 		return ret;
-	}
+	};
 	this.init = function init(filename){//import a layered graph from a json file
 		name=filename;
 		count=gGraph.lastNode();
@@ -34,15 +34,13 @@ function jSonFormatter(gGraph){
 				actions:graph.actions,
 				actions_binder:graph.actions_binder,
 				edges:graph.edges
-			}
+			};
 			jsToLGraph();
 			gGraph.wakeUp(false);
 		});	
 	};
 	var jsToLGraph = function(){//translate json to graph
-		force=false;
-		if(typeof(json.version)=='undefined' || json.version==null || json.version<1.1)
-			force=true;
+        force=typeof(json.version)=='undefined' || json.version==null || json.version<1.1;
 		var keys = Object.keys(json);
 		for(var i=0;i<keys.length;i++){
 			if(typeof(json[keys[i]])!='undefined' && json[keys[i]]!=null && json[keys[i]].length>0){
@@ -73,40 +71,56 @@ function jSonFormatter(gGraph){
 		output+="{\"version\":2.0,\n \"agents\":[\n";
 		var i=0;
 		d3.selectAll("g").filter(".agent").each(function(d){
-			output+=toText(d);
-			agents[d.id]=i++;
+			var txt=toText(d);
+			if(txt!=""){
+				output+=txt;
+				agents[d.id]=i++;
+			}
+
 		});
 		if(i>0)
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"regions\":[\n";
 		i=0;
 		d3.selectAll("g").filter(".region").each(function(d){
-			output+=toText(d);
-			regions[d.id]=i++;
+			var txt=toText(d);
+			if(txt!="") {
+				output += txt;
+				regions[d.id] = i++;
+			}
 		});
 		if(i>0)
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"key_rs\":[\n";
 		i=0;
 		d3.selectAll("g").filter(".key_res").each(function(d){
-			output+=toText(d);
-			key_rs[d.id]=i++;
+			var txt=toText(d);
+			if(txt!="") {
+				output += txt;
+				key_rs[d.id] = i++;
+			}
 		});
 		if(i>0)
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"attributes\":[\n";
 		i=0;
 		d3.selectAll("g").filter(".attribute").each(function(d){
-			output+=toText(d);
-			attributes[d.id]=i++;
+			var txt=toText(d);
+			if(txt!="") {
+				output += txt;
+				attributes[d.id] = i++;
+			}
 		});
 		if(i>0)
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"flags\":[\n";
 		i=0;
 		d3.selectAll("g").filter(".flag").each(function(d){
-			output+=toText(d);
-			flags[d.id]=i++;
+			var txt=toText(d);
+			if(txt!="") {
+				output += txt;
+				flags[d.id] = i++;
+			}
 		});
 		if(i>0)
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
@@ -121,8 +135,14 @@ function jSonFormatter(gGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="]\n}";
 		return output;
-	}
+	};
 	var toTextAct = function(d,a,r,k,att,f,act,out){
+		try{
+			var v=toTextActFail(d,a,r,k,att,f,act,out);
+			return v;
+		}catch(e){console.log("toTextActError for "+d.id);console.error(e.message);console.log("continuing");return "";}
+	};
+	var toTextActFail = function(d,a,r,k,att,f,act,out){
 		var names="";
 		var left="";
 		var right="";
@@ -200,8 +220,14 @@ function jSonFormatter(gGraph){
 			if(i<l_left.length-1)left+=",";
 		}
 		return left;
-	}
+	};
 	var toText = function(d){
+		try{
+			var v=toTextFail(d);
+			return v;
+		}catch(e){console.log("toTextError for "+d.id);console.error(e.message);console.log("continuing");return "";}
+	}
+	var toTextFail = function(d){
 		var names="";
 		var fclass="";
 		var path="";
