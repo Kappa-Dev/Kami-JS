@@ -55,7 +55,8 @@ var loadJson = function(){
 var loadFile = function(data){
 	var yep=true;
 	if(gGraph==null || !confirm('Merge with the existing graph ?')){
-		yep=confirm("confirm the removal of the old graph ?");
+		if(gGraph!=null)
+			yep=confirm("confirm the removal of the old graph ?");
 		if(yep){
 			d3.select("#graph").selectAll('*').remove();
 			delete(gGraph);
