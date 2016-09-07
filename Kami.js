@@ -9,7 +9,9 @@ var union = function(s1,s2){//union of two sets view as lists
 	return Object.keys(obj1);
 };
 var multiUnion = function(s_l){//union over multi sets
-	if(s_l.length<2)
+	if(s_l.length==0)
+		return [];
+	if(s_l.length==1)
 		return s_l[0];
 	var obj1={};
 	for(var i=0;i<s_l.length;i++){
@@ -35,7 +37,9 @@ var intersection = function(s1,s2){//intersection of two sets see as lists
 	return ret;
 };
 var multiIntersection = function(s_l){//intersection over multi sets
-	if(s_l.length<2)
+	if(s_l.length==0)
+		return [];
+	if(s_l.length==1)
 		return s_l[0];
 	else if(s_l.length==2)
 		return intersection(s_l[0],s_l[1]);
@@ -76,7 +80,7 @@ function Node(i,t,n,l,v,u){
 	var id=i;//unique identifier of a node
 	if(typeof t=='undefined' || t==null || t.length==0)
 		throw "unknown type :"+t;
-	var type=t;//this node type : component(1)/action(2)/super(3)/attribute (1):agent/region/keyres/flag (2):modPos/modNeg/syn/deg/bnd/brk/input/output (3):family/set/process
+	var type=t;//this node type : component(1)/action(2)/super(3)/attribute (1):agent/region/keyres/flag (2):mod/modPos/modNeg/syn/deg/bnd/brk/input/output (3):family/set/process
 	var labels=l || [];
 	var values=v || [];
 	var uid=u || null;
@@ -324,7 +328,7 @@ function UndoRedoStack(){//generic implementation of undo redo as graph rw rules
         console.log(sub_stack);
     }
 }
-function LayerGraph(){//An autonomous multi layer graph with optimized modification actions (all in O(1)) except removal/merge in O(Max(node arity)) and undo redo stack
+function LayerGraph(){//An autonomous multi layer graph with optimized modification actions (all in O(1)) except removal/merge in O(Max(node arity)) and undo redo stack with similar time optimizations
 	var NODE_ID = 0;//unique id for nodes (actions/components)
 	var EDGE_ID = 0;//unique id for edges (linking edges and structure edges)
 	var nodes = {};//hashtable of nodes objects, key:id, value:node
@@ -337,13 +341,17 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	var edgesByTarget={};//hashtable of edges, key:node output id, values:edges id list
 	var undoRedo=new UndoRedoStack();//undo redo stack for this layer graph.
 	var getNode = function(id){//return a specific node for a specific id
-		return nodes[id];
+		if(typeof(nodes[id])!=undefined && nodes[id]!=null)
+			return nodes[id];
+		else return null;
 	};
 	this.getNodes = function getNodes(){//return the whole nodes as a list of id
 		return Object.keys(nodes);
 	};
 	var getEdge = function(id){//return a specific edge for an id
-		return edges[id];
+		if(typeof(edges[id])!=undefined && edges[id]!=null)
+			return edges[id];
+		else return null;
 	};
 	this.getEdges = function getEdges(){//return the whole edges as a list of id
 		return Object.keys(edges);
@@ -370,11 +378,13 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		}
 		return {'ng':n.getNugget()[0],'left':null,'right':{'nodes':[n.clone()],'edges':[]}};
 	};
-	this.addNode = function addNode(t,ng,l,v,u){//add a NEW node
+	this.addNode = function addNode(t,ng,l,v,u){//add a NEW node return its id.
 		var n=new Node('n_'+NODE_ID++,t,ng,l,v,u);
-		undoRedo.stack(putNode(n));
+		var delta=putNode(n)
+		undoRedo.stack(delta);
+		retun deltaToId(delta);
 	};
-	var clNode = function(id){
+	var clNode = function(id){//internal removing function : return a delta object
         var n=nodes[id];
 		var ret={'ng':n.getNugget()[0],'right':null,'left':{'nodes':[n.clone()],'edges':[]}};//add this node to the delta
 		var source_edges = edgesBySource[id];//get all edges going from this node
@@ -405,9 +415,11 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		return ret;
 	};
 	this.rmNode = function rmNode(id){//remove a specific node
-		undoRedo.stack(clNode(id));//return Delta
+		var delta=clNode(id);
+		undoRedo.stack(delta);//return Delta
+		return deltaToId(delta);
 	};
-	this.mergeNode = function mergeNode(id1,id2){//merge two node in a third one.
+	this.mergeNode = function mergeNode(id1,id2){//merge two node in a third one and return its id
 		if(nodes[id1].getNugget()[0]!=nodes[id2].getNugget()[0])
 			throw "We can't merge nodes of different clusters!";
 		if(nodes[id1].getUid()!=nodes[id2].getUid() && idT(nodes[id1].getUid())=="up" && idT(nodes[id2].getUid())=="up")
@@ -453,6 +465,19 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		delta.left.nodes=n1_rm.left.nodes.concat(n2_rm.left.nodes);//add old node to delta.
 		delta.left.edges=n1_rm.left.edges.concat(n2_rm.left.edges);//add old edges to delta.
 		undoRedo.stack(delta);
+		return deltaToId(delta);
+	}
+	var deltaToId = function(delta){//return an enter/exit object with the id of all elements added/removed for an action.
+		var ret ={'enter':[],'exit':[]};
+		for(var i=0;i<delta.right.nodes.length;i++)
+			ret.enter.push(delta.right.nodes[i].getId());
+		for(var i=0;i<delta.right.edges.length;i++)
+			ret.enter.push(delta.right.edges[i].getId());
+		for(var i=0;i<delta.left.nodes.length;i++)
+			ret.exit.push(delta.left.nodes[i].getId());
+		for(var i=0;i<delta.left.edges.length;i++)
+			ret.exit.push(delta.left.edges[i].getId());
+		return ret;
 	}
 	this.addNodeLabels = function addNodeLabels(id,l){//add some labels to a node
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
@@ -464,6 +489,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		}
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
+		return deltaToId(ret);
 	};
 	this.rmNodeLabels = function rmNodeLabels(id,l){//remove labels from a node if l is null or [], remove all the labels
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
@@ -480,6 +506,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		else nodes[id].deleteLabels();
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
+		return deltaToId(ret);
 	};
 	this.chNodeUid = function chNodeUid(id,uid){//change Node Uid
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
@@ -492,12 +519,14 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		}
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
+		return deltaToId(ret);
 	};
 	this.addNodeValues = function addNodeValues(id,l){//add some values to a node
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
 		nodes[id].addValues(l);
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
+		return deltaToId(ret);
 	};
 	this.rmNodeValues = function rmNodeValues(id,l){//remove values from a node if l is null or [], remove all the Values
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
@@ -506,6 +535,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		else nodes[id].deleteValues();
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
+		return deltaToId(ret);
 	};
 	var putEdge = function(e){//UNSAFE add an edge to the LG, be carefull, this edge must have a none existing ID !
 		edges[e.getId()]=e;
@@ -524,7 +554,9 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	};
 	this.addEdge = function addEdge(t,ng,i,o){//add a NEW edge 
 		var e=new Edge('e_'+EDGE_ID++,t,ng,i,o);
-		undoRedo.stack(putEdge(e));
+		var delta=putEdge(e);
+		undoRedo.stack(delta);
+		return deltaToId(delta);
 	};
 	var clEdge = function(id){
         var e=edges[id];
@@ -544,28 +576,48 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		return ret;
 	};
 	this.rmEdge = function rmEdge(id){//remove an edge
-		undoRedo.stack(clEdge(id));
+		var delta=clEdge(id);
+		undoRedo.stack(delta);
+		return deltaToId(delta);
 	};
 	this.getNodeByLabels = function getNodeByLabels(labels){//return a nodes id list corresponding to the specific labels
 		var nodes_lists =[];
-		for(var i=0;i<labels.length;i++)
-			nodes_lists.push(nodesByLabel[labels[i]]);
+		for(var i=0;i<labels.length;i++){
+			var tmp_l=nodesByLabel[labels[i]];
+			if(fullListCheck(tmp_l))
+				nodes_lists.push(tmp_l);
+		}
 		return multiIntersection(nodes_lists);
 	};
 	this.getNodeByUid = function getNodeByUid(uid){//return the node id corresponding to a specific uid
-		return nodesByUid[uid].concat();
+		var ret=[];
+		if(fullListCheck(nodesByUid[uid]))
+			ret=nodesByUid[uid].concat();
+		return ret;
 	};
 	this.getNodeByNugget = function getNodeByNugget(n_id){//return all nodes in a specific nugget
-		return nodesByNuggets[n_id].concat();
+		var ret=[];
+		if(fullListCheck(nodesByNuggets[n_id])
+			ret=nodesByNuggets[n_id].concat();
+		return ret;
 	}
 	this.getEdgeBySource = function getEdgeBySource(iid){//return all the edges corresponding to a specific input (id list)
-		return edgesBySource[iid].concat();
+		var ret=[];
+		if(fullListCheck(edgesBySource[iid]))
+			ret=edgesBySource[iid].concat();
+		return ret;
 	};
 	this.getEdgeByTarget = function getEdgeByTarget(oid){//return all the edges corresponding to a specific output (id list)
-		return edgesByTarget[oid].concat();
+		var ret=[];
+		if(fullListCheck(edgesByTarget[oid]))
+			ret=edgesByTarget[oid].concat()
+		return ret;
 	};
 	this.getEdgeByNugget = function getEdgeByNugget(n_id){//return all edges in a specific nugget
-		return edgesByNuggets[n_id].concat();
+		var ret=[];
+		if(fullListCheck(edgesByNuggets[n_id]))
+			ret=edgesByNuggets[n_id].concat();
+		return ret;
 	};
 	this.log = function log() {
 		var n_keys = Object.keys(nodes);
@@ -592,37 +644,55 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	this.logStack = function logStack(){
 		undoRedo.log();
 	};
-	this.undo = function undo(){
-		deltaLeft(undoRedo.undo());
+	this.undo = function undo(){//Undo the last action and return an exit/enter object
+		delta=undoRedo.undo();
+		deltaLeft(delta);
+		return deltaToId(delta);
 	};
-	this.redo = function redo(){
-		deltaRight(undoRedo.redo());
+	this.redo = function redo(){//redo the last action undowed and return an exit/enter object
+		var delta=undoRedo.redo();
+		deltaRight(delta);
+		return deltaToId(delta);
 	};
-	this.localUndo = function localUndo(s_id){
-		deltaLeft(undoRedo.localUndo(s_id));
+	this.localUndo = function localUndo(s_id){//undo the last action in a specific nugget and return an exit/enter object
+		var delta=undoRedo.localUndo(s_id);
+		deltaLeft(delta);
+		return deltaToId(delta);
 	};
-	this.localRedo = function localRedo(s_id){
-		deltaRight(undoRedo.localRedo(s_id));
+	this.localRedo = function localRedo(s_id){//redo the last undowed action in a specific nugget and return an exit/enter object
+		var delta=undoRedo.localRedo(s_id);
+		deltaRight(delta);
+		return deltaToId(delta);
 	};
-	this.stackClear = function stackClear(){
+	this.stackClear = function stackClear(){//clear the whole undo/redo stack
 		undoRedo.clear();
 	};
-	this.stackLocClear = function stackLocClear(s_id){
+	this.stackLocClear = function stackLocClear(s_id){//clear a local stack for the s_id nugget
 		undoRedo.clearLocal(s_id);
 	};
-	this.undoNugget = function undoNugget(s_id){
+	this.undoNugget = function undoNugget(s_id){//undo a whole nugget and return an enter/exit object.
 		var delta=undoRedo.localUndo(s_id);
+		var ret=deltaToId(delta);
 		while(delta!=null){
 			deltaLeft(delta);
 			delta=undoRedo.localUndo(s_id);
+			var tmp=deltaToId(delta);
+			ret.enter=union(ret.enter,tmp.enter);//acumulator for enter
+			ret.exit=union(ret.exit,tmp.exit);//acumulator for exit
 		}
+		return ret;
 	};
-	this.redoNugget = function redoNugget(s_id){
+	this.redoNugget = function redoNugget(s_id){//redo a whole nugget undowed and return an exit/enter object
 		var delta=undoRedo.localRedo(s_id);
+		var ret=deltaToId(delta);
 		while(delta!=null){
 			deltaRight(delta);
 			delta=undoRedo.localRedo(s_id);
+			var tmp=deltaToId(delta);
+			ret.enter=union(ret.enter,tmp.enter);//acumulator for enter
+			ret.exit=union(ret.exit,tmp.exit);//acumulator for exit
 		}
+		return ret;
 	};
 	var deltaLeft = function(delta){
         if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.edges)) {
@@ -644,21 +714,22 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		}
 	};
 	var deltaRight = function(delta){
+		var ret={'enter':[],'exit':[]};
         if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.edges)) {
             for (var i = 0; i < delta.left.edges.length; i++)
-                clEdge(delta.left.edges[i].getId());
+                ret.exit.push(clEdge(delta.left.edges[i].getId()));
         }
         if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.nodes)) {
 			for (var i = 0; i < delta.left.nodes.length; i++)
-				clNode(delta.left.nodes[i].getId());
+				ret.exit.push(clNode(delta.left.nodes[i].getId()));
 		}
 		if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.nodes)) {
 			for (var i = 0; i < delta.right.nodes.length; i++)
-				putNode(delta.right.nodes[i]);
+				ret.enter.push(putNode(delta.right.nodes[i]));
 		}
 		if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.edges)) {
 			for (var i = 0; i < delta.right.edges.length; i++)
-				putEdge(delta.right.edges[i]);
+				ret.enter.push(putEdge(delta.right.edges[i]));
 		}
 	};
     this.getLabels = function getLabels(id){
@@ -688,11 +759,13 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
     this.getUid = function getUid(id){
         return getNode(id).getUid();
     };
-    this.copy = function copy(id){
-    	if(idT(id)=='e') return getEdge(id).copy('e_'+EDGE_ID++);
+    /*this.copy = function copy(id){//unsafe ?
+    	if(idT(id)=='e') {
+			var e=getEdge(id).copy('e_'+EDGE_ID++);
+		}	
 		else if (idT(id)=='n') return getNode(id).copy('n_'+NODE_ID++);
 			else console.error("undefined id type : "+idT(id));
-	}
+	}*/
     this.getSource = function getSource(id){
         return getEdge(id).getSource();
     };
@@ -709,7 +782,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 function Relation(){
     var antecedent_to_image={};//hashtable : key : antecedent, values : images
     var image_from_antecedent={};//hashtable : key : image, values : antecedents
-    this.addR = function addR(ant_l,img_l){
+    this.addR = function addR(ant_l,img_l){//add a relation between a list of antecedents and a list of images
         for(var i=0;i<ant_l.length;i++) {
             if(!fullListCheck(antecedent_to_image[ant_l[i]]))
                 antecedent_to_image[ant_l[i]]=[];
@@ -721,7 +794,7 @@ function Relation(){
             image_from_antecedent[img_l[i]] = union(image_from_antecedent[img_l[i]], ant_l);
         }
     };
-    this.getImg = function getImg(ant){
+    this.getImg = function getImg(ant){//get all the images of a specific antecedent
         if(fullListCheck(antecedent_to_image[ant]))
             return antecedent_to_image[ant].concat();
         else {
@@ -729,7 +802,7 @@ function Relation(){
             return null;
         }
     };
-    this.getAnt = function getAnt(img){
+    this.getAnt = function getAnt(img){//get all the antecedents of a specific image
         if(fullListCheck(image_from_antecedent[img]))
             return image_from_antecedent[img].concat();
         else {
@@ -737,11 +810,11 @@ function Relation(){
             return null;
         }
     };
-    this.clR = function clR(){
+    this.clR = function clR(){//clear the whole relation
         antecedent_to_image={};
         image_from_antecedent={};
     };
-    this.rmIm = function rmIm(img){
+    this.rmIm = function rmIm(img){//remove a specific image
         if(fullListCheck(image_from_antecedent[img])) {
             for(var i=0;i<image_from_antecedent[img].length;i++){
                 var idx=antecedent_to_image[image_from_antecedent[img][i]].indexOf(img);
@@ -753,7 +826,7 @@ function Relation(){
             image_from_antecedent[img] = [];
         }
     };
-    this.rmAnt = function rmAnt(ant){
+    this.rmAnt = function rmAnt(ant){//remove a specific antecedent
         if(fullListCheck(antecedent_to_image[ant])) {
             for(var i=0;i<antecedent_to_image[ant].length;i++){
                 var idx=image_from_antecedent[antecedent_to_image[ant][i]].indexOf(ant);
@@ -766,7 +839,7 @@ function Relation(){
             antecedent_to_image[ant] = [];
         }
     };
-    this.rmR = function rmR(ant_l,img_l){
+    this.rmR = function rmR(ant_l,img_l){//remove all relations between a list of antecedent and a list of images
         for(var i=0;i<ant_l.length;i++){
             for(var j=0;j<img_l.length;j++){
                 var idx=antecedent_to_image[ant_l[i]].indexOf(img_l[j]);
@@ -778,7 +851,7 @@ function Relation(){
             }
         }
     };
-    this.log = function log(){
+    this.log = function log(){//log a whole relation
         console.log("relations : ===================>");
         console.log("antecedents->images : ===================>");
         var an_to_im=Object.keys(antecedent_to_image);
@@ -822,60 +895,270 @@ function Nugget(i,n,c){
 		console.log("visible : "+visible);
 	};
 }
-function Kami() {//define the full workflow object
-	var NUGGET_ID = 0;
-	var UID = 0;
-	var nugg_graph = new LayerGraph();
-	var ngg_R_acg = new Relation();
-	var act_graph = new LayerGraph();
-	var acg_R_lcg = new Relation();
-	var lcg = new LayerGraph();
-	var nuggets ={};
-	var current_ng_id = 'ng_0';
-	var selected_nodes = [];
-	var projected_nuggets = [];
-	this.getNodesId = function getNodesId(lg_name){
-        var ids=[];
-        var ret=[];
-        switch(lg_name){
+function Kami() {//define the full workflow object, all the modification functions return an enter/exit object for all the graph (ngg, acg, lcg). Allow to do all updates localy !
+	var NUGGET_ID = 0;//id of nuggets for the nugget graph
+	var UID = 0;//uid for projection
+	var nugg_graph = new LayerGraph();//nuggets graph
+	var ngg_R_acg = new Relation();//projection of nuggets into actions
+	var act_graph = new LayerGraph();//actions graph
+	var acg_R_lcg = new Relation();//projection of actions into LCG
+	var lcg = new LayerGraph();//Logical contact graph
+	var nuggets ={};//hashtable of all nuggets objects.
+	var getLg = function(lg_name){//return the lg graph corresponding to the lg_name
+		switch(lg_name){
             case "ACG":
-                ids=act_graph.getNodes();
-                break;
+                return act_graph;
             case "NGG":
-                ids=nugg_graph.getNodes();
-                break;
+                return nugg_graph;
             case "LCG":
-                ids=lcg.getNodes();
+                return lcg;
+			default:
+				console.error("unknown value : "+lg_name);
         }
-        for(var i=0;i<ids.length;i++){
-            ret.push({'id':ids[i],'lg':lg_name});
-        }
-        return ret;
+	};
+	this.getNuggets = function getNuggets(){
+		return Object.keys(nuggets);
+	};
+	this.getNodes = function getNodes(lg_name){
+       return getLg(lg_name).getNodes();
     };
-    this.getEdgesId = function getEdgesId(lg_name){
-        var ids=[];
-        var ret=[];
-        switch(lg_name){
-            case "ACG":
-                ids=act_graph.getEdges();
-                break;
-            case "NGG":
-                ids=nugg_graph.getEdges();
-                break;
-            case "LCG":
-                ids=lcg.getEdges();
-        }
-        for(var i=0;i<ids.length;i++){
-            ret.push({'id':ids[i],'lg':lg_name});
-        }
-        return ret;
+	this.getEdges = function getEdges(lg_name){//return the whole edges as a list of id
+		return getLg(lg_name).getEdges();
+	};
+	var LocAddNode = function (t,ng,l,v,u,lg_name){//internal function adding nodes to a lg
+		return getLg(lg_name).addNode(t,ng,l,v,u);
+	};
+	this.addNode = function addNode(t,ng,l,v,u){//add a new node to kami : add the node to a nugget, if this nugget is visible, update the acg and the projection function. return the delta corresponding to modified nodes/edges id
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(idV(ng)>=NUGGET_ID){
+			console.error("This nugget isn't defined ! "+ng);
+			return delta;
+		}
+		if(!u)
+			delta.NGG=LocAddNode(t,ng,l,v,"u_"+UID++,"NGG");
+		else if(idT(u)=="u" && idV(u)>=UID){
+			console.error("this uid doesn't exist ! "+u);
+			return delta;
+		}else
+			delta.NGG=LocAddNode(t,ng,l,v,u,"NGG");
+		if(isNgVisible(ng))
+			delta.ACG=updateNRA(delta.NGG);
+		return delta;
+	}
+	var updateNRA = function(delta){//update the nugget to acg relation. take the enter/exit object from the nugget graph and return the enter/exit object for the Action graph !
+		var ret={'exit':[],'enter':[]};
+		for(var i=0;i<delta.exit.length;i++){//remove all nodes witch are in the exit segment from the projection table
+			var pr_id=ngg_R_acg.getImg(delta.exit[i])[0];
+			ngg_R_acg.rmAnt(delta.exit[i]);
+			if(getAnt(pr_id).length==0){//if the projection have no antecedents remaining, remove it from the ACG
+				if(idT(pr_id)=="n"){
+					var tmp_delta=act_graph.rmNode(pr_id);
+					ret.exit=union(ret.exit,tmp_delta.exit);
+					ret.enter=union(ret.enter,tmp_delta.enter);
+				}
+				else if(idT(pr_id)=="e"){
+					var tmp_delta=act_graph.rmEdge(pr_id);
+					ret.exit=union(ret.exit,tmp_delta.exit);
+					ret.enter=union(ret.enter,tmp_delta.enter);
+				}
+				else {
+					console.error("unknown type of element : "+delta.exit[i]);
+					return;
+				}
+			}
+		}
+		for(var i=0;i<delta.enter.length;i++){//add all nodes/edges of the enter segment in the projection table 
+			if(idT(delta.enter[i])=="n"){//projection for nodes
+				var tmp_uid=nugg_graph.getUid(delta.enter[i]);
+				var pr_id=act_graph.getNodeByUid(tmp_uid);//if the added node image doesn't exit yet, create it. add it to the antecedent of the image node : image node have the same uid !
+				if(!pr_id || pr_id.length==0){//create a copy of the nugget node (no sons, no father until we add edges !)
+					var tmp_delta=act_graph.addNode(nugg_graph.getType(delta.enter[i]),
+												nugg_graph.getNugget(delta.enter[i]),
+												nugg_graph.getLabels(delta.enter[i]),
+												nugg_graph.getValues(delta.enter[i]),
+												nugg_graph.getUid(delta.enter[i]));
+					pr_id=act_graph.getLastNodeId();//our projection will be the newly created node !
+					ret.enter=union(ret.enter,tmp_delta.enter);
+					ret.exit=union(ret.exit,tmp_delta.exit);
+				}
+				else pr_id=pr_id[0];//flatten this 1 element list !
+				ngg_R_acg.addR([delta.enter[i]],[pr_id]);//add the projection relation between this node and the ACG node.
+			}
+			else if(idT(delta.enter[i])=="e"){//projection for edges !!!!!!!=======!!!!!! trying some unsafe delay ! may need some guards!
+				var s_id=nugg_graph.getSource(delta.enter[i]);
+				var t_id=nugg_graph.getTarget(delta.enter[i]);
+				var pr_s=ngg_R_acg.getImg(s_id)[0];//flatten this one element list
+				var pr_t=ngg_R_acg.getImg(t_id)[0];//flatten this one element list
+				if(!pr_s || !pr_t){//if the source or target projection doesn't exist yet, delay the edge projection !
+					console.log("edge delayed ! "+ delta.enter[i]);
+					delta.enter.push(delta.enter[i]);
+					delta.enter.splice(i--,1);//don't let i being updated !
+				}
+				else{
+					var pr_e=Intersection([act_graph.getEdgeBySource(pr_s),act_graph.getEdgeByTarget(pr_t));//get all existing edges i the ACG connecting the same source and id
+					for(var k=0;k<pr_e.length;k++){//remove all edge of the wrong type
+						if(act_graph.getType(pr_e[k])==nugg_graph.getType(delta.enter[i]))
+							pr_e.splice(k--,1);
+					}
+					if (pr_e.length==0){//if there is no edges in the ACG, create an edge and update the delta!
+						var tmp_delta=act_graph.addEdge(nugg_graph.getType(delta.enter[i]),
+														nugg_graph.getNugget(delta.enter[i]),
+														pr_s,
+														pr_t);
+						ret.enter=union(ret.enter,tmp_delta.enter);
+						ret.exit=union(ret.exit,tmp_delta.exit);
+						pr_e=act_graph.getLastEdgeId();
+					} 
+					else if(pr_e.length==1)
+						pr_e=pr_e[0];//flatten the one element list
+					else {
+						console.error("more images than excepted for : "+delta.enter[i]);//if there is more than one edge, it is a mistake in the whole code !
+						return;
+					}
+					ngg_R_acg.addR([delta.enter[i],[pr_e]);
+				}
+			}
+			else {
+				console.error("unknown type of element : "+delta.enter[i]);
+				return;
+			}
+			
+		}
+		return ret;			
+	}
+	this.rmNode = function rmNode(id,lg_name){//remove a specific node and return a delta
+		return getLg(lg_name).rmNode(id);
+	};
+	this.mergeNode = function mergeNode(id1,id2,lg_name){//merge two node in a third one and return a delta
+		return getLg(lg_name).mergeNode(id1,id2);
+	}
+	this.addNodeLabels = function addNodeLabels(id,l,lg_name){//add some labels to a node
+		return getLg(lg_name).addNodeLabels(id,l);
+	};
+	this.rmNodeLabels = function rmNodeLabels(id,l,lg_name){//remove labels from a node if l is null or [], remove all the labels
+		return getLg(lg_name).rmNodeLabels(id,l);
+	};
+	this.chNodeUid = function chNodeUid(id,uid,lg_name){//change Node Uid
+		return getLg(lg_name).chNodeUid(id,uid,lg_name);
+	};
+	this.addNodeValues = function addNodeValues(id,l,lg_name){//add some values to a node
+		return getLg(lg_name).addNodeValues(id,l,lg_name);
+	};
+	this.rmNodeValues = function rmNodeValues(id,l,lg_name){//remove values from a node if l is null or [], remove all the Values
+		return getLg(lg_name).rmNodeValues(id,l);
+	};
+	this.addEdge = function addEdge(t,ng,i,o,lg_name){//add a NEW edge 
+		return getLg(lg_name).addEdge(t,ng,i,o);
+	};
+	this.rmEdge = function rmEdge(id,lg_name){//remove an edge
+		return getLg(lg_name).rmEdge(id);
+	};
+	this.getNodeByLabels = function getNodeByLabels(labels,lg_name){//return a nodes id list corresponding to the specific labels
+		return getLg(lg_name).getNodeByLabels(labels);
+	};
+	this.getNodeByUid = function getNodeByUid(uid,lg_name){//return the node id corresponding to a specific uid
+		return getLg(lg_name).getNodeByUid(uid);
+	};
+	this.getNodeByNugget = function getNodeByNugget(n_id,lg_name){//return all nodes in a specific nugget
+		return getLg(lg_name).getNodeByNugget(n_id);
+	}
+	this.getEdgeBySource = function getEdgeBySource(iid,lg_name){//return all the edges corresponding to a specific input (id list)
+		return getLg(lg_name).getEdgeBySource(iid);
+	};
+	this.getEdgeByTarget = function getEdgeByTarget(oid,lg_name){//return all the edges corresponding to a specific output (id list)
+		return getLg(lg_name).getEdgeByTarget(oid);
+	};
+	this.getEdgeByNugget = function getEdgeByNugget(n_id,lg_name){//return all edges in a specific nugget
+		return getLg(lg_name).getEdgeByNugget(n_id);
+	};
+	this.undo = function undo(lg_name){//Undo the last action and return an exit/enter object
+		return getLg(lg_name).undo();
+	};
+	this.redo = function redo(lg_name){//redo the last action undowed and return an exit/enter object
+		return getLg(lg_name).redo();
+	};
+	this.localUndo = function localUndo(s_id,lg_name){//undo the last action in a specific nugget and return an exit/enter object
+		return getLg(lg_name).localUndo(s_id);
+	};
+	this.localRedo = function localRedo(s_id,lg_name){//redo the last undowed action in a specific nugget and return an exit/enter object
+		return getLg(lg_name).localRedo(s_id);
+	};
+	this.stackClear = function stackClear(lg_name){
+		getLg(lg_name).stackClear();
+	};
+	this.stackLocClear = function stackLocClear(s_id,lg_name){
+		getLg(lg_name).stackLocClear(s_id);
+	};
+	this.undoNugget = function undoNugget(s_id,lg_name){//undo a whole nugget and return an enter/exit object.
+		return getLg(lg_name).undoNugget(s_id);
+	};
+	this.redoNugget = function redoNugget(s_id,lg_name){//redo a whole nugget undowed and return an exit/enter object
+		return getLg(lg_name).redoNugget(s_id);
+	};
+    this.getLabels = function getLabels(id,lg_name){
+        return getLg(lg_name).getLabels(id);
     };
-    this.addNode = function addNode(t,n,l,v,u){
-        var nugget=[];
-        if(!fullListCheck(n))nugget.push(current_ng_id);
-        nugg_graph.addNode(t,nugget,l,v,u);
+    this.getType = function getType(id,lg_name){
+        return getLg(lg_name).getType(id);
     };
-    this.log = function log(){
+    this.getFth = function getFth(id,lg_name){
+        return getLg(lg_name).getFth(id);
+    };
+    this.getSons = function getSons(id,lg_name){
+        return getLg(lg_name).getSons(id);
+    };
+    this.getNugget = function getNugget(id,lg_name){
+        return getLg(lg_name).getNugget(id);
+    };
+    this.getValues = function getValues(id,lg_name){
+        return getLg(lg_name).getValues(id);
+    };
+    this.getUid = function getUid(id,lg_name){
+        return getLg(lg_name).getUid(id);
+    };
+    this.getSource = function getSource(id,lg_name){
+        return getLg(lg_name).getSource(id);
+    };
+    this.getTarget = function getTarget(id,lg_name){
+        return getLg(lg_name).getTarget(id);
+    };
+    this.getLastNodeId = function getLastNodeId(lg_name){
+        return getLg(lg_name).getLastNodeId();
+    };
+    this.getLastEdgeId = function getLastEdgeId(lg_name){
+		return getLg(lg_name).getLastEdgeId();
+	};
+    this.addNugget = function addNugget(n,c){//add a new nugget to Kami background knowledge.
+		var ng=new Nugget('ng_'+(NUGGET_ID++),n,c);
+		nuggets[ng.getId()]=ng;
+		return ng.getId();
+	};
+	this.showNugget = function showNugget(nid){//add a specific nugget to the action graph.
+		nuggets[nid].show();
+		return nid;
+	};
+	this.hideNugget = function hideNugget(nid){
+		nuggets[nid].hide();
+		return nid;
+	}
+	this.getNgName = function getNgName(nid){
+		return nuggets[nid].getName();
+	};
+	this.getNgComment = function getNgComment(nid){
+		return nuggets[nid].getComment();
+	};
+	this.isNgVisible = function isNgVisible(nid){
+		return nuggets[nid].isVisible()
+	};
+	this.setNgName = function setNgName(n,nid){
+		nuggets[nid].setName(n);
+		return nid;
+	};
+	this.setNgComment = function setNgComment(c,nid){
+		nuggets[nid].setComment(c);
+		return nid;
+	};
+	this.log = function log(){
         console.log("Kami : ===================");
         console.log("Nugget graph : ");
         nugg_graph.log();
@@ -888,333 +1171,9 @@ function Kami() {//define the full workflow object
         ngg_R_acg.log();
         console.log("Action to LCG");
         acg_R_lcg.log();
+		console.log("Nuggets informations : ===================");
+		var key=Object.keys(nuggets);
+		for(var i=0;i<key.length)
+			nuggets[key[i]].log();
     };
 }
-/*var cmdParser = function(cmd){//parse command lines : [tar[@ctx]] act tar[@ctx]; cmd lines
-    var cmd_l=cmd.split(/;\n+/);
-    for(var i=0;i<cmd_l.length-1;i++){
-        var cmd_ct=cmd_l[i].split(" ");
-        var ct=[];
-        var tar={'left':[],'right':[]};
-        var act=null;
-        if(cmd_ct.length<3){
-            var nodes=cmd_ct[1].split('@');
-            if(nodes.length>1)
-                ct.concat(nodeParse(nodes[1]));
-            tar.left.concat(nodeParse(nodes[0]));
-            act=parseAction(cmd_ct[0]);
-        }else if(cmd_ct.length==3){
-            var nodes=cmd_ct[0].split('@');
-            if(nodes.length>1)
-                ct.concat(nodeParse(nodes[1]));
-            tar.left.concat(nodeParse(nodes[0]));
-            act=parseAction(cmd_ct[1]);
-            nodes=cmd_ct[2].split('@');
-            if(nodes.length>1)
-                ct.concat(nodeParse(nodes[1]));
-            tar.right.concat(nodeParse(nodes[0]));
-        }
-        cmdToNode(ct);
-        cmdToNode(tar.left);
-        cmdToNode(tar.right);
-        cmdToAct(act,tar);
-        nuggetProjection("ng_"+NUGGET_ID);//update ngg_R_acg and act_graph
-        NUGGET_ID++;
-    }
-};
-var cmdToNode = function(node_text){
-    var tree=cmdToTree(node_text);
-    treeToNode(tree);
-};
-var cmdToTree = function(node_text){//return a tree structure corresponding to a specific sentence
-    var token="";
-    var ret=new Tree("root",null);
-    var current_node=ret;
-    for(var i=0;i<node_text.length;i++){
-        var next_c = node_text.charAt(i);
-
-        if(next_c!='(' && next_c!=',' && next_c!=')') {
-            token += next_c;
-        }
-        else if(next_c==','){
-            if(token!="") {
-                current_node.addSon(token);
-                token = "";
-            }
-        }
-        else if(next_c=='('){
-            if(token!="") {
-                current_node.addSon(token);
-                token = "";
-            }
-            current_node=current_node.sons[current_node.sons.length-1];
-        }
-        else if(next_c==')'){
-            if(token!="") {
-                current_node.addSon(token);
-                token = "";
-            }
-            current_node=current_node.fth;
-        }
-    }
-    if(token!="") {//flush the last token
-        current_node.addSon(token);
-    }
-    return ret;
-};
-var treeToNode = function(tree){
-    for(var i=0;i<tree.sons.length;i++){
-        switch(tree.sons[i].label.charAt(0)){
-            case '.':
-                var node_uid=checkUid(tree.sons.label.substr(1),act_graph);//find if the label is an uid or if the label correspond to one
-                nugg_graph.addNode(["component","keyres"],NUGGET_ID,tree.sons.label.substr(1),[],node_uid);
-                var n_fth=nugg_graph.getNodeByLabels([tree.label.substr(1)])
-                if(fullListCheck(n_fth)){
-                    if(n_fth.length==1)
-                        nugg_graph.addEdge(t,ng,i,o);
-                    else
-                        console.log("multiple possible root for "+tree.label.substr(1)+", please specify an Uid");
-
-                }
-
-
-        }
-    }
-}
-var cmdToAct = function(act,target_nodes){
-};
-
-
-
-
-function graphicGui(k,c){//a graphic Gui use a svg caneva, nodes and edges and listener from the kami object.
-	var nodes=[];
-	var edges=[];//type can be 'link','parent','posinfl','neginfl','rw_rule' (contain edges id and nugg only)
-	var svg=null;
-	var width;
-	var	height;
-	var kami=k;
-	var force=null;
-	var first_init;
-	var container=c;//the html container
-	var svg=null;//the graphical caneva
-	this.init=function init(){
-		var width=document.getElementById(containerID).getBoundingClientRect().width;
-		var	height =document.getElementById(containerID).getBoundingClientRect().height;//menu is 30px heigth
-		force=d3.layout.force();
-		force.nodes(nodes)
-			.links(links)
-			.linkDistance(function(d){if(kami.getType(d.id)[0]!='parent') return 100; else return (nodeSize(kami.getType(d.source))+nodeSize(kami.getType(d.target)))})
-			.linkStrength(function(d){if(kami.getType(d.id)[0]!='parent') return 0.7; else return 5})
-			.charge(function(d){if(kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]!='input' && kami.getType(d.id)[1]!='output' ) return -300; else return -600})
-			.chargeDistance(function(d){
-				if((kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]!='input' && kami.getType(d.id)[1]!='output') || (kami.getType(d.id)[0]=='action' && kami.getType(d.id)[1]=='agent'))
-					return 100;
-				else
-					return nodeSize(kami.getType(d.id));
-			})
-			.size([width, height]);
-		first_init=false;
-		force.on("tick",tick);//add the tick function
-		force.drag().on("dragstart", dragstart);//add th dragging function
-		kami.setState("AGV");
-		svg=d3.select("#"+container).append("svg:svg")//create the SVG container
-			.attr("width",width)
-			.attr("height",height-30)
-			.on("contextmenu",d3.contextMenu(function(){return rightClickMenu();}));//add the right click menu
-		d3.select("#"+container).append("div")//add the top tooltype
-			.classed("n_tooltip",true)
-			.style("visibility","hidden");
-		d3.select("#"+container).append("div")//add the bottom tooltip
-			.classed("s_tooltip",true)
-			.style("visibility","hidden");
-		svg.append("svg:defs").selectAll("marker")//add the arrow at the end of edged
-			.data(["pos_end","neg_end","link_end","rw_end"])      // Different link/path types can be defined here
-			.enter().append("svg:marker")    // This section adds in the arrows
-			.attr("id", function(d){return d;})
-			.attr("refX", 40)
-			.attr("refY", 7)
-			.attr("markerWidth", 13)
-			.attr("markerHeight", 13)
-			.attr("orient", "auto")
-			.attr("markerUnits","strokeWidth")
-			.append("svg:path")
-			.attr("d", "M2,2 L2,13 L8,7 L2,2");
-	};
-	var nodeSize=function(type){//return the node RADIUS
-		//this node type : component(1)/action(2)/super(3)/attribute (1):agent/region/keyres/flag (2):modPos/modNeg/syn/deg/bnd/brk/input/output (3):family/set/process
-		if(type[0]=='attribute')
-			return 7;
-		switch(type[1]){
-			case 'flag':
-				return 7;
-			case "keyres":
-				return 10;
-			case "region":
-				return 15;
-			case "agent":
-			case "family":
-			case "set":
-			case "process":
-				return 20;
-			case "input":
-			case "output":
-				return 2;
-			case "modPos":
-			case "modNeg":
-			case "syn":
-			case "neg":
-			case "bnd":
-			case "brk":
-				return 40;
-			default:
-				throw "unknown type ! "+type;
-		}
-	};
-	this.wakeUp = function wakeUp(val){//speed up tick function
-		force.start();
-		if(!(typeof(val)!="undefined" && val!=null && !val))
-		//d3.selectAll("g.agent").classed("fixed",false);
-		//d3.selectAll("g.action").classed("fixed",false);
-			d3.selectAll("g.node").classed("fixed",false);
-		for(var i=0;i<300;i++){
-			force.tick();
-		}
-		if(first_init){
-			//d3.selectAll("g.agent").classed("fixed",true);
-			//d3.selectAll("g.action").classed("fixed",true);
-			d3.selectAll("g.node").classed("fixed",true);
-		}
-		first_init=true;
-	};
-	var update = function(){//update all the SVG elements
-		//links svg representation
-		edges = svg.selectAll(".edge")
-			.data(kami.getEdges(), function(d) { return d.id; });
-		edges.enter().insert("line","g")
-			.classed("edge",true)//type can be 'link','parent','posinfl','neginfl','rw_rule'
-			.classed("link",function(d){return kami.getType(d.id)[0]=="link"})
-			.classed("parent",function(d){return kami.getType(d.id)[0]=="parent"})
-			.classed("influence",function(d){return kami.getType(d.id)[0]=="posinfl" || kami.getType(d.id)[0]=="neginfl"})
-			.classed("posinfl",function(d){return kami.getType(d.id)[0]=="posinfl"})
-			.classed("neginfl",function(d){return kami.getType(d.id)[0]=="neginfl"})
-			.classed("rw_rule",function(d){return kami.getType(d.id)[0]=="rw_rule"});
-		d3.selectAll(".link").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
-		d3.selectAll(".influence").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
-		d3.selectAll(".rw_rule").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
-		d3.selectAll(".posinfl").attr("marker-end", "url(#pos_end)");
-		d3.selectAll(".neginfl").attr("marker-end", "url(#neg_end)");
-		d3.selectAll(".link").attr("marker-end", "url(#link_end)");
-		d3.selectAll(".rw_rule").attr("marker-end", "url(#rw_end)");
-		edges.exit().remove();
-		//none action nodes svg representation
-		nodes = svg.selectAll(".node")
-			.data(kami.getNodes(), function(d) { return d.id;});//add all node id to the graphic structure
-		var nodeEnter = nodes.enter().insert("g")
-			.classed("node",true)//this node type : component(1)/action(2)/super(3)/attribute (1):agent/region/keyres/flag (2):modPos/modNeg/syn/deg/bnd/brk/input/output (3):family/set/process
-			.classed("round",function(d){return kami.getType(d.id)[0]=="attribute" || kami.getType(d.id)[0]=="component" || (kami.getType(d.id)[0]=="action" && (kami.getType(d.id)[1]=="input" || kami.getType(d.id)[1]=="output"));})
-			.classed("rectangle",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]!="input" && kami.getType(d.id)[1]!="output";})
-			.classed("attribute",function(d){return kami.getType(d.id)[0]=="attribute";})
-			.classed("component",function(d){return kami.getType(d.id)[0]=="component";})
-			.classed("agent",function(d){return kami.getType(d.id)[0]=="component" && kami.getType(d.id)[1]=="agent";})
-			.classed("keyres",function(d){return kami.getType(d.id)[0]=="component" && kami.getType(d.id)[1]=="keyres";})
-			.classed("flag",function(d){return kami.getType(d.id)[0]=="component" && kami.getType(d.id)[1]=="flag";})
-			.classed("region",function(d){return kami.getType(d.id)[0]=="component" && kami.getType(d.id)[1]=="region";})
-			.classed("action",function(d){return kami.getType(d.id)[0]=="action";})
-			.classed("modPos",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="modPos";})
-			.classed("modNeg",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="modNeg";})
-			.classed("syn",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="syn";})
-			.classed("deg",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="deg";})
-			.classed("bnd",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="bnd";})
-			.classed("brk",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="brk";})
-			.classed("input",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="input";})
-			.classed("output",function(d){return kami.getType(d.id)[0]=="action" && kami.getType(d.id)[1]=="output";})
-			.on("mouseover",mouseOver)
-			.on("mouseout",mouseOut)
-			.on("click",clickHandler)
-			.on("contextmenu",d3.contextMenu(function(){return nodeCtMenu();}));
-		//add dragging function
-		nodeEnter.selectAll("g.rectangle").call(drag);
-		nodeEnter.selectAll("g.rectangle").on("dblclick",clickNugget);
-		nodeEnter.selectAll("g.agent").call(drag);
-		//add actions (rectangle)
-		nodeEnter.selectAll("g.rectangle").insert("rect")
-			.attr("width", function(d){return nodeSize(kami.getType(d.id))})
-			.attr("height", function(d){return nodeSize(kami.getType(d.id))});
-		nodeEnter.selectAll("g.rectangle").insert("text")
-			.classed("nodeLabel",true)
-			.attr("x", function(d){return nodeSize(kami.getType(d.id));})
-			.attr("dy", function(d){return nodeSize(kami.getType(d.id))/2;})
-			.attr("text-anchor", "middle")
-			.text(function(d) {if(kami.getLabel(d.id).length>0) return kami.getLabel(d.id)[0]; else return d.id;})
-			.attr("font-size", function(d){ return nodeSize(kami.getType(d.id))/1.5+"px";});
-		//add components (circle)
-		nodeEnter.selectAll(".round").insert("circle")
-			.attr("r", function(d){return nodeSize(kami.getType(d.id));});
-		//add text.
-		nodeEnter.selectAll(".component").insert("text")
-			.classed("nodeLabel",true)
-			.attr("x", 0)
-			.attr("dy", ".35em")
-			.attr("text-anchor", "middle")
-			.text(function(d) {if(kami.getLabel(d.id).length>0) return kami.getLabel(d.id)[0]; else return d.id;})
-			.attr("font-size", function(d){return nodeSize(kami.getType(d.id))+"px";});
-		//remove old elements
-		nodes.exit().remove();
-		force.start();
-	};
-	var tick = function(){//show up new svg element only if there position datas have been computed
-		if(first_init || force.alpha()<=0.00501){
-			//tick for nodes
-			nodes.attr("transform", function(d) {
-				if(kami.getType(d.id)[0]!="action" || (kami.getType(d.id)[1]!="input" && kami.getType(d.id)[1]!="output")){
-					d.x=Math.max(nodeSize(kami.getType(d.id)), Math.min(width - nodeSize(kami.getType(d.id)), d.x));
-					d.y=Math.max(nodeSize(kami.getType(d.id)), Math.min(height - nodeSize(kami.getType(d.id)), d.y));
-					return "translate(" + d.x + "," + d.y + ")";
-					if(kami.getType(d.id)[0]=="action"){
-						var in_out=kami.getSons(d.id);
-						var mult_in=false;
-						var mult_out=false;
-						for(var i=0;i<in_out.length;i++){//see for optimisation : hypothesis : actions have few attributes ! force the position of input/output of actions.
-							if(kami.getType(in_out[i])[0]!="attribute"){
-								if((kami.getType(in_out[i])[1]=="input" && !mult_in) || (kami.getType(in_out[i])[1]=="output" && mult_out)){//the first input is on the left
-									d.x=nodes[nodesHash[kami.getFather(d.id)]].x-nodeSize(kami.getType(kami.getFather(d.id)));
-									mult_in=true;
-								}if((kami.getType(in_out[i])[1]=="input" && mult_in) || (kami.getType(in_out[i])[1]=="output" && !mult_out)){//the first output is on the right
-									d.x=svg.select("#"+kami.getFather(d.id)).datum().x+nodeSize(kami.getType(kami.getFather(d.id)));
-									mult_out=true;
-								}
-								d.y=svg.select("#"+kami.getFather(d.id)).datum().y-(nodeSize(kami.getType(kami.getFather(d.id)))/2)
-							}
-
-						}
-					}
-				}
-			});
-			//tick for edges
-			edges.attr("x1", function(d){return svg.select("#"+d.source).datum().x;})
-				.attr("y1", function(d){return svg.select("#"+d.source).datum().y;})
-				.attr("x2", function(d){return svg.select("#"+d.target).datum().x;})
-				.attr("y2", function(d){return svg.select("#"+d.target).datum().y;});
-			first_init=true;
-		}else{//fixe all node when in stable state.
-			d3.selectAll("g.node").classed("fixed",true);
-		}
-	};
-
-
-}*/
-/*
-TODO
-afficher graph
-gerer event
-switch de vue
-projection (from nugget to action graph)
-compilation (use only action graph) 
-traduction (use lcg+nugget)
-attention: un noeud de nugget peut au final correspondre a de multiple noeud dans le lcg !, il peut aussi avoir disparu, inversement un noeud du lcg peut correspondre a plusieur noeud dans les nuggets !
-regle Kappa : on prend les action du LCG et les noeuds du LCG et on regarde les nuggets qui les mentionnent.
-*/
-//notes : creer tout les flag en kappa avec un state default : ask user.
-//also ask for default rates.
-//penser que label des agent strictement differents ! si un label en commun alors c'est le meme agent !
