@@ -1560,57 +1560,20 @@ function Kami(){//define the full workflow object, all the modification function
 	}
 	this.createLcg = function createLcg(){//create a LCG showing only viewable nuggets.
 		this.cleanLCG();
-		var neededNugget=Object.keys(viewable_nuggets);
-		var actions_l=act_graph.getNodeByType("action");//for each actions, add a projection.
-		for(var i=0;i<actions_l.length;i++){
-			lcg.addNode(act_graph.getType(actions_l[i]),"ng_0",act_graph.getLabels(actions_l[i]),act_graph.getValues(actions_l[i]),act_graph.getUid(actions_l[i]));
-			acg_R_lcg.addR([actions_l[i]],[lcg.getLastNodeId()]);
-		}
-		var agents_l=act_graph.getNodeByType("agent");//for each agent, add a projection.
-		for(var i=0;i<agents_l.length;i++){
-			lcg.addNode(act_graph.getType(agents_l[i]),"ng_0",act_graph.getLabels(agents_l[i]),act_graph.getValues(agents_l[i]),act_graph.getUid(agents_l[i]));
-			acg_R_lcg.addR([agents_l[i]],[lcg.getLastNodeId()]);
-		}
-		var action_input=act_graph.getNodeByType("input");//for each action, add input parenting link.
-		for(var i=0;i<action_input.length;i++){
-			var in_im=acg_R_lcg.getImg(action_input[i])[0];//there is only one image
-			var out_im=acg_R_lcg.getImg(act_graph.getFth(action_input[i]))[0];//there is only one image
-			lcg.addEdge("parent","ng_0",in_im,out_im);
-		}
-		var action_output=act_graph.getNodeByType("output");//for each action, add output parenting link.
-		for(var i=0;i<action_output.length;i++){
-			var in_im=acg_R_lcg.getImg(action_output[i])[0];//there is only one image
-			var out_im=acg_R_lcg.getImg(act_graph.getFth(action_output[i]))[0];//there is only one image
-			lcg.addEdge("parent","ng_0",in_im,out_im);
-		}
-		var attributs=act_graph.getNodeByType("attribute");//for each attribut : change its father to its root
-		for(var i=0;i<attributs.length;i++){
-			lcg.addNode(act_graph.getType(attributs[i]),"ng_0",act_graph.getLabels(attributs[i]),act_graph.getValues(attributs[i]),act_graph.getUid(attributs[i]));
-			var new_att=lcg.getLastNodeId();
-			acg_R_lcg.addR([attributs[i]],[new_att]);
-			//also add the parenting link !
-			var newfth=acg_R_lcg.getImg(getRoot(attributs[i],"ACG"))[0];//there is only one image : the root agent !
-			lcg.addEdge("parent","ng_0",new_att,newfth);
-		}
-		var regions=act_graph.getNodeByType("region");//get all the regions and put it in the lcg.
-		for(var i=0;i<regions.length;i++){
-			lcg.addNode(act_graph.getType(regions[i]),"ng_0",act_graph.getLabels(regions[i]),act_graph.getValues(regions[i]),act_graph.getUid(regions[i]));
-			var new_reg=lcg.getLastNodeId();
-			acg_R_lcg.addR([regions[i]],[new_reg]);
-			//also add the parenting link !
-			var newfth=acg_R_lcg.getImg(getRoot(regions[i],"ACG"))[0];//there is only one image : the root agent !
-			lcg.addEdge("parent","ng_0",new_reg,newfth);
-		}
-		var key_res=act_graph.getNodeByType("keyres");//get all the regions and put it in the lcg.
-		for(var i=0;i<key_res.length;i++){
-			lcg.addNode(act_graph.getType(key_res[i]),"ng_0",act_graph.getLabels(key_res[i]),act_graph.getValues(key_res[i]),act_graph.getUid(key_res[i]));
-			var new_reg=lcg.getLastNodeId();
-			acg_R_lcg.addR([regions[i]],[new_reg]);
-			//also add the parenting link !
-			var newfth=acg_R_lcg.getImg(getRoot(regions[i],"ACG"))[0];//there is only one image : the root agent !
-			lcg.addEdge("parent","ng_0",new_reg,newfth);
-		}
-		
+		var graph_cmp={"action","agent","attribute","region","keyres","flag"};
+		for(var i=0;i<graph_cmp.length;i++){
+			var el_l=act_graph.getNodeByType(graph_cmp[i]);
+			for(var eli=0;eli<el_l.length;eli++){
+				lcg.addNode(act_graph.getType(el_l[eli]),"ng_0",act_graph.getLabels(el_l[eli]),act_graph.getValues(el_l[eli]),act_graph.getUid(el_l[eli]));
+				var im_id=lcg.getLastNodeId();
+				acg_R_lcg.addR([el_l[eli]],[im_id]);
+				var fth=getRoot(el_l[eli],"ACG");
+				if(fth){
+					var fth_im=acg_R_lcg.getImg(fth)[0];//there is only one image
+					lcg.addEdge("parent","ng_0",im_id,fth_im);
+				}
+			}
+		}		
 	}
 	this.log = function log(){//log the whole Kami
         console.log("Kami : ===================");
