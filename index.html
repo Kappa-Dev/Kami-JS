@@ -18,17 +18,17 @@
 		console.log("Kami initialized :)");
 		console.log(kami.addNugget("my nugget","first test nugget of the world !"));
 		console.log("===============");
-		console.log(kami.addNode(["component","agent"],"ng_0",["test","re_test"],null,"u_0"));
+		console.log(kami.addNode(["component","agent"],"ng_0",["test","re_test"],["t1"],"u_0"));
 		console.log("===============");
-		console.log(kami.addNode(["component","agent"],"ng_0",["re_test","test2"],null,"u_0"));
+		console.log(kami.addNode(["component","agent"],"ng_0",["re_test","test2"],["t2"],"u_0"));
 		console.log("===============");
 		console.log(kami.addNode(["component","agent"],"ng_0",["bla"],null,"u_1"));
 		console.log("===============");
-		//console.log(kami.rmNode("n_0","NGG"));
-		console.log("===============");
 		console.log(kami.setMainNode("ng_0",["n_1"]));
 		console.log("===============");
-		console.log(kami.rmNodeLabels("n_0",["re_test"],"ACG"));
+		console.log(kami.addEdge(["parent"],"ng_0","n_0","n_0","ACG"));
+		console.log("===============");
+		console.log(kami.hideNugget("ng_0"));
 		console.log("===============");
 		kami.log();
     }

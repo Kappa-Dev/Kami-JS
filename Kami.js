@@ -237,17 +237,17 @@ function Edge(ii,t,n,i,o){//generic definition of an adge in a clustered graph
 	this.log = function log(){//log the whole edge informations O(1)
 		console.log('==== ' + id + ' ====');
 		console.log('type : '+type);
-		console.log('nugget : '+nuggets);
+		console.log('nugget : '+nugget);
 		console.log('source : '+source);
 		console.log('target : '+target);
 		console.log('______________');
 	};
 	this.clone = function clone(){//create a exact copy of the edge : O(1)
-		return new Edge(id,type,nuggets.concat(),source,target);
+		return new Edge(id,type,nugget,source,target);
 	};
 	this.copy = function copy(i){//create a copy of the edge with a new id : O(1)
 		if(i==id) throw new Error("this copy has the same id as the original edge, use clone insteed : "+id);
-		return new Edge(i,type,nuggets.concat(),source,target);
+		return new Edge(i,type,nugget,source,target);
 	};
 }
 function UndoRedoStack(){//generic implementation of undo redo as graph rw rules
@@ -303,7 +303,7 @@ function UndoRedoStack(){//generic implementation of undo redo as graph rw rules
             }
         }
         var ret=sub_stack[s_id].stack[++sub_stack[s_id].idx];
-        console.log(ret);
+        //console.log(ret);
         return ret;
     };
     this.clear = function clear(){//clear the whole undoredo object
@@ -349,6 +349,9 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	var edgesByTarget={};//hashtable of edges, key:node output id, values:edges id list
 	var edgesByType={}//hashable of edges, key:edge type, values: edges id list
 	var undoRedo=new UndoRedoStack();//undo redo stack for this layer graph.
+	this.nodeExist = function nodeExist(id){
+		return typeof nodes[id]!='undefined' && nodes[id]!=null;
+	}
 	var getNode = function(id){//return a specific node for a specific id
 		if(typeof(nodes[id])!=undefined && nodes[id]!=null)
 			return nodes[id];
@@ -492,6 +495,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	}
 	var deltaToId = function(delta){//return an enter/exit object with the id of all elements added/removed for an action.
 		var ret ={'enter':[],'exit':[]};
+		if(!delta) return ret;
 		for(var i=0;delta.right!=null && i<delta.right.nodes.length;i++)
 			ret.enter.push(delta.right.nodes[i].getId());
 		for(var i=0;delta.right!=null && i<delta.right.edges.length;i++)
@@ -520,6 +524,8 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	};
 	this.rmNodeLabels = function rmNodeLabels(id,l){//remove labels from a node if l is null or [], remove all the labels, return an enter/exit object
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
+		if(!fullListCheck(nodes[id].getLabels())) return emptyDelta();
+		var origLsize=nodes[id].getLabels().length;
 		if(fullListCheck(l)){//remove the node id from the node by labels hashtable
 			
 			for(var i=0;i<l.length;i++){
@@ -536,6 +542,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		if(fullListCheck(l))//rm the node labels
 			nodes[id].rmLabels(l);
 		else nodes[id].deleteLabels();
+		if (nodes[id].getLabels().length()==origLsize) return emptyDelta();
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
 		return deltaToId(ret);
@@ -565,16 +572,19 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	};
 	this.rmNodeValues = function rmNodeValues(id,l){//remove values from a node if l is null or [], remove all the Values, return an enter/exit object
 		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
+		if(!fullListCheck(nodes[id].getValues()))return emptyDelta();
+		var origsz=nodes[id].getValues().length;
 		if(fullListCheck(l))
 			nodes[id].rmValues(l);
 		else nodes[id].deleteValues();
+		if(nodes[id].getValues().length==origsz) return emptyDelta();
 		ret.right.nodes.push(nodes[id].clone());
 		undoRedo.stack(ret);
 		return deltaToId(ret);
 	};
 	var putEdge = function(e){//UNSAFE add an edge to the LG, be carefull, this edge must have a none existing ID !
 		edges[e.getId()]=e;
-        e.log();
+        //e.log();
 		if(e.getType()=='parent'){//if parenting, add information in the corresponding node
 			nodes[e.getSource()].setFather(e.getTarget());
 			nodes[e.getTarget()].addSons([e.getSource()]);
@@ -1010,6 +1020,10 @@ function Kami() {//define the full workflow object, all the modification functio
 	 * it take a list of type, a nugget number, a label list (or null), a value list(or null) and a uid (or null)
 	 * the uid must exist, if it isn't defined a new one is generated 
 	 * this function return a delta object containing the enter and exit set for each three layer graph */
+	var newInstanceOf = function(id,ng){//create a new instance of an existing node in the action graph
+		if(!act_graph.nodeExist(id)) throw new Error("unexisting node in action graph : "+id);
+		return nugg_graph.addNode(act_graph.getType(id),ng,act_graph.getLabels(id),act_graph.getValues(id),act_graph.getUid(id));
+	}
 	this.addNode = function addNode(t,ng,l,v,u,lg_name){//add a new node to kami : add the node to a nugget, if this nugget is visible, update the acg and the projection function. return the delta corresponding to modified nodes/edges id
 		var delta={"NGG":null,"ACG":null,"LCG":null};
 		if(idT(u)!="up" && (idT(u)!="u"))
@@ -1023,7 +1037,7 @@ function Kami() {//define the full workflow object, all the modification functio
 		var tmp_ng=ng;
 		if(lg_name=="ACG"){
 			this.addNugget("Virtual Type Nugget","This nugget was created for the sake of the new UID : "+u+" in the action graph");
-			tmp_ng=getLastNugget();
+			tmp_ng=this.getLastNugget();
 		}
 		delta.NGG=nugg_graph.addNode(t,[tmp_ng],l,v,u);
 		if(nuggets[tmp_ng].isVisible())
@@ -1113,14 +1127,14 @@ function Kami() {//define the full workflow object, all the modification functio
 		for(var i=0;i<exit_update.length;i++){//for each node exited, check if its projection stay used or not.
 			var pr_id=exit_update[i];
 			if(ngg_R_acg.getAnt(pr_id)==null || ngg_R_acg.getAnt(pr_id).length==0){//if the projection have no antecedents remaining, remove it from the ACG
-				var tmp_delta = this.cleanPR(pr_id);
+				var tmp_delta = cleanPr(pr_id);
 				ret.exit=union(ret.exit,tmp_delta.exit);
 				ret.enter=union(ret.enter,tmp_delta.enter);
 			}
 		}
 		return ret;			
 	}
-	var cleanPr = function(pr_id){//clear a node in the action graph
+	var cleanPr = function(pr_id){//clear a node/edge in the action graph
 		var tmp_delta;
 		if(idT(pr_id)=="n"){
 			tmp_delta=act_graph.rmNode(pr_id);
@@ -1144,24 +1158,45 @@ function Kami() {//define the full workflow object, all the modification functio
 			if(fullListCheck(dl)){
 				delta.NGG={"enter":[],"exit":[]};
 				for(var i=0;i<dl.length;i++){
-					delta.NGG.enter=union(delta.NGG.enter,nugg_graph.rmNode(dl[i]).enter);
-					delta.NGG.exit=union(delta.NGG.exit,nugg_graph.rmNode(dl[i]).exit);
+					var tmp_delta=nugg_graph.rmNode(dl[i]);
+					delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+					delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
 				}
 			}
+			ngg_R_acg.rmIm(id);
 			delta.ACG=cleanPr(id);
 		}
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
-	this.mergeNode = function mergeNode(id1,id2){//merge two node in a third one and return a delta
+	this.mergeNode = function mergeNode(id1,id2,lg_name){//merge two node in a third one and return a delta
 		var delta={"NGG":null,"ACG":null,"LCG":null};
-		if(nugg_graph.getNugget(id1)[0]!=nugg_graph.getNugget(id2)[0]){
-			console.log("unable to merge node from two different nugget "+id1+" , "+id2);
-			return delta;
-		}
-		var ng=nugg_graph.getNugget(id1)[0];
-		delta.NGG=nugg_graph.mergeNode(id1,id2);
-		if(nuggets[ng].isVisible())
-			delta.ACG=updateNRA(delta.NGG);
+		if(lg_name=="NGG"){
+			if(nugg_graph.getNugget(id1)!=nugg_graph.getNugget(id2)) 
+				throw new Error("unable to merge node from two different nugget "+id1+" , "+id2);
+			var ng=nugg_graph.getNugget(id1);
+			delta.NGG=nugg_graph.mergeNode(id1,id2);
+			if(nuggets[ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}else if(lg_name=="ACG"){
+			var uid1=nugg_graph.getNodeByUid(act_graph.getUid(id1));
+			var uid2=nugg_graph.getNodeByUid(act_graph.getUid(id2));
+			ngg_R_acg.rmIm(id1);
+			ngg_R_acg.rmIm(id2);
+			delta.ACG=act_graph.mergeNode(id1,id2);
+			var newn=act_graph.getLastNodeId();
+			delta.NGG={"enter":[],"exit":[]};
+			for(var i=0;i<uid1.length;i++){
+				var tmp_delta=nugg_graph.chNodeUid(uid1[i],act_graph.getUid(newn));
+				delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+				delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+				ngg_R_acg.addR(uid1[i],newn);
+			}for(var i=0;i<uid2.length;i++){
+				var tmp_delta=nugg_graph.chNodeUid(uid2[i],act_graph.getUid(newn));
+				delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+				delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+				ngg_R_acg.addR(uid2[i],newn);
+			}
+		}else throw new Error("unknown lg name : "+lg_name);
 		return delta;//delta is the enter/exit structure for each graph of kami
 	}
 	this.addNodeLabels = function addNodeLabels(id,l,lg_name){//add some labels to a node, return a delta
@@ -1192,42 +1227,142 @@ function Kami() {//define the full workflow object, all the modification functio
 		}else if(lg_name=="ACG"){
 			var lbNode=[];
 			if(!fullListCheck(l)) l=act_graph.getLabels(id);
-			console.log(l);
 			for(var i=0;i<l.length;i++){
-				console.log(l[i]);
-				console.log(nugg_graph.getNodeByLabels(l[i]));
-				lbNode.push(nugg_graph.getNodeByLabels(l[i]));
+				lbNode.push(nugg_graph.getNodeByLabels([l[i]]));
 			}
-			console.log(lbNode);	
-			console.log(ngg_R_acg.getAnt(id));
 			var dl=intersection(ngg_R_acg.getAnt(id),multiUnion(lbNode));
-			console.log(dl);
 			if(fullListCheck(dl)){
 				delta.NGG={"enter":[],"exit":[]};
 				for(var i=0;i<dl.length;i++){
-					delta.NGG.enter=union(delta.NGG.enter,nugg_graph.rmNodeLabels(dl[i],l).enter);
-					delta.NGG.exit=union(delta.NGG.exit,nugg_graph.rmNodeLabels(dl[i],l).exit);
+					var tmp_delta=nugg_graph.rmNodeLabels(dl[i],l);
+					delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+					delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
 				}
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=act_graph.rmNodeLabels(id,l);
 			}
 		}
 		else throw new Error("Unknown graph name : "+lg_name );
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
-	this.chNodeUid = function chNodeUid(id,uid,lg_name){//change Node Uid
-		return getLg(lg_name).chNodeUid(id,uid,lg_name);
+	this.chNodeUid = function chNodeUid(id,uid,lg_name){//change Node Uid return a delta object
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(lg_name=="NGG"){
+			if(nugg_graph.getUid(id)!=uid)
+				return delta;
+			var ng=nugg_graph.getNugget(id);
+			delta.NGG=nugg_graph.chNodeUid(id,uid);
+			if(nuggets[ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}else if(lg_name=="ACG"){
+			if(fullListCheck(act_graph.getNodeByUid(uid)))
+				throw new Error("This UID : "+uid+" already exists in the contact map, please use merge instead !");
+			var uid1=nugg_graph.getNodeByUid(act_graph.getUid(id));
+			//ngg_R_acg.rmIm(id);
+			delta.ACG=act_graph.chNodeUid(id,uid);
+			delta.NGG={"enter":[],"exit":[]};
+			for(var i=0;i<uid1.length;i++){
+				var tmp_delta=nugg_graph.chNodeUid(uid1[i],uid);
+				delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+				delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+			}
+		}else throw new Error("unknown lg name : "+lg_name);
+		return delta;//delta is the enter/exit structure for each graph of kami
 	};
-	this.addNodeValues = function addNodeValues(id,l,lg_name){//add some values to a node
-		return getLg(lg_name).addNodeValues(id,l,lg_name);
+	this.addNodeValues = function addNodeValues(id,l,lg_name){//add some values to a node, return a delta object.
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(fullListCheck(l) && intersection(l,getLg(lg_name).getValues(id)).length==l.length)
+			return delta;
+		if(lg_name=="ACG"){
+			this.addNugget("ACG_valueExtend","values added : "+l.join());
+			return this.addNode(act_graph.getType(id),this.getLastNugget(),null,l,act_graph.getUid(id));
+		}
+		if(lg_name=="NGG"){
+			delta.NGG=nugg_graph.addNodeValues(id,l);
+			var ng=nugg_graph.getNugget(id)[0];
+			if(nuggets[ng].isVisible()){
+				delta.ACG=updateNRA(delta.NGG);
+				
+			}
+		}
+		return delta;
 	};
 	this.rmNodeValues = function rmNodeValues(id,l,lg_name){//remove values from a node if l is null or [], remove all the Values
-		return getLg(lg_name).rmNodeValues(id,l);
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(lg_name=="NGG"){
+			var ng=nugg_graph.getNugget(id);
+			delta.NGG=nugg_graph.rmNodeValues(id,l);
+			if(nuggets[ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}else if(lg_name=="ACG"){
+			var lbNode=[];
+			if(!fullListCheck(l)) l=act_graph.getValues(id);
+			var dl=ngg_R_acg.getAnt(id);
+			if(fullListCheck(dl)){
+				delta.NGG={"enter":[],"exit":[]};
+				for(var i=0;i<dl.length;i++){
+					var tmp_delta=nugg_graph.rmNodeValues(dl[i],l);
+					delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+					delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+				}
+				delta.ACG=act_graph.rmNodeValues(id,l);
+			}
+		}
+		else throw new Error("Unknown graph name : "+lg_name );
+		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.addEdge = function addEdge(t,ng,i,o,lg_name){//add a NEW edge 
-		return getLg(lg_name).addEdge(t,ng,i,o);
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(!correctEdgeType(t))
+			throw new Error("bad type definition : "+t);
+		if(!getLg(lg_name).nodeExist(i)) throw new Error("the input node doesn't exist "+i);
+		if(!getLg(lg_name).nodeExist(o)) throw new Error("the output node doesn't exist "+o);
+		if(lg_name=="NGG" && (idT(ng)!= "ng" || idV(ng)>=NUGGET_ID))
+			throw new Error("This nugget isn't defined ! "+ng);
+		if(getLg(lg_name).getNugget(i)!=ng || getLg(lg_name).getNugget(o)!=ng) throw new Error("the input ("+i+") or output ("+o+") node ar not part of the nugget "+ng);
+		var the_edge = multiIntersection([act_graph.getEdgeBySource(i),act_graph.getEdgeByTarget(o),act_graph.getEdgeByType(t)]);
+		if(lg_name=="ACG" && fullListCheck(the_edge))
+			throw new Error("this edge already exist in the action graph : "+i+", "+o);
+		var tmp_ng=ng;
+		delta.NGG={"enter":[],"exit":[]};
+		if(lg_name=="ACG"){
+			this.addNugget("Virtual Edge Nugget","This nugget was created for the sake of the new Edge : from : "+i+" to : "+o+" in the action graph");
+			tmp_ng=this.getLastNugget();
+			var tmp_delta1=newInstanceOf(i,tmp_ng);
+			i=nugg_graph.getLastNodeId();
+			var tmp_delta2=newInstanceOf(o,tmp_ng);
+			o=nugg_graph.getLastNodeId();
+			delta.NGG.enter=multiUnion([delta.NGG.enter,tmp_delta1.enter,tmp_delta2.enter]);
+			delta.NGG.exit=multiUnion([delta.NGG.exit,tmp_delta1.exit,tmp_delta2.exit]);
+		}
+			var tmp_delta=nugg_graph.addEdge(t,ng,i,o);
+			delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+			delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+		if(nuggets[tmp_ng].isVisible())
+			delta.ACG=updateNRA(delta.NGG);
+		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.rmEdge = function rmEdge(id,lg_name){//remove an edge
-		return getLg(lg_name).rmEdge(id);
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(lg_name=="NGG"){
+			var ng=nugg_graph.getNugget(id);
+			delta.NGG=nugg_graph.rmEdge(id);
+			if(nuggets[ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}
+		if(lg_name=="ACG"){
+			var dl=ngg_R_acg.getAnt(id);
+			if(fullListCheck(dl)){
+				delta.NGG={"enter":[],"exit":[]};
+				for(var i=0;i<dl.length;i++){
+					var tmp_delta=nugg_graph.rmEdge(dl[i]);
+					delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
+					delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
+				}
+			}
+			ngg_R_acg.rmIm(id);
+			delta.ACG=cleanPr(id);
+		}
+		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.getNodeByLabels = function getNodeByLabels(labels,lg_name){//return a nodes id list corresponding to the specific labels
 		return getLg(lg_name).getNodeByLabels(labels);
@@ -1313,20 +1448,33 @@ function Kami() {//define the full workflow object, all the modification functio
 		return ng.getId();
 	};
 	this.showNugget = function showNugget(nid){//add a specific nugget to the action graph.
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
+		if(this.isNgVisible(nid)) return delta;
+		var elmt =union(nugg_graph.getNodeByNugget(nid),nugg_graph.getEdgeByNugget(nid));
 		nuggets[nid].show();
-		return nid;
+		delta.ACG=updateNRA({"enter":elmt,exit:[]});
+		return delta;
 	};
 	this.hideNugget = function hideNugget(nid){
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
+		if(!this.isNgVisible(nid)) return delta;
+		var elmt =union(nugg_graph.getNodeByNugget(nid),nugg_graph.getEdgeByNugget(nid));
 		nuggets[nid].hide();
-		return nid;
+		delta.ACG=updateNRA({"enter":[],exit:elmt});
+		return delta;
 	}
 	this.getNgName = function getNgName(nid){
+		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].getName();
 	};
 	this.getNgComment = function getNgComment(nid){
+		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].getComment();
 	};
 	this.isNgVisible = function isNgVisible(nid){
+		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].isVisible()
 	};
 	this.setNgName = function setNgName(n,nid){
