@@ -340,6 +340,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 	var nodes = {};//hashtable of nodes objects, key:id, value:node
 	var edges = {};//hashtable of edges objects, key:id, value:edge
 	/* !!!! ==== those Hashtable may contain redondent ids ==== !!!! */
+	var edgesByHash = {};//hashtable of edges, key:source_target_type, value : edge id list
 	var nodesByLabel = {};//hashtable of nodes, key:label, value :nodes id list
 	var nodesByUid = {};//hashtable of nodes, key:uid, value: nodes id list
 	var nodesByNuggets = {};//hashtable of nodes, key: nugget id, value:nodes id list
@@ -597,6 +598,8 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 		edgesByNuggets[e.getNugget()].push(e.getId());
 		if(!fullListCheck(edgesByType[e.getType()])) edgesByType[e.getType()]=[];//add the edge to edgesByType hashtable
 		edgesByType[e.getType()].push(e.getId());
+		//if(!fullListCheck(edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()])) edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()]=[];//add the edge to edgesByType hashtable
+		//edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()].push(e.getId());
 		return {'ng':e.getNugget(),'left':null,'right':{'nodes':[],'edges':[e.clone()]}};
 	};
 	this.addEdge = function addEdge(t,ng,i,o){//add a NEW edge, return an enter/exit object
@@ -866,18 +869,12 @@ function Relation(){
     this.getImg = function getImg(ant){//get all the images of a specific antecedent
         if(fullListCheck(antecedent_to_image[ant]))
             return antecedent_to_image[ant].concat();
-        else {
-            console.log(ant + " doesn't exist in R");
-            return null;
-        }
+        else return null;
     };
     this.getAnt = function getAnt(img){//get all the antecedents of a specific image
         if(fullListCheck(image_from_antecedent[img]))
             return image_from_antecedent[img].concat();
-        else {
-            console.log(img + " doesn't exist in R");
-            return null;
-        }
+        else return null;
     };
     this.clR = function clR(){//clear the whole relation
         antecedent_to_image={};
@@ -974,15 +971,21 @@ function Nugget(i,n,c){//define a nugget structure
 		console.log("---------------");
 	};
 }
-function Kami() {//define the full workflow object, all the modification functions return an enter/exit object for all the graph (ngg, acg, lcg). Allow to do all updates localy !
+function Kami(){//define the full workflow object, all the modification functions return an enter/exit object for all the graph (ngg, acg, lcg). Allow to do all updates localy !
 	var NUGGET_ID = 0;//id of nuggets for the nugget graph
 	//var UID = 0;//uid for projection
 	var nugg_graph = new LayerGraph();//nuggets graph
-	var ngg_R_acg = new Relation();//projection of nuggets into actions
+	var ngg_R_acg = new Relation();//projection of nuggets into actions : contains nodes and edges (maybe edges are useless !)
 	var act_graph = new LayerGraph();//actions graph
-	var acg_R_lcg = new Relation();//projection of actions into LCG
+	var acg_R_lcg = new Relation();//projection of actions into LCG : only contains nodes
 	var lcg = new LayerGraph();//Logical contact graph
 	var nuggets ={};//hashtable of all nuggets objects.
+	var viewable_nuggets={};
+	this.cleanLCG = function cleanLCG(){
+		lcg=new LayerGraph();
+		acg_R_lcg=new Relation();
+		selected_nodes=[];
+	}
 	var getLg = function(lg_name){//return the lg graph corresponding to the lg_name
 		switch(lg_name){
             case "ACG":
@@ -1334,7 +1337,7 @@ function Kami() {//define the full workflow object, all the modification functio
 			delta.NGG.enter=multiUnion([delta.NGG.enter,tmp_delta1.enter,tmp_delta2.enter]);
 			delta.NGG.exit=multiUnion([delta.NGG.exit,tmp_delta1.exit,tmp_delta2.exit]);
 		}
-			var tmp_delta=nugg_graph.addEdge(t,ng,i,o);
+			var tmp_delta=nugg_graph.addEdge(t,tmp_ng,i,o);
 			delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
 			delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
 		if(nuggets[tmp_ng].isVisible())
@@ -1383,63 +1386,124 @@ function Kami() {//define the full workflow object, all the modification functio
 		return getLg(lg_name).getEdgeByNugget(n_id);
 	};
 	this.undo = function undo(lg_name){//Undo the last action and return an exit/enter object
-		return getLg(lg_name).undo();
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		var tmp_ng;
+		if(lg_name=="NGG"){
+			var tmp_delta=nugg_graph.undo();
+			if(!tmp_delta || (!fullListCheck(tmp_delta.enter) && fullListCheck(tmp_delta.exit))) return delta;//if there is no modification, return an unmodified delta
+			if(fullListCheck(tmp_delta.enter)) tmp_ng=nugg_graph.getNugget(tmp_delta.enter[0]);//if the modofication is from the enter get the nugget
+			if(fullListCheck(tmp_delta.exit)) tmp_ng=nugg_graph.getNugget(tmp_delta.exit[0]);//if the modification is from the exit, get the nugget.
+			delta.NGG=tmp_delta;
+			if(nuggets[tmp_ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}
+		else if(lg_name=="ACG"){
+			console.log("not implemented !");
+		}
+		else if(lg_name=="LCG") delta.LCG=lcg.undo();
+		else throw new Error("unknown graph name "+lg_name);
+		return delta;
 	};
 	this.redo = function redo(lg_name){//redo the last action undowed and return an exit/enter object
-		return getLg(lg_name).redo();
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		var tmp_ng;
+		if(lg_name=="NGG"){
+			var tmp_delta=nugg_graph.redo();
+			if(!tmp_delta || (!fullListCheck(tmp_delta.enter) && fullListCheck(tmp_delta.exit))) return delta;//if there is no modification, return an unmodified delta
+			if(fullListCheck(tmp_delta.enter)) tmp_ng=nugg_graph.getNugget(tmp_delta.enter[0]);//if the modofication is from the enter get the nugget
+			if(fullListCheck(tmp_delta.exit)) tmp_ng=nugg_graph.getNugget(tmp_delta.exit[0]);//if the modification is from the exit, get the nugget.
+			delta.NGG=tmp_delta;
+			if(nuggets[tmp_ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		}
+		else if(lg_name=="ACG"){
+			console.log("not implemented !");
+		}
+		else if(lg_name=="LCG") delta.LCG=lcg.redo();
+		else throw new Error("unknown graph name "+lg_name);
+		return delta;
 	};
-	this.localUndo = function localUndo(s_id,lg_name){//undo the last action in a specific nugget and return an exit/enter object
-		return getLg(lg_name).localUndo(s_id);
+	this.localUndo = function localUndo(s_id){//undo the last action in a specific nugget and return an exit/enter object
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		
+			var tmp_ng=s_id;
+			delta.NGG=nugg_graph.localUndo(s_id);
+			if(nuggets[tmp_ng].isVisible())
+				delta.ACG=updateNRA(delta.NGG);
+		return delta;
 	};
-	this.localRedo = function localRedo(s_id,lg_name){//redo the last undowed action in a specific nugget and return an exit/enter object
-		return getLg(lg_name).localRedo(s_id);
+	this.localRedo = function localRedo(s_id){//redo the last undowed action in a specific nugget and return an exit/enter object
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		var tmp_ng=s_id;
+		delta.NGG=nugg_graph.localRedo(s_id);
+		if(nuggets[tmp_ng].isVisible())
+			delta.ACG=updateNRA(delta.NGG);
+		return delta;
 	};
-	this.stackClear = function stackClear(lg_name){
-		getLg(lg_name).stackClear();
+	this.stackClear = function stackClear(lg_name){//clear the whole undo redo stack of nugget graph and action graph
+		if(lg_name=="NGG" || lg_name=="ACG"){
+			nugg_graph.stackClear();
+			act_graph.stackClear();
+		}
+		else if(lg_name=="LCG") lcg.stackClear();
+		
 	};
-	this.stackLocClear = function stackLocClear(s_id,lg_name){
-		getLg(lg_name).stackLocClear(s_id);
+	this.stackLocClear = function stackLocClear(s_id){//clear a specific stack from the nugget graph
+		nugg_graph.stackLocClear(s_id);
 	};
-	this.undoNugget = function undoNugget(s_id,lg_name){//undo a whole nugget and return an enter/exit object.
-		return getLg(lg_name).undoNugget(s_id);
+	this.undoNugget = function undoNugget(s_id){//undo a whole nugget and return an enter/exit object.
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		var tmp_ng=s_id;
+		delta.NGG=nugg_graph.undoNugget(s_id);
+		if(nuggets[tmp_ng].isVisible())
+			delta.ACG=updateNRA(delta.NGG);
+		return delta;
 	};
-	this.redoNugget = function redoNugget(s_id,lg_name){//redo a whole nugget undowed and return an exit/enter object
-		return getLg(lg_name).redoNugget(s_id);
+	this.redoNugget = function redoNugget(s_id){//redo a whole nugget undowed and return an exit/enter object
+		var delta={"NGG":null,"ACG":null,"LCG":null};
+		var tmp_ng=s_id;
+		delta.NGG=nugg_graph.redoNugget(s_id);
+		if(nuggets[tmp_ng].isVisible())
+			delta.ACG=updateNRA(delta.NGG);
+		return delta;
 	};
-    this.getLabels = function getLabels(id,lg_name){
+    this.getLabels = function getLabels(id,lg_name){//return the labels of a specific node of a specific graph
         return getLg(lg_name).getLabels(id);
     };
-    this.getType = function getType(id,lg_name){
+    this.getType = function getType(id,lg_name){//return the types of a specific node/edge of a specific graph
         return getLg(lg_name).getType(id);
     };
-    this.getFth = function getFth(id,lg_name){
+    this.getFth = function getFth(id,lg_name){//return the father of a specific node of a specific graph
         return getLg(lg_name).getFth(id);
     };
-    this.getSons = function getSons(id,lg_name){
+    this.getSons = function getSons(id,lg_name){//return the sons of a specific node of a specific graph
         return getLg(lg_name).getSons(id);
     };
-    this.getNugget = function getNugget(id,lg_name){
+    this.getNugget = function getNugget(id,lg_name){//return the nugget of a specific node/edge of a specific graph
         return getLg(lg_name).getNugget(id);
     };
-    this.getValues = function getValues(id,lg_name){
+	this.getViewableNugget = function getViewableNugget(){
+		return Object.keys(viewable_nuggets);
+	}
+    this.getValues = function getValues(id,lg_name){//return the values of a specific node of a specific graph
         return getLg(lg_name).getValues(id);
     };
-    this.getUid = function getUid(id,lg_name){
+    this.getUid = function getUid(id,lg_name){//return the uid of a specific node of a specific graph
         return getLg(lg_name).getUid(id);
     };
-    this.getSource = function getSource(id,lg_name){
+    this.getSource = function getSource(id,lg_name){//return the source of a specific edge of a specific graph
         return getLg(lg_name).getSource(id);
     };
-    this.getTarget = function getTarget(id,lg_name){
+    this.getTarget = function getTarget(id,lg_name){//return the target of a specific edge of a specific graph
         return getLg(lg_name).getTarget(id);
     };
-    this.getLastNodeId = function getLastNodeId(lg_name){
+    this.getLastNodeId = function getLastNodeId(lg_name){//return the last node created id of a specific graph
         return getLg(lg_name).getLastNodeId();
     };
-    this.getLastEdgeId = function getLastEdgeId(lg_name){
+    this.getLastEdgeId = function getLastEdgeId(lg_name){//return the last edge created id of a specific graph
 		return getLg(lg_name).getLastEdgeId();
 	};
-	this.getLastNugget = function getLastNugget(){
+	this.getLastNugget = function getLastNugget(){//return the last nugget created id of a specific graph
 		return "ng_"+(NUGGET_ID-1);
 	}
     this.addNugget = function addNugget(n,c){//add a new nugget to Kami background knowledge.
@@ -1451,41 +1515,104 @@ function Kami() {//define the full workflow object, all the modification functio
 		var delta={"NGG":null,"ACG":null,"LCG":null};
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		if(this.isNgVisible(nid)) return delta;
+		viewable_nuggets[nid]=true;
 		var elmt =union(nugg_graph.getNodeByNugget(nid),nugg_graph.getEdgeByNugget(nid));
 		nuggets[nid].show();
 		delta.ACG=updateNRA({"enter":elmt,exit:[]});
 		return delta;
 	};
-	this.hideNugget = function hideNugget(nid){
+	this.hideNugget = function hideNugget(nid){//hide a specific nugget of the nugget graph
 		var delta={"NGG":null,"ACG":null,"LCG":null};
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
-		if(!this.isNgVisible(nid)) return delta;
+		if(!this.isNgVisible(nid)) return delta
+		delete viewable_nuggets[nid];
 		var elmt =union(nugg_graph.getNodeByNugget(nid),nugg_graph.getEdgeByNugget(nid));
 		nuggets[nid].hide();
 		delta.ACG=updateNRA({"enter":[],exit:elmt});
 		return delta;
 	}
-	this.getNgName = function getNgName(nid){
+	this.getNgName = function getNgName(nid){//get the name of a nugget
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].getName();
 	};
-	this.getNgComment = function getNgComment(nid){
+	this.getNgComment = function getNgComment(nid){//get the comment of a nugget
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].getComment();
 	};
-	this.isNgVisible = function isNgVisible(nid){
+	this.isNgVisible = function isNgVisible(nid){//verify if a nugget is visible
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
 		return nuggets[nid].isVisible()
 	};
-	this.setNgName = function setNgName(n,nid){
+	this.setNgName = function setNgName(n,nid){//set the name of a nugget
 		nuggets[nid].setName(n);
 		return nid;
 	};
-	this.setNgComment = function setNgComment(c,nid){
+	this.setNgComment = function setNgComment(c,nid){//set the comment of a nugget
 		nuggets[nid].setComment(c);
 		return nid;
 	};
-	this.log = function log(){
+	var getRoot = function(id,lg_name){
+		var tmp_id=id;
+		while(getLg(lg_name).getFth(tmp_id)!=null){
+			tmp_id=getLg(lg_name).getFth(id);
+		}
+		return tmp_id;
+	}
+	this.createLcg = function createLcg(){//create a LCG showing only viewable nuggets.
+		this.cleanLCG();
+		var neededNugget=Object.keys(viewable_nuggets);
+		var actions_l=act_graph.getNodeByType("action");//for each actions, add a projection.
+		for(var i=0;i<actions_l.length;i++){
+			lcg.addNode(act_graph.getType(actions_l[i]),"ng_0",act_graph.getLabels(actions_l[i]),act_graph.getValues(actions_l[i]),act_graph.getUid(actions_l[i]));
+			acg_R_lcg.addR([actions_l[i]],[lcg.getLastNodeId()]);
+		}
+		var agents_l=act_graph.getNodeByType("agent");//for each agent, add a projection.
+		for(var i=0;i<agents_l.length;i++){
+			lcg.addNode(act_graph.getType(agents_l[i]),"ng_0",act_graph.getLabels(agents_l[i]),act_graph.getValues(agents_l[i]),act_graph.getUid(agents_l[i]));
+			acg_R_lcg.addR([agents_l[i]],[lcg.getLastNodeId()]);
+		}
+		var action_input=act_graph.getNodeByType("input");//for each action, add input parenting link.
+		for(var i=0;i<action_input.length;i++){
+			var in_im=acg_R_lcg.getImg(action_input[i])[0];//there is only one image
+			var out_im=acg_R_lcg.getImg(act_graph.getFth(action_input[i]))[0];//there is only one image
+			lcg.addEdge("parent","ng_0",in_im,out_im);
+		}
+		var action_output=act_graph.getNodeByType("output");//for each action, add output parenting link.
+		for(var i=0;i<action_output.length;i++){
+			var in_im=acg_R_lcg.getImg(action_output[i])[0];//there is only one image
+			var out_im=acg_R_lcg.getImg(act_graph.getFth(action_output[i]))[0];//there is only one image
+			lcg.addEdge("parent","ng_0",in_im,out_im);
+		}
+		var attributs=act_graph.getNodeByType("attribute");//for each attribut : change its father to its root
+		for(var i=0;i<attributs.length;i++){
+			lcg.addNode(act_graph.getType(attributs[i]),"ng_0",act_graph.getLabels(attributs[i]),act_graph.getValues(attributs[i]),act_graph.getUid(attributs[i]));
+			var new_att=lcg.getLastNodeId();
+			acg_R_lcg.addR([attributs[i]],[new_att]);
+			//also add the parenting link !
+			var newfth=acg_R_lcg.getImg(getRoot(attributs[i],"ACG"))[0];//there is only one image : the root agent !
+			lcg.addEdge("parent","ng_0",new_att,newfth);
+		}
+		var regions=act_graph.getNodeByType("region");//get all the regions and put it in the lcg.
+		for(var i=0;i<regions.length;i++){
+			lcg.addNode(act_graph.getType(regions[i]),"ng_0",act_graph.getLabels(regions[i]),act_graph.getValues(regions[i]),act_graph.getUid(regions[i]));
+			var new_reg=lcg.getLastNodeId();
+			acg_R_lcg.addR([regions[i]],[new_reg]);
+			//also add the parenting link !
+			var newfth=acg_R_lcg.getImg(getRoot(regions[i],"ACG"))[0];//there is only one image : the root agent !
+			lcg.addEdge("parent","ng_0",new_reg,newfth);
+		}
+		var key_res=act_graph.getNodeByType("keyres");//get all the regions and put it in the lcg.
+		for(var i=0;i<key_res.length;i++){
+			lcg.addNode(act_graph.getType(key_res[i]),"ng_0",act_graph.getLabels(key_res[i]),act_graph.getValues(key_res[i]),act_graph.getUid(key_res[i]));
+			var new_reg=lcg.getLastNodeId();
+			acg_R_lcg.addR([regions[i]],[new_reg]);
+			//also add the parenting link !
+			var newfth=acg_R_lcg.getImg(getRoot(regions[i],"ACG"))[0];//there is only one image : the root agent !
+			lcg.addEdge("parent","ng_0",new_reg,newfth);
+		}
+		
+	}
+	this.log = function log(){//log the whole Kami
         console.log("Kami : ===================");
         console.log("Nugget graph : ");
         nugg_graph.log();
@@ -1499,6 +1626,9 @@ function Kami() {//define the full workflow object, all the modification functio
         console.log("Action to LCG");
         acg_R_lcg.log();
 		console.log("Nuggets informations : ===================");
+		console.log("Viewable Nuggets :");
+		console.log(Object.keys(viewable_nuggets).join(","));
+		console.log("Nuggets description :")
 		var key=Object.keys(nuggets);
 		for(var i=0;i<key.length;i++)
 			nuggets[key[i]].log();
