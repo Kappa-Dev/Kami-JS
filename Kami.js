@@ -1014,7 +1014,7 @@ function Kami(){//define the full workflow object, all the modification function
 	}
 	var correctEdgeType = function(t){//semantic check for edge type
 		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule","depend"];
-		return MAINTYPE.indexOf(t)!=-1
+		return fullListCheck(t) && MAINTYPE.indexOf(t[0])!=-1;
 	}
 	/* add a new node to Kami
 	 * if it is part of a nugget, this node is added to the nugget graph
@@ -1044,7 +1044,7 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		delta.NGG=nugg_graph.addNode(t,[tmp_ng],l,v,u);
 		if(nuggets[tmp_ng].isVisible())
-			delta.ACG=updateNRA(delta.NGG);
+			delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.setMainNode = function setMainNode(n_id,n_list){//set a list of nodes as the mains nodes of a nugget, they must be part of this nugget!
@@ -1055,11 +1055,9 @@ function Kami(){//define the full workflow object, all the modification function
 		nuggets[n_id].setMnode(n_list);
 		return n_id;
 	}
-	var updateNRA = function(delta){//update the nugget to acg relation. take the enter/exit object from the nugget graph and return the enter/exit object for the Action graph !
-		var ret={'exit':[],'enter':[]};
+	var exitNRA = function(delta){//remove all nodes/edges witch are in the exit segment from the projection table
 		var exit_update=[];//all the node of the action updated by an exit in the nugget graph.
-		var delayed_edges={};
-		for(var i=0;i<delta.exit.length;i++){//remove all nodes/edges witch are in the exit segment from the projection table
+		for(var i=0;i<delta.exit.length;i++){
 			var pr_id=ngg_R_acg.getImg(delta.exit[i]);
 			if(pr_id.length==0)
 				throw new Error("this element doesn't have a projection : "+delta.exit[i]);
@@ -1069,63 +1067,66 @@ function Kami(){//define the full workflow object, all the modification function
 			exit_update.push(pr_id);
 			ngg_R_acg.rmAnt(delta.exit[i]);
 		}
+		return exit_update;
+	}
+	var enterNNRA = function(delta,i){
+		var tmp_uid=nugg_graph.getUid(delta.enter[i]);
+		var pr_id=act_graph.getNodeByUid(tmp_uid);//if the added node image doesn't exit yet, create it. add it to the antecedent of the image node : image node have the same uid !
+		var tmp_delta={'exit':[],'enter':[]};
+		if(!pr_id || pr_id.length==0){//create a copy of the nugget node (no sons, no father until we add edges !)
+			tmp_delta=act_graph.addNode(nugg_graph.getType(delta.enter[i]),
+				"ng_0",
+				nugg_graph.getLabels(delta.enter[i]),
+				nugg_graph.getValues(delta.enter[i]),
+				nugg_graph.getUid(delta.enter[i]));
+			pr_id=act_graph.getLastNodeId();//our projection will be the newly created node !
+		}
+		else{//if there is already a corresponding node in the acg, update it if necessary
+			pr_id=pr_id[0];//flatten this 1 element list !
+			if(intersection(nugg_graph.getLabels(delta.enter[i]),act_graph.getLabels(pr_id)).length!=nugg_graph.getLabels(delta.enter[i]).length){
+				tmp_delta=act_graph.addNodeLabels(pr_id,nugg_graph.getLabels(delta.enter[i]));
+			}
+			if(intersection(nugg_graph.getValues(delta.enter[i]),act_graph.getValues(pr_id)).length!=nugg_graph.getValues(delta.enter[i]).length){
+				tmp_delta=act_graph.addNodeValues(pr_id,nugg_graph.getValues(delta.enter[i]));
+			}		
+		}
+		ngg_R_acg.addR([delta.enter[i]],[pr_id]);//add the projection relation between this node and the ACG node.
+		return tmp_delta;
+	}
+	var enterENRA = function(delta,i){//add needed edges this delta contains only the needed edges (no enter/exit structure)
+		var s_id=nugg_graph.getSource(delta[i]);
+		var t_id=nugg_graph.getTarget(delta[i]);
+		var pr_s=ngg_R_acg.getImg(s_id)[0];//flatten this one element list
+		var pr_t=ngg_R_acg.getImg(t_id)[0];//flatten this one element list
+		var tmp_delta={"enter":[],"exit":[]};
+		var pr_e=multiIntersection([act_graph.getEdgeBySource(pr_s),act_graph.getEdgeByTarget(pr_t),act_graph.getEdgeByType(nugg_graph.getType(delta[i]))]);//get all existing edges i the ACG connecting the same source and id
+		if (pr_e.length==0){//if there is no edges in the ACG, create an edge and update the delta!
+			var tmp_delta=act_graph.addEdge(nugg_graph.getType(delta[i]),"ng_0",pr_s,pr_t);
+			pr_e=act_graph.getLastEdgeId();
+		} 
+		else if(pr_e.length==1)
+			pr_e=pr_e[0];//flatten the one element list
+		else throw new Error("more images than excepted for : "+delta[i]);//if there is more than one edge, it is a mistake in the whole code !
+		ngg_R_acg.addR([delta[i]],[pr_e]);
+		return tmp_delta;
+	}
+	var updateNRA = function(delta){//update the nugget to acg relation. take the enter/exit object from the nugget graph and return the enter/exit object for the Action graph !
+		var ret={'exit':[],'enter':[]};
+		var exit_update=exitNRA(delta);//all the node of the action updated by an exit in the nugget graph.
+		var delayed_edges=[];
 		for(var i=0;i<delta.enter.length;i++){//add all nodes/edges of the enter segment in the projection table 
 			if(idT(delta.enter[i])=="n"){//projection for nodes
-				var tmp_uid=nugg_graph.getUid(delta.enter[i]);
-				var pr_id=act_graph.getNodeByUid(tmp_uid);//if the added node image doesn't exit yet, create it. add it to the antecedent of the image node : image node have the same uid !
-				if(!pr_id || pr_id.length==0){//create a copy of the nugget node (no sons, no father until we add edges !)
-					var tmp_delta=act_graph.addNode(nugg_graph.getType(delta.enter[i]),
-												"ng_0",
-												nugg_graph.getLabels(delta.enter[i]),
-												nugg_graph.getValues(delta.enter[i]),
-												nugg_graph.getUid(delta.enter[i]));
-					pr_id=act_graph.getLastNodeId();//our projection will be the newly created node !
-					ret.enter=union(ret.enter,tmp_delta.enter);
-					ret.exit=union(ret.exit,tmp_delta.exit);
-				}
-				else{//if there is already a corresponding node in the acg, update it if necessary
-					pr_id=pr_id[0];//flatten this 1 element list !
-					if(intersection(nugg_graph.getLabels(delta.enter[i]),act_graph.getLabels(pr_id)).length!=nugg_graph.getLabels(delta.enter[i]).length){
-						var tmp_delta=act_graph.addNodeLabels(pr_id,nugg_graph.getLabels(delta.enter[i]));
-						ret.enter=union(ret.enter,tmp_delta.enter);
-						ret.exit=union(ret.exit,tmp_delta.exit);
-					}
-					if(intersection(nugg_graph.getValues(delta.enter[i]),act_graph.getValues(pr_id)).length!=nugg_graph.getValues(delta.enter[i]).length){
-						var tmp_delta=act_graph.addNodeValues(pr_id,nugg_graph.getValues(delta.enter[i]));
-						ret.enter=union(ret.enter,tmp_delta.enter);
-						ret.exit=union(ret.exit,tmp_delta.exit);
-					}
-					
-				}
-				ngg_R_acg.addR([delta.enter[i]],[pr_id]);//add the projection relation between this node and the ACG node.
+				var tmp_delta=enterNNRA(delta,i);
+				ret.enter=union(ret.enter,tmp_delta.enter);
+				ret.exit=union(ret.exit,tmp_delta.exit);
 			}
-			else if(idT(delta.enter[i])=="e"){//projection for edges !!!!!!!=======!!!!!! trying some unsafe delay ! may need some guards!
-				var s_id=nugg_graph.getSource(delta.enter[i]);
-				var t_id=nugg_graph.getTarget(delta.enter[i]);
-				var pr_s=ngg_R_acg.getImg(s_id)[0];//flatten this one element list
-				var pr_t=ngg_R_acg.getImg(t_id)[0];//flatten this one element list
-				if(!pr_s || !pr_t){//if the source or target projection doesn't exist yet, delay the edge projection !
-					console.log("edge delayed ! "+ delta.enter[i]);
-					if(delayed_edges[delta.enter[i]]) throw new Error("source or target of the edge : "+delta.enter[i]+"doesn't exist");
-					delayed_edges[delta.enter[i]]=true;
-					delta.enter.push(delta.enter[i]);
-					delta.enter.splice(i--,1);//don't let i being updated !
-				}
-				else{
-					var pr_e=multiIntersection([act_graph.getEdgeBySource(pr_s),act_graph.getEdgeByTarget(pr_t),act_graph.getEdgeByType(nugg_graph.getType(delta.enter[i]))]);//get all existing edges i the ACG connecting the same source and id
-					if (pr_e.length==0){//if there is no edges in the ACG, create an edge and update the delta!
-						var tmp_delta=act_graph.addEdge(nugg_graph.getType(delta.enter[i]),"ng_0",pr_s,pr_t);
-						ret.enter=union(ret.enter,tmp_delta.enter);
-						ret.exit=union(ret.exit,tmp_delta.exit);
-						pr_e=act_graph.getLastEdgeId();
-					} 
-					else if(pr_e.length==1)
-						pr_e=pr_e[0];//flatten the one element list
-					else throw new Error("more images than excepted for : "+delta.enter[i]);//if there is more than one edge, it is a mistake in the whole code !
-					ngg_R_acg.addR([delta.enter[i]],[pr_e]);
-				}
-			}
+			else if(idT(delta.enter[i])=="e") delayed_edges.push(delta.enter[i]);
 			else throw new Error("unknown type of element : "+delta.enter[i]);
+		}
+		for(var i=0;i<delayed_edges.length;i++){
+			var tmp_delta=enterENRA(delayed_edges,i);
+			ret.enter=union(ret.enter,tmp_delta.enter);
+			ret.exit=union(ret.exit,tmp_delta.exit);
 		}
 		for(var i=0;i<exit_update.length;i++){//for each node exited, check if its projection stay used or not.
 			var pr_id=exit_update[i];
@@ -1154,7 +1155,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNode(id);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}
 		if(lg_name=="ACG"){
 			var dl=ngg_R_acg.getAnt(id);
@@ -1179,7 +1180,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id1);
 			delta.NGG=nugg_graph.mergeNode(id1,id2);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var uid1=nugg_graph.getNodeByUid(act_graph.getUid(id1));
 			var uid2=nugg_graph.getNodeByUid(act_graph.getUid(id2));
@@ -1214,7 +1215,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG=nugg_graph.addNodeLabels(id,l);
 			var ng=nugg_graph.getNugget(id)[0];
 			if(nuggets[ng].isVisible()){
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 				
 			}
 		}
@@ -1226,7 +1227,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNodeLabels(id,l);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var lbNode=[];
 			if(!fullListCheck(l)) l=act_graph.getLabels(id);
@@ -1255,7 +1256,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.chNodeUid(id,uid);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}else if(lg_name=="ACG"){
 			if(fullListCheck(act_graph.getNodeByUid(uid)))
 				throw new Error("This UID : "+uid+" already exists in the contact map, please use merge instead !");
@@ -1283,7 +1284,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG=nugg_graph.addNodeValues(id,l);
 			var ng=nugg_graph.getNugget(id)[0];
 			if(nuggets[ng].isVisible()){
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 				
 			}
 		}
@@ -1295,7 +1296,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNodeValues(id,l);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var lbNode=[];
 			if(!fullListCheck(l)) l=act_graph.getValues(id);
@@ -1341,7 +1342,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
 			delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
 		if(nuggets[tmp_ng].isVisible())
-			delta.ACG=updateNRA(delta.NGG);
+			delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.rmEdge = function rmEdge(id,lg_name){//remove an edge
@@ -1350,7 +1351,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmEdge(id);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(delta.NGG);
+				delta.ACG=updateNRA(semantick_checker(delta.NGG));
 		}
 		if(lg_name=="ACG"){
 			var dl=ngg_R_acg.getAnt(id);
@@ -1551,29 +1552,79 @@ function Kami(){//define the full workflow object, all the modification function
 		nuggets[nid].setComment(c);
 		return nid;
 	};
-	var getRoot = function(id,lg_name){
+	var getRoot = function(id,lg_name){//get the root node of a specific node : return itself for root nodes.
 		var tmp_id=id;
 		while(getLg(lg_name).getFth(tmp_id)!=null){
 			tmp_id=getLg(lg_name).getFth(id);
 		}
 		return tmp_id;
 	}
-	this.createLcg = function createLcg(){//create a LCG showing only viewable nuggets. This section is modifiable according to semantics constraints.
+	var semantick_checker = function(delta){//here is the dynamic semantic checker : for each modification of the nugget graph, it check that the knowledge stay coherent.
+		//semantic checker take a delta of modified node, do some modifications according to the type graph properties or the user answers and then it return a new delta corresponding to the nodes which are really modified !
+		return delta;
+	};
+	this.createLcg = function createLcg(conflict_b){//create a LCG showing only viewable nuggets. This section is modifiable according to semantics constraints.
 		this.cleanLCG();
-		var graph_cmp={"action","agent","attribute","region","keyres","flag"};//put here all new node type !
+		var graph_cmp=["action","agent","region","keyres","flag","attribute"];//put here all new node type !
 		for(var i=0;i<graph_cmp.length;i++){
 			var el_l=act_graph.getNodeByType(graph_cmp[i]);
 			for(var eli=0;eli<el_l.length;eli++){//for each node of a specific type : link it to its root : flatten the graph !
 				lcg.addNode(act_graph.getType(el_l[eli]),"ng_0",act_graph.getLabels(el_l[eli]),act_graph.getValues(el_l[eli]),act_graph.getUid(el_l[eli]));
 				var im_id=lcg.getLastNodeId();
 				acg_R_lcg.addR([el_l[eli]],[im_id]);
-				var fth=getRoot(el_l[eli],"ACG");
-				if(fth){
+				var fth;
+				if(graph_cmp[i]!="attribute" || idT(act_graph.getLabels(el_l[eli])[0])!="#") fth=getRoot(el_l[eli],"ACG");
+				else fth=act_graph.getFth(el_l[eli]);//if it is an attribute : keep it on its father !
+				if(fth!=el_l[eli]){//if the root isn't the node itself (agent/action)
 					var fth_im=acg_R_lcg.getImg(fth)[0];//there is only one image
-					lcg.addEdge("parent","ng_0",im_id,fth_im);;
+					lcg.addEdge("parent","ng_0",im_id,fth_im);
 				}
 			}
-		}//for each break action, if it isn't linked to a bind, link it to all bind using the same source edges.
+		}//for each break action, if it isn't linked to a bind, link it to all bind using the same pattern.
+		var brk=act_graph.getNodeByType("brk");
+		for(var i=0;i<brk.length;i++){
+			var dp_e=act_graph.getEdgeBySource(brk[i]);
+			if(!fullListCheck(dp_e)){//if this break doesn't depend of a specific action, it will depend of all bindings with the same patern !
+				var ouputs=act_graph.getSons(brk[i]).filter(function(e){return act_graph.getType(e)=="output"});//get the input of the action : there is only 2 outputs !
+				var out1_nodes=act_graph.getEdgeBySource(outputs[0]).map(act_graph.getTarget);//all node linked on the first output.
+				var out2_nodes=act_graph.getEdgeBySource(outputs[1]).map(act_graph.getTarget);//all node linked on the second output.
+				var cpt_bnd=act_graph.getNodeByType("bnd").filter(function(e){
+					var inputs=act_graph.getSons(e).filter(function(f){return act_graph.getType(f)=="input"});//there is 2 input on a bnd action !
+					var in1_nodes=act_graph.getEdgeByTarget(inputs[0]).map(act_graph.getTarget);//all node linked on the first input.
+					var in2_nodes=act_graph.getEdgeByTarget(inputs[1]).map(act_graph.getTarget);//all node linked on the second input.
+					return (fullListCheck(intersection(out1_nodes,in2_nodes)) && fullListCheck(intersection(out2_nodes,in1_nodes))) || (fullListCheck(intersection(out1_nodes,in1_nodes)) && fullListCheck(intersection(out2_nodes,in2_nodes)));
+					//if the pattern is matched, it will work, either, it will be removed : pattern can be matched both side !
+				});
+				for(var j=0;j<cpt_bnd.length;j++)
+					lcg.addEdge("depend",acg_R_lcg.getIm(brk[i]),acg_R_lcg.getIm(cpt_bnd[j]));//this edge will have no antecedent : it is a way to check the allucinated knowledge !
+			}
+			else{//else, link this break to all its binding in the LCG.
+				for(var j=0;j<dp_e.length;j++){
+					if(act_graph.getType(dp_e[j])=="depend"){//add a copy of the dependency in the lcg, also add the relation.
+						lcg.addEdge("depend",acg_R_lcg.getIm(brk[i]),acg_R_lcg.getIm(act_graph.getTarget(dp_e[j])))
+						acg_R_lcg.addR(dp_e[j],lcg.getLastEdgeId());
+					}
+				}
+			}
+		}
+		//generate conflicts
+		//for each binding, generate its interval attribut if not existing. : interval attribute is : #interval
+		var bnd=act_graph.getNodeByType("bnd");
+		for(var i=0;i<bnd.length;i++){
+			if(!fullListCheck(act_graph.getSons(bnd[i]).filter(function(e){ return act_graph.getType(e)[0]=="attribute" && act_graph.getLabels(e)[0]=="#_interval";}))){
+				if(conflict_b)//if user has choose : always conflict
+					lcg.addNode(["attribute"],"ng_0",["#_interval"],[0,-1],"u_-1");
+				else //if the user has choose : never conflict
+					lcg.addNode(["attribute"],"ng_0",["#_interval"],[0,0],"u_-1");
+				lcg.addEdge("parent",lcg.getLastNodeId(),acg_R_lcg.getIm(bnd[i]));
+			}
+		}
+		//for each regions whitch are overlapping due to there interval attribut : merge them into one big site.
+		var agent=act_graph.getNodeByType("agent");//get all the agent : for each agent, merge overleaping regions
+		for(var i=0;i<agent.length;i++){
+			var regions=act_graph.getSons(agent[i]).filter(function(e){return act_graph.getType(e)[0]=="component" && act_graph.getType(e)[0]=="region";});
+			
+		}
 		
 	}
 	this.log = function log(){//log the whole Kami
