@@ -1013,8 +1013,8 @@ function Kami(){//define the full workflow object, all the modification function
 		return fullListCheck(t) && t.length==2 && MAINTYPE.indexOf(t[0])!=-1 && SUBTYPE[MAINTYPE.indexOf(t[0])].indexOf(t[1])!=-1;
 	}
 	var correctEdgeType = function(t){//semantic check for edge type
-		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule"];
-		return fullListCheck(t) && t.length==1 && MAINTYPE.indexOf(t[0])!=-1
+		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule","depend"];
+		return MAINTYPE.indexOf(t)!=-1
 	}
 	/* add a new node to Kami
 	 * if it is part of a nugget, this node is added to the nugget graph
@@ -1558,22 +1558,23 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		return tmp_id;
 	}
-	this.createLcg = function createLcg(){//create a LCG showing only viewable nuggets.
+	this.createLcg = function createLcg(){//create a LCG showing only viewable nuggets. This section is modifiable according to semantics constraints.
 		this.cleanLCG();
-		var graph_cmp={"action","agent","attribute","region","keyres","flag"};
+		var graph_cmp={"action","agent","attribute","region","keyres","flag"};//put here all new node type !
 		for(var i=0;i<graph_cmp.length;i++){
 			var el_l=act_graph.getNodeByType(graph_cmp[i]);
-			for(var eli=0;eli<el_l.length;eli++){
+			for(var eli=0;eli<el_l.length;eli++){//for each node of a specific type : link it to its root : flatten the graph !
 				lcg.addNode(act_graph.getType(el_l[eli]),"ng_0",act_graph.getLabels(el_l[eli]),act_graph.getValues(el_l[eli]),act_graph.getUid(el_l[eli]));
 				var im_id=lcg.getLastNodeId();
 				acg_R_lcg.addR([el_l[eli]],[im_id]);
 				var fth=getRoot(el_l[eli],"ACG");
 				if(fth){
 					var fth_im=acg_R_lcg.getImg(fth)[0];//there is only one image
-					lcg.addEdge("parent","ng_0",im_id,fth_im);
+					lcg.addEdge("parent","ng_0",im_id,fth_im);;
 				}
 			}
-		}		
+		}//for each break action, if it isn't linked to a bind, link it to all bind using the same source edges.
+		
 	}
 	this.log = function log(){//log the whole Kami
         console.log("Kami : ===================");
