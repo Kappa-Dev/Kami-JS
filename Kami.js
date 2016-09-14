@@ -91,6 +91,17 @@ var idV = function(id){//get the numerical value of an id : O(1) : size of an id
 var idT = function(id){//get the header of an id : O(1) : size of an id is constant
 	return id.split('_')[0];
 }
+var min = function(a,b){//-1 code for infiny, [null,null] code for emptyset
+	if(a==-1 || b==-1)return a+b+1;
+	if(a==null || b==null) return null;
+	return a < b ? a : b;
+};
+var max = function(a,b){
+	if(a==-1 || b==-1) return -1;
+	if(a==null || b==null) return a+b;
+	return a > b ? a : b;
+};
+
 function Node(i,t,n,l,v,u){//generic definition of a node in a clustered graph
 	if(typeof i=='undefined' || i==null) throw new Error("undefined id : "+i);
 	var id=i;//unique identifier of a node
@@ -214,7 +225,7 @@ function Edge(ii,t,n,i,o){//generic definition of an adge in a clustered graph
 		return nugget;
 	};
 	this.getType = function getType(){//return the edge type (new array) : O(t) : t=type size : constant
-		return type;
+		return type.concat();
 	};
 	this.getSource = function getSource(){//return the edge source : O(1)
 		return source;
@@ -817,7 +828,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
         return getNode(id).getFather();
     };
     this.getSons = function getSons(id){//return all the sons of a node
-        return getnode(id).getSons();
+        return getNode(id).getSons();
     };
     this.getNugget = function getNugget(id){//return the nugget of a son or an edge
         if(idT(id)=='e')
@@ -854,7 +865,13 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
 function Relation(){
     var antecedent_to_image={};//hashtable : key : antecedent, values : images
     var image_from_antecedent={};//hashtable : key : image, values : antecedents
-    this.addR = function addR(ant_l,img_l){//add a relation between a list of antecedents and a list of images
+    this.merge = function merge(im1,im2,res){
+		var ant1=union(this.getAnt(im1),this.getAnt(im2));
+		this.rmIm(im1);
+		this.rmIm(im2);
+		this.addR(ant1,[res]);
+	}
+	this.addR = function addR(ant_l,img_l){//add a relation between a list of antecedents and a list of images
         for(var i=0;i<ant_l.length;i++) {
             if(!fullListCheck(antecedent_to_image[ant_l[i]]))
                 antecedent_to_image[ant_l[i]]=[];
@@ -981,11 +998,10 @@ function Kami(){//define the full workflow object, all the modification function
 	var lcg = new LayerGraph();//Logical contact graph
 	var nuggets ={};//hashtable of all nuggets objects.
 	var viewable_nuggets={};
-	this.cleanLCG = function cleanLCG(){
-		lcg=new LayerGraph();
-		acg_R_lcg=new Relation();
-		selected_nodes=[];
-	}
+	var always_conflict=false;
+	this.setDefaultConflictRule = function setDefaultConflictRule(val){
+		always_conflict=val;
+	};
 	var getLg = function(lg_name){//return the lg graph corresponding to the lg_name
 		switch(lg_name){
             case "ACG":
@@ -1010,7 +1026,7 @@ function Kami(){//define the full workflow object, all the modification function
 	var correctNodeType = function(t){//semantic check for node type
 		var MAINTYPE=["component","action","super","attribute"];
 		var SUBTYPE=[["agent","region","keyres","flag"],["mod","modpos","modneg","syn","deg","bnd","brk","input","output"],["family","set","process"]];
-		return fullListCheck(t) && t.length==2 && MAINTYPE.indexOf(t[0])!=-1 && SUBTYPE[MAINTYPE.indexOf(t[0])].indexOf(t[1])!=-1;
+		return fullListCheck(t) && (t[0]=="attribute" || (t.length==2 && MAINTYPE.indexOf(t[0])!=-1 && SUBTYPE[MAINTYPE.indexOf(t[0])].indexOf(t[1])!=-1));
 	}
 	var correctEdgeType = function(t){//semantic check for edge type
 		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule","depend"];
@@ -1510,8 +1526,19 @@ function Kami(){//define the full workflow object, all the modification function
     this.addNugget = function addNugget(n,c){//add a new nugget to Kami background knowledge.
 		var ng=new Nugget('ng_'+(NUGGET_ID++),n,c);
 		nuggets[ng.getId()]=ng;
+		viewable_nuggets[ng.getId()]=true;
 		return ng.getId();
 	};
+	this.rmNugget = function rmNugget(id){
+		this.showNugget(id);
+		var n_l=getNodeByNugget(id);
+		var e_l=getEdgeByNugget(id);
+		for(var i=0;i<e_l.length;i++)
+			this.rmEdge(e_l[i],"NGG");
+		for(var i=0;i<n_l.length;i++)
+			this.rmNode(n_l[i],"NGG");
+		this.hideNugget(id);
+	}
 	this.showNugget = function showNugget(nid){//add a specific nugget to the action graph.
 		var delta={"NGG":null,"ACG":null,"LCG":null};
 		if(!nuggets[nid]) throw new Error("this nugget doesn't exist : "+nid);
@@ -1555,7 +1582,8 @@ function Kami(){//define the full workflow object, all the modification function
 	var getRoot = function(id,lg_name){//get the root node of a specific node : return itself for root nodes.
 		var tmp_id=id;
 		while(getLg(lg_name).getFth(tmp_id)!=null){
-			tmp_id=getLg(lg_name).getFth(id);
+			if(getLg(lg_name).getFth(tmp_id)==tmp_id) throw new Error("a node can't be defined as its own father : "+tmp_id);
+			tmp_id=getLg(lg_name).getFth(tmp_id);
 		}
 		return tmp_id;
 	}
@@ -1580,52 +1608,95 @@ function Kami(){//define the full workflow object, all the modification function
 					lcg.addEdge("parent","ng_0",im_id,fth_im);
 				}
 			}
-		}//for each break action, if it isn't linked to a bind, link it to all bind using the same pattern.
+		}
+		//for each break action, if it isn't linked to a bind, link it to all bind using the same pattern.
 		var brk=act_graph.getNodeByType("brk");
 		for(var i=0;i<brk.length;i++){
 			var dp_e=act_graph.getEdgeBySource(brk[i]);
 			if(!fullListCheck(dp_e)){//if this break doesn't depend of a specific action, it will depend of all bindings with the same patern !
-				var ouputs=act_graph.getSons(brk[i]).filter(function(e){return act_graph.getType(e)=="output"});//get the input of the action : there is only 2 outputs !
-				var out1_nodes=act_graph.getEdgeBySource(outputs[0]).map(act_graph.getTarget);//all node linked on the first output.
-				var out2_nodes=act_graph.getEdgeBySource(outputs[1]).map(act_graph.getTarget);//all node linked on the second output.
+				var outputs=act_graph.getSons(brk[i]).filter(function(e){return act_graph.getType(e)[0]=="action" && act_graph.getType(e)[1]=="output"});//get the outputs of the action : there is only 2 outputs !
+				var out1_nodes=act_graph.getEdgeBySource(outputs[0]).map(act_graph.getTarget).filter(function(e){return e!=brk[i]});//all node linked on the first output but the brk action.
+				var out2_nodes=act_graph.getEdgeBySource(outputs[1]).map(act_graph.getTarget).filter(function(e){return e!=brk[i]});//all node linked on the second but the brk action output.
 				var cpt_bnd=act_graph.getNodeByType("bnd").filter(function(e){
-					var inputs=act_graph.getSons(e).filter(function(f){return act_graph.getType(f)=="input"});//there is 2 input on a bnd action !
-					var in1_nodes=act_graph.getEdgeByTarget(inputs[0]).map(act_graph.getTarget);//all node linked on the first input.
-					var in2_nodes=act_graph.getEdgeByTarget(inputs[1]).map(act_graph.getTarget);//all node linked on the second input.
+					var inputs=act_graph.getSons(e).filter(function(f){return act_graph.getType(f)[0]=="action" && act_graph.getType(f)[1]=="input"});//there is 2 input on a bnd action !
+					var in1_nodes=act_graph.getEdgeByTarget(inputs[0]).map(act_graph.getSource);//all node linked on the first input.
+					var in2_nodes=act_graph.getEdgeByTarget(inputs[1]).map(act_graph.getSource);//all node linked on the second input.
 					return (fullListCheck(intersection(out1_nodes,in2_nodes)) && fullListCheck(intersection(out2_nodes,in1_nodes))) || (fullListCheck(intersection(out1_nodes,in1_nodes)) && fullListCheck(intersection(out2_nodes,in2_nodes)));
 					//if the pattern is matched, it will work, either, it will be removed : pattern can be matched both side !
 				});
 				for(var j=0;j<cpt_bnd.length;j++)
-					lcg.addEdge("depend",acg_R_lcg.getIm(brk[i]),acg_R_lcg.getIm(cpt_bnd[j]));//this edge will have no antecedent : it is a way to check the allucinated knowledge !
+					lcg.addEdge("depend","ng_0",acg_R_lcg.getImg(brk[i])[0],acg_R_lcg.getImg(cpt_bnd[j])[0]);//this edge will have no antecedent : it is a way to check the allucinated knowledge !
 			}
 			else{//else, link this break to all its binding in the LCG.
 				for(var j=0;j<dp_e.length;j++){
-					if(act_graph.getType(dp_e[j])=="depend"){//add a copy of the dependency in the lcg, also add the relation.
-						lcg.addEdge("depend",acg_R_lcg.getIm(brk[i]),acg_R_lcg.getIm(act_graph.getTarget(dp_e[j])))
+					if(act_graph.getType(dp_e[j])[0]=="depend"){//add a copy of the dependency in the lcg, also add the relation.
+						lcg.addEdge("depend","ng_0",acg_R_lcg.getImg(brk[i])[0],acg_R_lcg.getImg(act_graph.getTarget(dp_e[j]))[0]);
 						acg_R_lcg.addR(dp_e[j],lcg.getLastEdgeId());
 					}
 				}
 			}
 		}
+		//for each component : if no interval are defined : get the interval of its father : start with the agent, finish with region
+		var agents=act_graph.getNodeByType("agent");
+		var regions=act_graph.getNodeByType("region");
+		for(var i=0;i<agents.length;i++){
+			if(!fullListCheck(act_graph.getSons(agents[i]).filter(function(e){ return act_graph.getType(e)[0]=="attribute" && act_graph.getLabels(e)[0]=="#_interval";}))){
+				var interv=conflict_b? [0,-1] : [null,null];
+				lcg.addNode(["attribute"],"ng_0",["#_interval"],interv,"u_-1");
+				lcg.addEdge("parent","ng_0",lcg.getLastNodeId(),acg_R_lcg.getImg(agents[i])[0]);
+			}
+		}
+		for(var i=0;i<regions.length;i++){//for each region : if it has no inverval : add its father interval !
+			if(!fullListCheck(act_graph.getSons(regions[i]).filter(function(e){ return act_graph.getType(e)[0]=="attribute" && act_graph.getLabels(e)[0]=="#_interval";}))){//check if there is an attribut interval
+				var fth_int=!conflict_b ? [null,null] : lcg.getValues(lcg.getSons(lcg.getFth(acg_R_lcg.getImg(regions[i])[0])).filter(function(e){ return lcg.getType(e)[0]=="attribute" && lcg.getLabels(e)[0]=="#_interval";})[0])//they must have one interval attribut on the father in the lcg !
+				lcg.addNode(["attribute"],"ng_0",["#_interval"],fth_int,"u_-1");
+				lcg.addEdge("parent","ng_0",lcg.getLastNodeId(),acg_R_lcg.getImg(regions[i])[0]);
+			}
+		}
+		
 		//generate conflicts
 		//for each binding, generate its interval attribut if not existing. : interval attribute is : #interval
 		var bnd=act_graph.getNodeByType("bnd");
 		for(var i=0;i<bnd.length;i++){
 			if(!fullListCheck(act_graph.getSons(bnd[i]).filter(function(e){ return act_graph.getType(e)[0]=="attribute" && act_graph.getLabels(e)[0]=="#_interval";}))){
-				if(conflict_b)//if user has choose : always conflict
-					lcg.addNode(["attribute"],"ng_0",["#_interval"],[0,-1],"u_-1");
-				else //if the user has choose : never conflict
-					lcg.addNode(["attribute"],"ng_0",["#_interval"],[0,0],"u_-1");
-				lcg.addEdge("parent",lcg.getLastNodeId(),acg_R_lcg.getIm(bnd[i]));
+				var interv=!conflict_b?[null,null] : ;
+				lcg.addNode(["attribute"],"ng_0",["#_interval"],interv,"u_-1");
+				lcg.addEdge("parent",lcg.getLastNodeId(),acg_R_lcg.getImg(bnd[i])[0]);
 			}
 		}
-		//for each regions whitch are overlapping due to there interval attribut : merge them into one big site.
-		var agent=act_graph.getNodeByType("agent");//get all the agent : for each agent, merge overleaping regions
-		for(var i=0;i<agent.length;i++){
-			var regions=act_graph.getSons(agent[i]).filter(function(e){return act_graph.getType(e)[0]=="component" && act_graph.getType(e)[0]=="region";});
-			
-		}
 		
+		//for each regions whitch are overlapping due to there interval attribut : merge them into one big site.
+		//get all the agent : for each agent, merge overleaping regions
+		/*for(var i=0;i<agents.length;i++){
+			var regions=lcg_graph.getSons(agents[i]).filter(function(e){return act_graph.getType(e)[0]=="component" && act_graph.getType(e)[0]=="region";});//get all regions of the node
+			//merge all overlapping regions.
+			var reduced_reg=reducInterv(regions);
+		}
+		*/
+	}
+	var reducInterv = function(regions){
+		var ln=regions.length;
+		for(var i=0;i<regions.length-1;i++){
+			var sn1=lcg.getSons(regions[i]).filter(function(e){ return lcg.getType(e)[0]=="attribute" && lcg.getLabels(e)[0]=="#_interval";})[0];
+			var int1=lcg.getValues(sn1);
+			for(var j=i+1;j<regions.length;j++){
+				var sn2=lcg.getSons(regions[j]).filter(function(e){ return lcg.getType(e)[0]=="attribute" && lcg.getLabels(e)[0]=="#_interval";})[0];
+				var int2=lcg.getValues(sn2);
+				if(int2[0]<=int1[1] ){//if int1 and int2 overlap !
+					var tmp_delta=lcg.mergeNode(regions[i],regions[j]);//get the new node as the enter part
+					acg_R_lcg.merge(regions[i],regions[j],tmp_delta.enter[0]);//merge the images
+					tmp_delta=lcg.mergeNode(sn1,sn2);//merge the attributes
+					acg_R_lcg.merge(sn1,sn2,tmp_delta.enter[0]);//merge the images
+					lcg.rmNodeValues(tmp_delta.enter[0]);//merge the values of the attribute 
+					lcg.addNodeValues(tmp_delta.enter[0],[min(int1[0],int2[0]),max(int1[1],int2[1])]);
+					regions.splice(j,1);//remove old region from the list
+					regions.splice(i,1);//add the new one
+					regions.push(tmp_delta.enter[0]);//add the created node from the merge !
+					return reducInterv(regions);
+				}
+			}
+		}
+		return regions;
 	}
 	this.log = function log(){//log the whole Kami
         console.log("Kami : ===================");

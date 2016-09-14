@@ -16,22 +16,64 @@
     window.onload = function () {
         kami = new Kami();
 		console.log("Kami initialized :)");
-		console.log(kami.addNugget("my nugget","first test nugget of the world !"));
+		console.log(kami.addNugget("my nugget","ag1 binds and break rule with ag2 on region reg1 of ag1"));
 		console.log("===============");
-		console.log(kami.addNode(["component","agent"],"ng_0",["test","re_test"],["t1"],"u_0"));
+		console.log(kami.addNode(["component","agent"],"ng_0",["ag1"],null,"u_0"));//agent ag1 : n_0
 		console.log("===============");
-		console.log(kami.addNode(["component","agent"],"ng_0",["re_test","test2"],["t2"],"u_0"));
+		console.log(kami.addNode(["component","agent"],"ng_0",["ag2"],null,"u_0"));//agent ag2 : n_1
 		console.log("===============");
-		console.log(kami.addNode(["component","agent"],"ng_0",["bla"],null,"u_1"));
+		console.log(kami.addNode(["component","region"],"ng_0",["reg1"],null,"u_2"));//region reg1 : n_2
 		console.log("===============");
-		console.log(kami.setMainNode("ng_0",["n_1"]));
+		console.log(kami.addEdge(["parent"],"ng_0","n_2","n_0","NGG"));//reg1 of ag1
 		console.log("===============");
-		console.log(kami.addEdge(["parent"],"ng_0","n_0","n_0","ACG"));
+		console.log(kami.addNode(["attribute"],"ng_0",["#_interval"],[4,7],"u_3"));//attribute interval : n_3
 		console.log("===============");
-		console.log(kami.hideNugget("ng_0"));
+		console.log(kami.addEdge(["parent"],"ng_0","n_3","n_0","NGG"));//interval of ag1
 		console.log("===============");
-		console.log(kami.showNugget("ng_0"));
+		console.log(kami.addNode(["attribute"],"ng_0",["#_interval"],[6,9],"u_4"));//attribute interval : n_4
 		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_4","n_2","NGG"));//interval of reg1
+		console.log("===============");
+		console.log(kami.addNode(["component","region"],"ng_0",["reg2"],null,"u_5"));//region reg2 : n_5
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_5","n_0","NGG"));//region reg2 of ag1
+		console.log("===============");
+		console.log(kami.addNode(["action","bnd"],"ng_0",["bnd"],null,"u_6"));//binding action : n_6
+		console.log("===============");
+		console.log(kami.addNode(["action","input"],"ng_0",["in1"],null,"u_7"));//input : n_7
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_7","n_6","NGG"));//input of bind
+		console.log("===============");
+		console.log(kami.addNode(["action","input"],"ng_0",["in2"],null,"u_8"));//input : n_8
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_8","n_6","NGG"));//input2 of bind
+		console.log("===============");
+		console.log(kami.addNode(["action","brk"],"ng_0",["brk"],null,"u_9"));//breaking action : n_9
+		console.log("===============");
+		console.log(kami.addNode(["action","output"],"ng_0",["out1"],null,"u_10"));//output : n_10
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_10","n_9","NGG"));//output of brk
+		console.log("===============");
+		console.log(kami.addNode(["action","output"],"ng_0",["out2"],null,"u_11"));//output : n_11
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_11","n_9","NGG"));//output2 of brk
+		console.log("===============");
+		console.log(kami.addEdge(["link"],"ng_0","n_2","n_7","NGG"));//link bnd to reg1
+		console.log("===============");
+		console.log(kami.addEdge(["link"],"ng_0","n_1","n_8","NGG"));//link bnd to ag2
+		console.log("===============");
+		console.log(kami.addEdge(["link"],"ng_0","n_10","n_2","NGG"));//link brk to reg1
+		console.log("===============");
+		console.log(kami.addEdge(["link"],"ng_0","n_11","n_1","NGG"));//link brk to ag2
+		console.log("===============");
+		console.log(kami.addNode(["component","region"],"ng_0",["reg3"],null,"u_12"));//region reg3 : n_12
+		console.log("===============");
+		console.log(kami.addEdge(["parent"],"ng_0","n_12","n_1","NGG"));//region reg3 of ag2
+		console.log("===============");
+		console.log(kami.setMainNode("ng_0",["n_6"]));
+
+		console.log("===============");
+		kami.createLcg(false);
 		kami.log();
     }
 </script>
