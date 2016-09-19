@@ -133,13 +133,11 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 
 function dragstarted(d) {
-	console.log("draggn");
   d3.event.sourceEvent.stopPropagation();
   d3.select(this).classed("dragging", true);
 }
 
 function dragged(d) {
-	console.log("whooooo");
   d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
 }
 
@@ -820,11 +818,6 @@ function dragended(d) {
 				menu.push({
 					title: "Change Parent",
 					action: function(elm,d,i){
-						console.log(d);
-						console.log(d.id);
-						console.log(d.father);
-						console.log(d3.select("g.selected").datum());
-						console.log(d3.select("g.selected").datum().id);
 						if(d.father)
 							self.rmParent(d.id);
 						self.addParent(d.id,d3.select("g.selected").datum().id);
@@ -1402,29 +1395,16 @@ function dragended(d) {
 	var addLcgAction = function(tmp_node,convert_table){//for a specific action, add all the needed node in the LCG
 		var possible_target=[tmp_node.id];//possible target for edges
 		if(typeof(convert_table[tmp_node.id])=="undefined" || convert_table[tmp_node.id]==null){
-			console.log("creating node");
-			console.log(tmp_node);
 			self.addNode(tmp_node.classes.concat(),tmp_node.label.concat(),[],tmp_node.x,tmp_node.y);
 			convert_table[tmp_node.id]=self.lastNode();
-			console.log(layerG.nodes[layerG.nodesHash[self.lastNode()]]);
-			console.log(convert_table);
 			for(var s=0;s<tmp_node.sons.length;s++){//add all the action sons in the lcg
 				if(typeof(convert_table[tmp_node.sons[s]])=="undefined" || convert_table[tmp_node.sons[s]]==null){
-					console.log("son not existing");
 					var tmp_son=nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]];
-					console.log(tmp_son);
 					self.addNode(tmp_son.classes.concat(),tmp_son.label.concat(),[convert_table[tmp_node.id]]);
 					convert_table[tmp_son.id]=self.lastNode();
-					console.log(layerG.nodes[layerG.nodesHash[self.lastNode()]]);
-					console.log(convert_table);
 					if(checkExist(tmp_son.context))
 						self.addCtx(convert_table[tmp_son.id],tmp_son.context.concat(),null,layerG.copyACtx(tmp_son.apply_context));
 				}else{
-					console.log("node exist : adding parenting");
-					console.log(layerG.nodes[layerG.nodesHash[convert_table[tmp_node.sons[s]]]]);
-					console.log(convert_table[tmp_node.sons[s]]);
-					console.log(convert_table[tmp_node.id]);
-					console.log(convert_table);
 					self.addParent(convert_table[tmp_node.sons[s]],convert_table[tmp_node.id]);
 				}if(nuggG.nodes[nuggG.nodesHash[tmp_node.sons[s]]].classes[0]=="action"){
 					possible_target.push(tmp_node.sons[s]);
@@ -1546,7 +1526,6 @@ function dragended(d) {
 			}
 		}
 		layerG.log();
-		console.log(convert_table);
 	}
 	var getRoot = function(node,lg){//get the root node of a slecific node "node" in a specific grap "lg"
 		var tmp_node=node;
@@ -1717,6 +1696,8 @@ function dragended(d) {
 		}
 	}	
 	var to_rule = function(c_act,node,rule_list){
+		console.log("======================");
+		console.log("to rule");
 		console.log(c_act);
 		console.log("-------------------");
 		console.log(node);
@@ -1724,7 +1705,11 @@ function dragended(d) {
 		console.log(rule_list);
 		console.log("--------------------");
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
+		console.log(s_rule);
+		console.log("---------------------");
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
+		console.log(s_rule);
+		console.log("--------------------");
 		var tmp_ctx=[];//transformed context
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
 			if(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[1]!="binder"){
@@ -1802,7 +1787,8 @@ function dragended(d) {
 			if(typeof(side[i].s)!="undefined" && side[i].s!=null)//if this site has binding, give him
 				tmp_s=side[i].s;
 			var s_l={};
-			s_l[side[i].e]={s:tmp_s,v:tmp_v};
+			if(side[i].e!=null)
+				s_l[side[i].e]={s:tmp_s,v:tmp_v};
 			st.push({a:side[i].a,site:s_l});					
 		}
 		/************************************/
@@ -1890,6 +1876,8 @@ function dragended(d) {
 		return [ag_n[0],site_n[0]];
 	}
 	var fullName = function(id){
+		console.log("the id "+id);
+		if(id==null) return "";
 		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
 		return tmp_node.id+"_"+tmp_node.label.join("_");
 	}
@@ -1911,6 +1899,9 @@ function dragended(d) {
 		var tmp_root=getRoot(tmp_node,layerG);
 		if(tmp_node.classes[0]=="flag" || tmp_node.classes[0]=="attribute"){
 			tmp_node=layerG.nodes[layerG.nodesHash[tmp_node.father]];
+		}
+		if(tmp_root.id==tmp_node.id){
+			return {a:tmp_root.id,e:null,v:el.v,s:el.s};
 		}
 		return{a:tmp_root.id,e:tmp_node.id,v:el.v,s:el.s};
 	}
@@ -1947,23 +1938,29 @@ function dragended(d) {
 			var nop=false;
 			if(left_side!=null){
 				for(var i=0;i<left_side.length;i++){
-					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c]){
+					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c] ){
 						nop=true;
+						//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.left.push({e:d.context[c],v:d.valued_context[d.context[c]]});
-						else ret.left.push({e:d.context[c],v:null});
+						else  ret.left.push({e:d.context[c],v:null});
+						//}
 					}
 				}
 			}if(right_side!=null){
 				for(var i=0;i<right_side.length;i++){
 					if(right_side[i].sourceID==d.context[c] || right_side[i].targetID==d.context[c]){
 						nop=true;
+						//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.right.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else ret.right.push({e:d.context[c],v:null});
+						//}
 					}
 				}
 			}if(!nop){
+				//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
 				if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.ctx.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 				else ret.ctx.push({e:d.context[c],v:null});
+				//}
 			}
 		}
 		return ret;
@@ -1988,7 +1985,6 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
 			if(input_l.length==1){
 				inp.on("focus",function(){
 					inp.on("keypress", function() {
-						//console.log("keypressed");
 						var e = d3.event;
 						if (e.keyCode == 13) {
 							d3.event.stopPropagation();
