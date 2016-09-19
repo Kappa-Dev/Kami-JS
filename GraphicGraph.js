@@ -1448,25 +1448,30 @@ function dragended(d) {
 
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
-							if((convert_table[tmp_ctx.id].length==1 && ( tmp_node.classes[1]!="syn" && tmp_node.classes[1]!="deg"))|| tmp_node.classes[1]=="bnd"){
-								self.addNode(["key_res"],[],[convert_table[tmp_ctx.id][0]]);
-								convert_table[tmp_ctx.id].push(self.lastNode());
-							}if(tmp_node.classes[1]!="bnd" && tmp_node.classes[1]!="syn" && tmp_node.classes[1]!="deg"){
-								for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
+							if(convert_table[tmp_ctx.id].length==1 || tmp_node.classes[1]=="bnd"){
+								if(tmp_node.classes[1]!="syn" && tmp_node.classes[1]!="deg"){
+									self.addNode(["key_res"],[],[convert_table[tmp_ctx.id][0]]);
+									convert_table[tmp_ctx.id].push(self.lastNode());
+								}
+							}if(tmp_node.classes[1]!="bnd"){
+								if(tmp_node.classes[1]!="syn" && tmp_node.classes[1]!="deg"){
+									for(var i=1;i<convert_table[tmp_ctx.id].length;i++){
+										self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null,layerG.copyACtx(tmp_node.apply_context));
+										if(act_links[l].sourceID==tmp_ctx.id)
+											self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
+										else
+											self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
+									}
+								}else{
+									var i=0;
 									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null,layerG.copyACtx(tmp_node.apply_context));
 									if(act_links[l].sourceID==tmp_ctx.id)
 										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
 									else
 										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
 								}
-							}else if(tmp_node.classes[1]!="syn" || tmp_node.classes[1]!="deg"){
-								var i=0;
-									self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][i]],null,layerG.copyACtx(tmp_node.apply_context));
-									if(act_links[l].sourceID==tmp_ctx.id)
-										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].targetID]);
-									else
-										self.addEdge(convert_table[tmp_ctx.id][i],convert_table[act_links[l].sourceID]);
-							}else{
+							}
+							else{
 								self.addCtx(convert_table[tmp_node.id],[self.lastNode()],null,layerG.copyACtx(tmp_node.apply_context));
 								if(act_links[l].sourceID==tmp_ctx.id)
 										self.addEdge([self.lastNode()],convert_table[act_links[l].targetID]);
@@ -1719,6 +1724,7 @@ function dragended(d) {
 		console.log(rule_list);
 		console.log("--------------------");
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
+		console.log(s)
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
 		var tmp_ctx=[];//transformed context
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
