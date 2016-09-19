@@ -111,6 +111,19 @@ function KamiGui(k){
 					action: function(elm,d,i){
 						openNugget();
 					}
+				},{
+					title: "Edit Node",
+					child:[{
+						title: "Add Nugget",
+					action: function(elm,d,i){
+						openNugget();
+					}
+					},{title: "Add Nugget",
+					action: function(elm,d,i){
+						openNugget();
+					}
+					}]
+					
 				});
 		}
 			

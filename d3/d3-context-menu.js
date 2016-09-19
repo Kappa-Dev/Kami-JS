@@ -1,11 +1,9 @@
 d3.contextMenu = function (menu, openCallback) {
-
 	// create the div element that will hold the context menu
 	d3.selectAll('.d3-context-menu').data([1])
 		.enter()
 		.append('div')
 		.attr('class', 'd3-context-menu');
-
 	// close menu
 	d3.select('body').on('click.d3-context-menu', function() {
 		d3.select('.d3-context-menu').style('display', 'none');
@@ -13,8 +11,8 @@ d3.contextMenu = function (menu, openCallback) {
 
 	// this gets executed when a contextmenu event occurs
 	return function(data, index) {
-		//console.log(menu);
-		/*if(menu.length==0) {
+		console.log(menu);
+		/*if(data.length==0) {
 			d3.event.preventDefault();
 			d3.event.stopPropagation();
 			console.log("no context menu ^^'");
