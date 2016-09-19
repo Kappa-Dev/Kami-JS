@@ -47,10 +47,12 @@ window.onload = function () {
 
 var loadJson = function(){
 	var data=null; 
-	var file=document.getElementById("import_f").files[0];
-	if(typeof(file)!="undefined" && file !=null && file !="") data=file;
+	var file=document.getElementById("import_f").files;
+	if(typeof(file)!="undefined" && file !=null && file.length>0){
+		for(var i=0;i<file.length;i++)
+			loadFile(file[i]);
+	} 
 	else alert("No input file. Default datas loaded !");
-	loadFile(data);
 }
 var loadFile = function(data){
 	var yep=true;
