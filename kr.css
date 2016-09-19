@@ -7,6 +7,7 @@ body{
 #main_container{
 	width:100vw;
 	height:100vh;
+	background-color:#fffeec;
 }
 #top_chart{
 	height:4.5%;
@@ -251,6 +252,109 @@ svg{
 	color: #fefefe;
 	border-radius: 3px;
 }
+#side_content{
+	width:100%;
+	height:calc(100%-45px);
+}
+.side_button{
+	width:170px;
+	background:linear-gradient(to bottom, #3fa4f0 0%, #0f71ba 100%);
+	border:2px solid #0f71ba;
+	border-radius:5px;
+	height:40px;
+}
+.side_el{
+	margin:auto;
+	text-align:center;
+	font-weight: bold;
+	color:rgb(251, 249, 200);
+	font-family: Capriola, Helvetica, sans-serif;
+	font-size:100%;	
+}
+#side_title{
+	top:0px;
+	width:100%;
+	text-align:center;
+	height:45px;
+	font-weight: bold;
+	color:rgb(251, 249, 200);
+	font-family: Capriola, Helvetica, sans-serif;
+	font-size:100%;
+}
+
+
+
+
+
+
+.posInfl{
+	stroke-width: 2.5px;
+	stroke-dasharray:10 3;
+	stroke:#00cc00;
+	fill:#00cc00;
+}
+.negInfl{
+	stroke-width: 2.5px;
+	stroke-dasharray:10 3;
+	stroke:#ff0000;
+	fill:#ff0000;
+}
+.link{
+	stroke-width: 2.5px;
+	stroke:#000000;
+	fill:#000000;
+}
+.rw{
+	stroke-width: 2.5px;
+	stroke-dasharray:10 3;
+	stroke:#000000;
+	fill:#000000;
+}
+#tab_frame{
+	margin-left: 15px;
+}
+.input{
+	
+}
+.output{
+	
+}
+.action{
+	
+}
+.bnd{
+	
+}
+.brk{
+	
+}
+.mod{
+	
+}
+.syn{
+	
+}
+.deg{
+	
+}
+.agent{
+	
+}
+.region{
+	
+}
+.key_res{
+	
+}
+.flag{
+	
+}
+.attribute{
+	
+}
+.node_label{
+	
+}
 
 #tab_menu{}
 .tab_button{
@@ -263,9 +367,7 @@ svg{
 .tooltip{
 	
 }
-#tab_frame{
-	margin-left: 15px;
-}
+
 #zoom_menu{
 	
 }

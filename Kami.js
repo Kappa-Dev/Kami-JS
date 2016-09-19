@@ -1022,6 +1022,7 @@ function Kami(){//define the full workflow object, all the modification function
 		always_conflict=val;
 	};
 	var getLg = function(lg_name){//return the lg graph corresponding to the lg_name
+		if(!lg_name)return nugg_graph;
 		switch(lg_name){
             case "ACG":
                 return act_graph;
@@ -1598,6 +1599,9 @@ function Kami(){//define the full workflow object, all the modification function
 		nuggets[nid].setComment(c);
 		return nid;
 	};
+	this.getNgMnode = function getNgMnode(nid){
+		return nuggets[nid].getMnode();
+	}
 	this.getNgRefs = function getNGRefs(nid){
 		return nuggets[nid].getRefs();
 	};
@@ -1766,31 +1770,4 @@ function Kami(){//define the full workflow object, all the modification function
 			nuggets[key[i]].log();
     };
 };
-function JSonParser(k){
-	var kami=k;
-	this.importF = function importF(file){
-		
-	};
-	this.exportF = function exportF(file){
-		
-	};
-	this.convertF = function convertF(file){
-		d3.json(file,function(error, graph) {
-			if (error) throw error;
-			var json={
-				version:graph.version,
-				agents:graph.agents,
-				regions:graph.regions,
-				key_rs:graph.key_rs,
-				attributes:graph.attributes,
-				flags:graph.flags,
-				actions:graph.actions,
-				actions_binder:graph.actions_binder,
-				edges:graph.edges
-			}
-			jsToLGraph();
-			gGraph.wakeUp(false);
-		});	
-	}
-	
-};
+
