@@ -58,12 +58,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.wakeUp = function wakeUp(val){//speed up tick function
 		dynG.getForce().start();
 		if(!(typeof(val)!="undefined" && val!=null && !val))
-			d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
+			svg.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
 		for(var i=0;i<300;i++){
 			dynG.getForce().tick();
 		}
 		if(first_init)
-				d3.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
+				svg.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
 		first_init=true;
 	};
 	this.log = function log(){//output layerGraph data
@@ -90,24 +90,19 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
 		//initialize
 		first_init=false;
-		this.setState("kr_view");
-		svg=d3.select("#"+containerID).append("svg:svg")
+		
+		var zoom = d3.behavior.zoom()
+		.scaleExtent([0.02, 1])
+		.on("zoom", zoomed);
+		var drg = d3.behavior.drag()
+		.origin(function(d) { return d; })
+		.on("dragstart", dragstarted)
+		.on("drag", dragged)
+		.on("dragend", dragended);
+		var svg_pan=d3.select("#"+containerID).append("svg:svg")
 			.attr("width",width)
-			.attr("height",height)
-			.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
-		d3.select("#"+containerID).append("div")
-			.classed("n_tooltip",true)
-			.style("visibility","hidden");
-		d3.select("#"+containerID).append("div")
-			.classed("s_tooltip",true)
-			.style("visibility","hidden");
-		//dynG.getForce().start();
-	};
-	//update all the SVG elements
-	var update = function(){
-		//links svg representation
-		dynG.init();
-		svg.append("svg:defs").selectAll("marker")
+			.attr("height",height);
+		svg_pan.append("svg:defs").selectAll("marker")
 		.data(["pos_end","neg_end"])      // Different link/path types can be defined here
 		.enter().append("svg:marker")    // This section adds in the arrows
 		.attr("id", function(d){return d;})
@@ -119,6 +114,48 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		.attr("markerUnits","strokeWidth")
 		.append("svg:path")
 		.attr("d", "M2,2 L2,13 L8,7 L2,2");
+		svg_pan.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
+		//svg=svg_pan.append("g").call(zoom).call(drg);
+		svg=svg_pan;
+		svg.call(zoom);
+		d3.select("#"+containerID).append("div")
+			.classed("n_tooltip",true)
+			.style("visibility","hidden");
+		d3.select("#"+containerID).append("div")
+			.classed("s_tooltip",true)
+			.style("visibility","hidden");
+			this.setState("kr_view");
+		//dynG.getForce().start();
+		
+	};
+	function zoomed() {
+		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+
+function dragstarted(d) {
+	console.log("draggn");
+  d3.event.sourceEvent.stopPropagation();
+  d3.select(this).classed("dragging", true);
+}
+
+function dragged(d) {
+	console.log("whooooo");
+  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+}
+
+function dragended(d) {
+  d3.select(this).classed("dragging", false);
+}
+	//.call(d3.behavior.zoom().scaleExtent([0.02, 1]).on("zoom", zoom))
+	/*function zoom() {
+		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}*/
+
+	//update all the SVG elements
+	var update = function(){
+		//links svg representation
+		dynG.init();
+		
 		s_link = svg.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
         s_link.enter().insert("line","g")
@@ -408,6 +445,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		return layerG.nodes[layerG.nodeHash[id]].label.concat();
 	};
 	var dragstart = function(d) {//allow only to move agents and actions.
+		d3.event.sourceEvent.stopPropagation();
 		if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
 			d3.select(this).classed("fixed", d.fixed = true);
 	};
@@ -470,7 +508,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					.style("display","initial");
 				if(!nugget_add){
 					this.clearStack();
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				nugget_add=true;
 				edition=false;
@@ -496,7 +534,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				kr_show=true;
 				lcg_view=false;
 				kappa_view=false;
-				d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+				svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				d3.select("#menu_f").selectAll("input").property("disabled",true)
 					.style("display","none");
 				d3.select("#import_f").property("disabled",false)
@@ -536,7 +574,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					.style("display","initial");
 				if(!edition){
 					this.clearStack();
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				nugget_add=false;
 				edition=true;
@@ -581,7 +619,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 						layerG.init();
 						lcgConvert(selected_l);
 					}
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				break;
 			case "kappa_view"://nobody care : open jasim !
@@ -609,7 +647,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			var ctx_lst=[];
 			for(var i=0;i<d.context.length;i++){
-				var ctx_el=d3.selectAll("g").filter(function(e){return e.id==d.context[i];});
+				var ctx_el=svg.selectAll("g").filter(function(e){return e.id==d.context[i];});
 				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
 					if(typeof(d.apply_context)!="undefined" && d.apply_context!=null){
 						var tmp_node=ctx_el.datum();
@@ -655,7 +693,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			d3.select(".n_tooltip").style("visibility","hidden")
 								.text("");
 			for(var i=0;i<d.context.length;i++){
-				d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false)
+				svg.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false)
 																				 .classed("exist",false)
 																				 .classed("existAlway",false)
 																				 .classed("alway",false);	
@@ -674,7 +712,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		menu=[{
 			title: "Select Source-target",
 			action: function(elm,d,i){
-				d3.selectAll("g").filter(function(e){return (e.id==d.sourceID || e.id==d.targetID || (d.source.classes[0]=="action" && d.source.father!=null && d.source.father==e.id) || (d.target.classes[0]=="action" && d.target.father!=null && d.target.father==e.id));})
+				svg.selectAll("g").filter(function(e){return (e.id==d.sourceID || e.id==d.targetID || (d.source.classes[0]=="action" && d.source.father!=null && d.source.father==e.id) || (d.target.classes[0]=="action" && d.target.father!=null && d.target.father==e.id));})
 					.classed("selected",function(d){ return layerG.nodes[layerG.nodesHash[d.id]].selected=true;});
 			}
 		}];
@@ -949,7 +987,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				title: "Select context",
 				action: function(elm,d,i){
 					for(var i=0;i<d.context.length;i++)
-						d3.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
+						svg.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
 				}
 			});
 		}
@@ -1220,19 +1258,19 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			{
 				title: "Unlock all",
 				action: function(elm,d,i){
-					d3.selectAll("g").classed("fixed",function(d){return d.fixed=false;});
+					svg.selectAll("g").classed("fixed",function(d){return d.fixed=false;});
 					update();
 				}
 			},{
 				title: "Select all",
 				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=true;});
+					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=true;});
 					update();
 				}
 			},{
 				title: "Unselect all",
 				action: function(elm,d,i){
-					d3.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 					update();
 				}
 			}];
@@ -1241,7 +1279,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			{
 				title: "Add Agent",
 				action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					var lbl=window.prompt("define your label","");
 					if(lbl=="")self.addNode(["agent"],[],[],mousepos[0],mousepos[1]);
 					else self.addNode(["agent"],lbl.split(","),[],mousepos[0],mousepos[1]);
@@ -1264,7 +1302,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				child:[{
 					title:"Bind",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
@@ -1274,7 +1312,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				{
 					title:"Break",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","brk"],["break"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
@@ -1285,7 +1323,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				{
 					title:"Modify pos",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","mod","pos"],["mod+"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
@@ -1295,7 +1333,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				{
 					title:"Modify neg",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","mod","neg"],["mod-"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
@@ -1304,7 +1342,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				},{
 					title:"Synthesis",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","syn"],["synth"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
@@ -1314,7 +1352,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				{
 					title:"Degradation",
 					action: function(elm,d,i){
-					var mousepos=d3.mouse(svg[0][0]);
+					var mousepos=d3.mouse(this);
 					self.addNode(["action","deg"],["deg"],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
