@@ -7,16 +7,19 @@
 <meta name="keywords" content="Kappa,knowledge representation">
 <meta name="author" content="Adrien Basso-Blandin">
 <meta http-equiv="Cache-Control" content="no-store" />
-<link rel="stylesheet" type="text/css" href="kami.css">
+<link rel="stylesheet" type="text/css" href="kr.css">
 <script src="d3/d3.js"></script>
 <script src="d3/d3-context-menu.js"></script>
 <script src="Kami.js"></script>
+<script src="KamiGui.js"></script>
 <script>
     var kami;
     window.onload = function () {
         kami = new Kami();
+		kGui = new KamiGui(kami);
 		console.log("Kami initialized :)");
-		console.log(kami.addNugget("my nugget","ag1 binds and break rule with ag2 on region reg1 of ag1"));
+		kGui.init();
+		/*console.log(kami.addNugget("my nugget","ag1 binds and break rule with ag2 on region reg1 of ag1"));
 		console.log("===============");
 		console.log(kami.addNode(["component","agent"],"ng_0",["ag1"],null,"u_0"));//agent ag1 : n_0
 		console.log("===============");
@@ -74,7 +77,7 @@
 
 		console.log("===============");
 		kami.createLcg(false);
-		kami.log();
+		kami.log();*/
     }
 </script>
 </head> 

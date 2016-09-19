@@ -91,7 +91,7 @@ var idV = function(id){//get the numerical value of an id : O(1) : size of an id
 var idT = function(id){//get the header of an id : O(1) : size of an id is constant
 	return id.split('_')[0];
 }
-var min = function(a,b){//-1 code for infiny, [null,null] code for emptyset
+var min = function(a,b){//-1 code for infiny, [null,null] code for empty set
 	if(a==-1 || b==-1)return a+b+1;
 	if(a==null || b==null) return null;
 	return a < b ? a : b;
@@ -101,7 +101,6 @@ var max = function(a,b){
 	if(a==null || b==null) return a+b;
 	return a > b ? a : b;
 };
-
 function Node(i,t,n,l,v,u){//generic definition of a node in a clustered graph
 	if(typeof i=='undefined' || i==null) throw new Error("undefined id : "+i);
 	var id=i;//unique identifier of a node
@@ -862,7 +861,7 @@ function LayerGraph(){//An autonomous multi layer graph with optimized modificat
         return 'e_'+(EDGE_ID-1);
     };
 }
-function Relation(){
+function Relation(){//definition of a relation : sets of antecedent assiociated with sets of images
     var antecedent_to_image={};//hashtable : key : antecedent, values : images
     var image_from_antecedent={};//hashtable : key : image, values : antecedents
     this.merge = function merge(im1,im2,res){
@@ -965,6 +964,7 @@ function Nugget(i,n,c){//define a nugget structure
 	var comments= c || "";
 	var visible = true;
 	var main_node = [];
+	var references ={"doi":"","publication":"","url":"","meta":""};
 	this.setMnode = function setMnode(id_l){//set the main node of a nugget 
 		main_node=id_l.concat();
 	};
@@ -987,6 +987,21 @@ function Nugget(i,n,c){//define a nugget structure
 		console.log("main nodes : "+main_node.join());
 		console.log("---------------");
 	};
+	this.getRefs = function getRefs(){
+		return {"doi":references.doi,"publication":references.publication,"url":references.url,"meta":references.meta};
+	};
+	this.setDoi = function setDoi(d){
+		references.doi=d;
+	};
+	this.setPubli = function setPubli(d){
+		references.publication=d;
+	};
+	this.setUrl = function setUrl(d){
+		references.url=d;
+	};
+	this.setMeta = function setMeta(d){
+		references.meta=d;
+	};
 }
 function Kami(){//define the full workflow object, all the modification functions return an enter/exit object for all the graph (ngg, acg, lcg). Allow to do all updates localy !
 	var NUGGET_ID = 0;//id of nuggets for the nugget graph
@@ -999,6 +1014,10 @@ function Kami(){//define the full workflow object, all the modification function
 	var nuggets ={};//hashtable of all nuggets objects.
 	var viewable_nuggets={};
 	var always_conflict=false;
+	this.cleanLCG = function cleanLCG(){
+		lcg=new LayerGraph();
+		acg_R_lcg = new Relation();
+	}
 	this.setDefaultConflictRule = function setDefaultConflictRule(val){
 		always_conflict=val;
 	};
@@ -1529,7 +1548,7 @@ function Kami(){//define the full workflow object, all the modification function
 		viewable_nuggets[ng.getId()]=true;
 		return ng.getId();
 	};
-	this.rmNugget = function rmNugget(id){
+	this.rmNugget = function rmNugget(id){//remove a specified nugget of the graph : remove also all its content !
 		this.showNugget(id);
 		var n_l=getNodeByNugget(id);
 		var e_l=getEdgeByNugget(id);
@@ -1577,6 +1596,25 @@ function Kami(){//define the full workflow object, all the modification function
 	};
 	this.setNgComment = function setNgComment(c,nid){//set the comment of a nugget
 		nuggets[nid].setComment(c);
+		return nid;
+	};
+	this.getNgRefs = function getNGRefs(nid){
+		return nuggets[nid].getRefs();
+	};
+	this.setNgDoi = function setNgDoi(d,nid){
+		nuggets[nid].setDoi(d);
+		return nid;
+	};
+	this.setNgPubli = function setNgPubli(d,nid){
+		nuggets[nid].setPubli(d);
+		return nid;
+	};
+	this.setNgUrl = function setNgUrl(d,nid){
+		nuggets[nid].setUrl(d);
+		return nid;
+	};
+	this.setNgMeta = function setNgMeta(d,nid){
+		nuggets[nid].setMeta(d);
 		return nid;
 	};
 	var getRoot = function(id,lg_name){//get the root node of a specific node : return itself for root nodes.
@@ -1653,15 +1691,23 @@ function Kami(){//define the full workflow object, all the modification function
 				lcg.addEdge("parent","ng_0",lcg.getLastNodeId(),acg_R_lcg.getImg(regions[i])[0]);
 			}
 		}
-		
+		//for each binding action : add its binding edges.
+		var bnd_edges=act_graph.getEdgeByType("link").filter(function(e){var fth=act_graph.getFth(act_graph.getTarget(e)); return fth && act_graph.getType(fth)[1]=="bnd"});
+		console.log(bnd_edges);
+		bnd_edges.forEach(function(e){
+						lcg.addEdge("link","ng_0",acg_R_lcg.getImg(act_graph.getSource(e)),acg_R_lcg.getImg(act_graph.getTarget(e)));
+						acg_R_lcg.addR([e],[lcg.getLastEdgeId()]);
+						console.log(acg_R_lcg.getImg(e));
+					});
 		//generate conflicts
 		//for each binding, generate its interval attribut if not existing. : interval attribute is : #interval
-		var bnd=act_graph.getNodeByType("bnd");
+		var bnd=act_graph.getNodeByType("input").filter(function(e){return act_graph.getType(act_graph.getFth(e))[1]=="bnd"});
 		for(var i=0;i<bnd.length;i++){
 			if(!fullListCheck(act_graph.getSons(bnd[i]).filter(function(e){ return act_graph.getType(e)[0]=="attribute" && act_graph.getLabels(e)[0]=="#_interval";}))){
-				var interv=!conflict_b?[null,null] : ;
+				var input_e=lcg.getEdgeByTarget(acg_R_lcg.getImg(bnd[i])[0]);
+				var interv=input_e.map(function(e){var inter=!conflict_b?[null,null] :lcg.getValues(lcg.getSource(e));return [e,inter[0],inter[1]];});
 				lcg.addNode(["attribute"],"ng_0",["#_interval"],interv,"u_-1");
-				lcg.addEdge("parent",lcg.getLastNodeId(),acg_R_lcg.getImg(bnd[i])[0]);
+				lcg.addEdge("parent","ng_0",lcg.getLastNodeId(),acg_R_lcg.getImg(bnd[i])[0]);
 			}
 		}
 		
@@ -1674,7 +1720,7 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		*/
 	}
-	var reducInterv = function(regions){
+	var reducInterv = function(regions){//merge overlaping regions together.
 		var ln=regions.length;
 		for(var i=0;i<regions.length-1;i++){
 			var sn1=lcg.getSons(regions[i]).filter(function(e){ return lcg.getType(e)[0]=="attribute" && lcg.getLabels(e)[0]=="#_interval";})[0];
@@ -1698,7 +1744,7 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		return regions;
 	}
-	this.log = function log(){//log the whole Kami
+	this.log = function log(){//log the whole Kami object
         console.log("Kami : ===================");
         console.log("Nugget graph : ");
         nugg_graph.log();
@@ -1719,4 +1765,32 @@ function Kami(){//define the full workflow object, all the modification function
 		for(var i=0;i<key.length;i++)
 			nuggets[key[i]].log();
     };
-}
+};
+function JSonParser(k){
+	var kami=k;
+	this.importF = function importF(file){
+		
+	};
+	this.exportF = function exportF(file){
+		
+	};
+	this.convertF = function convertF(file){
+		d3.json(file,function(error, graph) {
+			if (error) throw error;
+			var json={
+				version:graph.version,
+				agents:graph.agents,
+				regions:graph.regions,
+				key_rs:graph.key_rs,
+				attributes:graph.attributes,
+				flags:graph.flags,
+				actions:graph.actions,
+				actions_binder:graph.actions_binder,
+				edges:graph.edges
+			}
+			jsToLGraph();
+			gGraph.wakeUp(false);
+		});	
+	}
+	
+};

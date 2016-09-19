@@ -1,0 +1,220 @@
+ form.inputMenu {
+	padding: 10px;
+    color: #4A22FF;
+    background:#99ccff;
+}
+.lead {
+    font-style: italic;
+}
+p {
+    margin: 5px 0px;
+}
+polygon {
+    pointer-events: none;
+}
+        
+		
+rect.selection {
+    stroke          : gray;
+    stroke-dasharray: 4px;
+    stroke-opacity  : 0.5;
+    fill            : transparent;
+}
+.d3-context-menu {
+	position: absolute;
+	display: none;
+	background-color: #f2f2f2;
+	border-radius: 4px;
+	font-family: Arial, sans-serif;
+	font-size: 14px;
+	min-width: 150px;
+	border: 1px solid #d4d4d4;
+	z-index:1200;
+}
+.d3-context-menu ul {
+	list-style-type: none;
+	margin: 4px 0px;
+	padding: 0px;
+	cursor: default;
+}
+.d3-context-menu ul li {
+	padding: 4px 16px;
+}
+.d3-context-menu ul li:hover {
+	background-color: #4677f8;
+	color: #fefefe;
+}
+.d3-context-menu ul li > ul {
+	list-style-type: none;
+	margin: 4px 0px;
+	padding: 0px;
+	cursor: default;
+}
+.d3-context-menu ul li > ul li {
+	padding: 4px 16px;
+}
+.d3-context-menu ul li > ul li:hover { 
+    background-color: #4677f8;
+	color: #fefefe;
+}
+.nodeLabel{
+  fill: #000;
+  font-family: sans-serif;
+}
+.links {
+  stroke: #000;
+  stroke-width: 2.5px;
+}
+.influence{
+  stroke-width: 2.5px;
+  stroke-dasharray:10 3;
+}
+.influence.positive{
+	stroke:#00cc00;
+}
+.influence.negative{
+	stroke:#ff0000;	
+}
+#pos_end{
+	fill:#00cc00;
+	stroke:#00cc00;
+}
+#neg_end{
+	fill:#ff0000;
+	stroke:#ff0000;
+}
+
+.parent {
+  stroke: #009933;
+  stroke-width: 2px;
+}
+circle.node {
+  cursor: move;
+  stroke:#000;
+  stroke-width: 1.5px;
+  stroke-dasharray:none;
+}
+.node.fixed {
+  stroke-dasharray:10 3;
+}
+.node.selected {
+  stroke:#f00;
+}
+.node.hilighted{
+	fill:#ffa31a;
+	stroke:#000;
+}
+.node.alway{
+	stroke:#1496bb;
+}
+.action.alway{
+	stroke:#1496bb;
+}
+.action.existAlway{
+	stroke:#9900cc;
+}
+.node.exist{
+	stroke:#ff66cc;
+}
+.action.exist{
+	stroke:#ff66cc;
+}
+.node.selected_overlay{
+	fill:#ffa31a;
+}
+.action.selected_overlay{
+	fill:#ffa31a;
+}
+label.hilighted{
+	fill:#ffa31a;
+	stroke:#000;
+}
+rect.action{
+  cursor: move;
+  stroke:#000;
+  stroke-width: 1.5px;
+  stroke-dasharray:none;
+}
+rect.action.fixed {
+  stroke-dasharray:10 3;
+}
+.action.selected{
+	stroke:#f00;
+}
+.bnd{
+	fill: #aaf;
+}
+.brk{fill: #aae;}
+.mod{fill:#aad;}
+.syn{fill:#aac;}
+.deg{fill:#aab;}	
+.agent{fill: #aaa;}
+.region{fill: #bbb;}
+.key_res{fill: #ccc;}
+.attribute{fill: #ddd;}
+.flag{fill: #eee;}
+.binder{
+	fill: #fff;
+	stroke:#003366;
+	stroke-width: 1px;
+}
+svg {
+  height: 100%;
+  max-width: 100%;
+}
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+#main-container{
+	height: auto;
+    width: 100%;
+}
+#menu{
+  position: absolute;
+  top:0;
+  left: 0;
+  height: 4%;
+  max-width: 100%;
+  background: #ffe;
+}
+#graph{
+  position: absolute;
+  top:30;
+  height: 96%;
+  max-width: 100%;
+  bottom: 0;
+  left:0;
+  right:0;
+  background: #fff;
+}
+.n_tooltip{
+  padding: 5px 15px;
+  margin: 3px 25px;
+  border-radius: 25px;	
+  vertical-align: top;	
+  text-align: left;
+  z-index: 10;
+  background: #1496bb;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  display: block;
+  position: absolute;
+  width: 150px;
+  overflow : hidden;
+}
+.s_tooltip{
+  bottom: 20px;
+  left: 10px;
+  position: absolute;
+  height: 25px;
+}
+.att_tooltip{
+  fill: white;
+  stroke: black;
+  stroke-width: 1;
+  opacity: 0.85;
+}
