@@ -1724,7 +1724,6 @@ function dragended(d) {
 		console.log(rule_list);
 		console.log("--------------------");
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
-		console.log(s)
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
 		var tmp_ctx=[];//transformed context
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
