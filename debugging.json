@@ -1,0 +1,21 @@
+{"version":2.0,
+ "agents":[
+{"classes":["agent"],"father_classes":[],"path":[],"labels":["n0"],"values":[],"x":925.4720656290025,"y":263.83273226500035}
+],
+ "regions":[
+],
+ "key_rs":[
+],
+ "attributes":[
+],
+ "flags":[
+{"classes":["flag"],"father_classes":["agent"],"path":["n0"],"labels":["test"],"values":["vrai","faux"],"x":900.8144661664307,"y":282.13367457678515}
+],
+ "actions":[
+{"classes":["action","deg"],"labels":["deg"],
+"left":[],
+"right":[{"ref":["agents",0]}],
+"context":[{"ref":["flags",0],"values":["vrai"]}],
+"x":959.7658368464472,"y":374.35156262497816}
+]
+}
