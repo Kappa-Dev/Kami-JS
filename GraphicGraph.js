@@ -129,7 +129,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		
 	};
 	function zoomed() {
-		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+		console.log(d3.event.translate);
+		d3.event.stopPropagation;
+		var scale=svg.attr("transform")?svg.attr("transform").split("(")[2]:1;
+		console.log(scale<d3.event.scale + ")");
+		var trs=d3.event.translate;
+		trs[0]=trs[0]<0?0:trs[0];
+		trs[0]=trs[0]>width?width:trs[0];
+		trs[1]=trs[1]<0?0:trs[1];
+		trs[1]=trs[1]>height?height:trs[1];
+		svg.attr("transform", "translate(" + trs + ")scale(" + d3.event.scale + ")");
 	}
 
 function dragstarted(d) {
