@@ -1861,9 +1861,8 @@ function dragended(d) {
 		}
 		//add the text version of the rule !
 		for(var i=0;i<st.length;i++){
-			
 			ret+=fullName(st[i].a)+"(";
-			if(site!=null){
+			if(st[i].site!=null){
 			var site_l=Object.keys(st[i].site);
 			for(var j=0;j<site_l.length;j++){
 				ret+=fullName(site_l[j]);
