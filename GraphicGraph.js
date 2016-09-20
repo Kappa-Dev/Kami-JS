@@ -1889,7 +1889,7 @@ function dragended(d) {
 	}
 	var fullName = function(id){
 		console.log("the id "+id);
-		if(id==null) return "";
+		if(id==null || typeof layerG.nodesHash[id]=='undefined' ||  layerG.nodesHash[id]==null) return "";
 		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
 		return tmp_node.id+"_"+tmp_node.label.join("_");
 	}
