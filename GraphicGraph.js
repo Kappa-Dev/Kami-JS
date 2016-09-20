@@ -1696,20 +1696,8 @@ function dragended(d) {
 		}
 	}	
 	var to_rule = function(c_act,node,rule_list){
-		console.log("======================");
-		console.log("to rule");
-		console.log(c_act);
-		console.log("-------------------");
-		console.log(node);
-		console.log("-------------------");
-		console.log(rule_list);
-		console.log("--------------------");
 		var s_rule=ruleOf(node.classes,c_act.left,c_act.right);	
-		console.log(s_rule);
-		console.log("---------------------");
 		s_rule={l:shrinkElList(s_rule.l),r:shrinkElList(s_rule.r)};	
-		console.log(s_rule);
-		console.log("--------------------");
 		var tmp_ctx=[];//transformed context
 		for(var i=0;i<c_act.ctx.length;i++){//for each element
 			if(layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[c_act.ctx[i].e]].classes[1]!="binder"){
@@ -1763,15 +1751,20 @@ function dragended(d) {
 		}else return r;
 	}
 	var rToText = function(node,rule,ctx){ 
+	console.log("rto toext");
+	console.log(node);
+	console.log(rule);
+	console.log(ctx);
+	console.log("-------------");
 		var tmp_l_ctx;
 		var tmp_r_ctx;
 		if(node.classes[1]=="syn"){
-			tmp_l_ctx=ctx.concat().filter(function(e){return e.a!=rule.l.a});
+			tmp_l_ctx=ctx.concat().filter(function(e){return e.a!=rule.r[0].a});
 			tmp_r_ctx=ctx;
 		}
 		else if(node.classes[1]=="deg"){
 			tmp_l_ctx=ctx;
-			tmp_r_ctx=ctx.concat().filter(function(e){return e.a!=rule.l.a});
+			tmp_r_ctx=ctx.concat().filter(function(e){return e.a!=rule.l[0].a});
 		}else{
 			tmp_l_ctx=ctx;
 			tmp_r_ctx=ctx;
