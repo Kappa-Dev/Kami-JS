@@ -1861,8 +1861,8 @@ function dragended(d) {
 		}
 		//add the text version of the rule !
 		for(var i=0;i<st.length;i++){
-			
 			ret+=fullName(st[i].a)+"(";
+			if(st[i].site!=null){
 			var site_l=Object.keys(st[i].site);
 			for(var j=0;j<site_l.length;j++){
 				ret+=fullName(site_l[j]);
@@ -1873,7 +1873,7 @@ function dragended(d) {
 					ret+="!"+st[i].site[site_l[j]].s;
 				}
 				if(j<site_l.length-1) ret+=",";
-			}
+			}}
 			ret+=")";
 			if(i<st.length-1) ret+=",";
 		}
@@ -1889,7 +1889,7 @@ function dragended(d) {
 	}
 	var fullName = function(id){
 		console.log("the id "+id);
-		if(id==null) return "";
+		if(id==null || typeof layerG.nodesHash[id]=='undefined' ||  layerG.nodesHash[id]==null) return "";
 		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
 		return tmp_node.id+"_"+tmp_node.label.join("_");
 	}
