@@ -1762,11 +1762,26 @@ function dragended(d) {
 			return [tmp_res];
 		}else return r;
 	}
-	var rToText = function(node,rule,ctx){
+	var rToText = function(node,rule,ctx){ 
+		var tmp_l_ctx;
+		var tmp_r_ctx;
+		if(node.classes[1]=="syn"){
+			tmp_l_ctx=ctx.concat().filter(function(e){return e.a!=rule.l.a});
+			tmp_r_ctx=ctx;
+		}
+		else if(node.classes[1]=="deg"){
+			tmp_l_ctx=ctx;
+			tmp_r_ctx=ctx.concat().filter(function(e){return e.a!=rule.l.a});
+		}else{
+			tmp_l_ctx=ctx;
+			tmp_r_ctx=ctx;
+		}
+			
+		
 		var ret="";
-		ret+=sToText(node,rule.l,ctx);
+		ret+=sToText(node,rule.l,tmp_l_ctx);
 		ret+=" -> ";
-		ret+=sToText(node,rule.r,ctx);
+		ret+=sToText(node,rule.r,tmp_r_ctx);
 		var rate="";
 		for(var i=0;i<node.sons.length;i++){
 			if(layerG.nodes[layerG.nodesHash[node.sons[i]]].classes[0]=="attribute" && layerG.nodes[layerG.nodesHash[node.sons[i]]].label[0]=="rate")
