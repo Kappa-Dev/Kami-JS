@@ -1425,9 +1425,10 @@ function dragended(d) {
 						self.addNode(tmp_ctx.classes.concat(),tmp_ctx.label.concat(),[],tmp_ctx.x,tmp_ctx.y);
 						convert_table[tmp_ctx.id]=[self.lastNode()];
 					}
-
+					var finded=false;
 					for(var l=0;l<act_links.length;l++){
 						if(act_links[l].sourceID==tmp_ctx.id || act_links[l].targetID==tmp_ctx.id){
+							finded=true;
 							if(convert_table[tmp_ctx.id].length==1 || tmp_node.classes[1]=="bnd"){
 								if(tmp_node.classes[1]!="syn" && tmp_node.classes[1]!="deg"){
 									self.addNode(["key_res"],[],[convert_table[tmp_ctx.id][0]]);
@@ -1459,7 +1460,10 @@ function dragended(d) {
 										self.addEdge([self.lastNode()],convert_table[act_links[l].sourceID]);
 							}
 						}
-					}	
+					}
+					if(!finded){
+						self.addCtx(convert_table[tmp_node.id],[convert_table[tmp_ctx.id][0]],null,layerG.copyACtx(tmp_node.apply_context));
+					}					
 				}
 				if(tmp_ctx.classes[0]=="attribute" || tmp_ctx.classes[0]=="flag"){
 					if(typeof(convert_table[tmp_ctx.id])=="undefined" || convert_table[tmp_ctx.id]==null){
@@ -1948,27 +1952,28 @@ function dragended(d) {
 				for(var i=0;i<left_side.length;i++){
 					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c] ){
 						nop=true;
-						//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
+						
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.left.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else  ret.left.push({e:d.context[c],v:null});
-						//}
+
 					}
 				}
-			}if(right_side!=null){
+			}
+			if(right_side!=null){
 				for(var i=0;i<right_side.length;i++){
 					if(right_side[i].sourceID==d.context[c] || right_side[i].targetID==d.context[c]){
 						nop=true;
-						//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
+						
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.right.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else ret.right.push({e:d.context[c],v:null});
-						//}
+
 					}
 				}
-			}if(!nop){
-				//if(d.classes[1]!="syn" && d.classes[1]!="deg"){
+			}
+			if(!nop){
+			
 				if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.ctx.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 				else ret.ctx.push({e:d.context[c],v:null});
-				//}
 			}
 		}
 		return ret;
