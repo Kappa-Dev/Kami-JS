@@ -134,18 +134,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		svg_content.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 	}
 
-/*function dragstarted(d) {
-  d3.event.sourceEvent.stopPropagation();
-  d3.select(this).classed("dragging", true);
-}
 
-function dragged(d) {
-  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-}
-
-function dragended(d) {
-  d3.select(this).classed("dragging", false);
-}*/
 	//update all the SVG elements
 	var update = function(){
 		//links svg representation
