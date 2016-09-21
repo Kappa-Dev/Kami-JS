@@ -60,7 +60,7 @@ var loadFile = function(data){
 		if(gGraph!=null)
 			yep=confirm("confirm the removal of the old graph ?");
 		if(yep){
-			d3.select("#graph").selectAll('*').remove();
+			d3.select("#graph").select(".svg_zoom_content").selectAll('*').remove();
 			delete(gGraph);
 			gGraph = new GraphicGraph('graph');
 			gGraph.init();	

@@ -10,6 +10,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var width;
 	var	height;//menu is 30px heigth
 	var svg; 
+	var svg_content;
 	var drag;
 	var dynG;//the force layout graph for this graphical graph
 	var s_node,s_action,s_link,s_binder;//graphical object for node,action,link and binders
@@ -58,12 +59,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	this.wakeUp = function wakeUp(val){//speed up tick function
 		dynG.getForce().start();
 		if(!(typeof(val)!="undefined" && val!=null && !val))
-			svg.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
+			svg_content.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
 		for(var i=0;i<300;i++){
 			dynG.getForce().tick();
 		}
 		if(first_init)
-				svg.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
+				svg_content.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
 		first_init=true;
 	};
 	this.log = function log(){//output layerGraph data
@@ -90,19 +91,18 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		nuggDrag=nuggDynG.getForce().drag().on("dragstart", dragstart);
 		//initialize
 		first_init=false;
-		
 		var zoom = d3.behavior.zoom()
 		.scaleExtent([0.02, 1])
 		.on("zoom", zoomed);
-		var drg = d3.behavior.drag()
+		/*var drg = d3.behavior.drag()
 		.origin(function(d) { return d; })
 		.on("dragstart", dragstarted)
 		.on("drag", dragged)
-		.on("dragend", dragended);
-		var svg_pan=d3.select("#"+containerID).append("svg:svg")
+		.on("dragend", dragended);*/
+		svg=d3.select("#"+containerID).append("svg:svg")
 			.attr("width",width)
 			.attr("height",height);
-		svg_pan.append("svg:defs").selectAll("marker")
+		svg.append("svg:defs").selectAll("marker")
 		.data(["pos_end","neg_end"])      // Different link/path types can be defined here
 		.enter().append("svg:marker")    // This section adds in the arrows
 		.attr("id", function(d){return d;})
@@ -114,10 +114,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		.attr("markerUnits","strokeWidth")
 		.append("svg:path")
 		.attr("d", "M2,2 L2,13 L8,7 L2,2");
-		svg_pan.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
+		svg.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
 		//svg=svg_pan.append("g").call(zoom).call(drg);
-		svg=svg_pan;
 		svg.call(zoom);
+		svg_content=svg.append("g").classed("svg_zoom_content",true);
 		d3.select("#"+containerID).append("div")
 			.classed("n_tooltip",true)
 			.style("visibility","hidden");
@@ -129,19 +129,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		
 	};
 	function zoomed() {
-		console.log(d3.event.translate);
-		d3.event.stopPropagation;
-		var scale=svg.attr("transform")?svg.attr("transform").split("(")[2]:1;
-		console.log(scale<d3.event.scale + ")");
-		var trs=d3.event.translate;
-		trs[0]=trs[0]<0?0:trs[0];
-		trs[0]=trs[0]>width?width:trs[0];
-		trs[1]=trs[1]<0?0:trs[1];
-		trs[1]=trs[1]>height?height:trs[1];
-		svg.attr("transform", "translate(" + trs + ")scale(" + d3.event.scale + ")");
+		if(!d3.event.sourceEvent.ctrlKey)return;
+		//d3.event.stopPropagation;
+		svg_content.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 	}
 
-function dragstarted(d) {
+/*function dragstarted(d) {
   d3.event.sourceEvent.stopPropagation();
   d3.select(this).classed("dragging", true);
 }
@@ -152,13 +145,13 @@ function dragged(d) {
 
 function dragended(d) {
   d3.select(this).classed("dragging", false);
-}
+}*/
 	//update all the SVG elements
 	var update = function(){
 		//links svg representation
 		dynG.init();
 		
-		s_link = svg.selectAll(".link")
+		s_link = svg_content.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
         s_link.enter().insert("line","g")
 			.classed("link",true)
@@ -173,7 +166,7 @@ function dragended(d) {
 		d3.selectAll(".negative").attr("marker-end", "url(#neg_end)");
         s_link.exit().remove();
 		//none action nodes svg representation
-		s_node = svg.selectAll("g.node")
+		s_node = svg_content.selectAll("g.node")
 			  .data(function(){return layerG.nodes.filter(function(d){return d.classes[0]!="action"})}, function(d) { return d.id;});
 		var nodeEnter = s_node.enter().insert("g")
             .classed("node",true)
@@ -199,7 +192,7 @@ function dragended(d) {
 			.on("dblclick",clickText);
 		s_node.exit().remove();
 		//action nodes svg representation
-		s_action = svg.selectAll("g.action")
+		s_action = svg_content.selectAll("g.action")
 			  .data(function(){return layerG.nodes.filter(function(d){return d.classes[0]=="action" && d.classes[1]!="binder"})}, function(d) { return d.id;});
 		var actionEnter = s_action.enter().insert("g")
 			.classed("action",true)
@@ -227,7 +220,7 @@ function dragended(d) {
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_action.exit().remove();
-		s_binder = svg.selectAll("circle.binder")
+		s_binder = svg_content.selectAll("circle.binder")
 			.data(function(){return layerG.nodes.filter(function(d){return d.classes[0]=="action" && d.classes[1]=="binder"})}, function(d) { return d.id;});
 		var binderEnter = s_binder.enter().insert("circle")
 			.classed("binder",true)
@@ -510,7 +503,7 @@ function dragended(d) {
 					.style("display","initial");
 				if(!nugget_add){
 					this.clearStack();
-					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				nugget_add=true;
 				edition=false;
@@ -536,7 +529,7 @@ function dragended(d) {
 				kr_show=true;
 				lcg_view=false;
 				kappa_view=false;
-				svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+				svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				d3.select("#menu_f").selectAll("input").property("disabled",true)
 					.style("display","none");
 				d3.select("#import_f").property("disabled",false)
@@ -560,7 +553,7 @@ function dragended(d) {
 					dynG.getForce().stop();
 					dynG=nuggDynG;
 					drag=nuggDrag;
-					svg.selectAll("*").remove();
+					svg_content.selectAll("*").remove();
 					update();
 					modified=false;
 				}
@@ -576,7 +569,7 @@ function dragended(d) {
 					.style("display","initial");
 				if(!edition){
 					this.clearStack();
-					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				nugget_add=false;
 				edition=true;
@@ -586,7 +579,7 @@ function dragended(d) {
 				break;
 			case "lcg_view":
 				var selected_l=[];
-				svg.selectAll("g").filter(".selected").filter(".action").each(function(d){selected_l.push(d.id)});
+				svg_content.selectAll("g").filter(".selected").filter(".action").each(function(d){selected_l.push(d.id)});
 				if(selected_l==null || selected_l.length==0){
 					alert("Select at least one action");
 					return;
@@ -615,13 +608,13 @@ function dragended(d) {
 					dynG.getForce().stop();
 					dynG=lcgDynG;
 					drag=lcgDrag;
-					svg.selectAll("*").remove();
+					svg_content.selectAll("*").remove();
 					update();
 					if(modified || confirm("Generate a new LCG ?")){
 						layerG.init();
 						lcgConvert(selected_l);
 					}
-					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
 				break;
 			case "kappa_view"://nobody care : open jasim !
@@ -649,7 +642,7 @@ function dragended(d) {
 		}else if(d3.select(this).classed("action") && !d3.select(this).classed("binder")){
 			var ctx_lst=[];
 			for(var i=0;i<d.context.length;i++){
-				var ctx_el=svg.selectAll("g").filter(function(e){return e.id==d.context[i];});
+				var ctx_el=svg_content.selectAll("g").filter(function(e){return e.id==d.context[i];});
 				ctx_el.classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=true);
 					if(typeof(d.apply_context)!="undefined" && d.apply_context!=null){
 						var tmp_node=ctx_el.datum();
@@ -695,7 +688,7 @@ function dragended(d) {
 			d3.select(".n_tooltip").style("visibility","hidden")
 								.text("");
 			for(var i=0;i<d.context.length;i++){
-				svg.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false)
+				svg_content.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected_overlay",layerG.nodes[layerG.nodesHash[d.context[i]]].selected_over=false)
 																				 .classed("exist",false)
 																				 .classed("existAlway",false)
 																				 .classed("alway",false);	
@@ -714,7 +707,7 @@ function dragended(d) {
 		menu=[{
 			title: "Select Source-target",
 			action: function(elm,d,i){
-				svg.selectAll("g").filter(function(e){return (e.id==d.sourceID || e.id==d.targetID || (d.source.classes[0]=="action" && d.source.father!=null && d.source.father==e.id) || (d.target.classes[0]=="action" && d.target.father!=null && d.target.father==e.id));})
+				svg_content.selectAll("g").filter(function(e){return (e.id==d.sourceID || e.id==d.targetID || (d.source.classes[0]=="action" && d.source.father!=null && d.source.father==e.id) || (d.target.classes[0]=="action" && d.target.father!=null && d.target.father==e.id));})
 					.classed("selected",function(d){ return layerG.nodes[layerG.nodesHash[d.id]].selected=true;});
 			}
 		}];
@@ -823,13 +816,13 @@ function dragended(d) {
 						if(lbl!="") self.addCtx(d.id,lbl.split(","));
 					}
 				});
-			}if((evt_trg.classed("attribute") || evt_trg.classed("flag") || evt_trg.classed("region") || evt_trg.classed("key_res")) && !d3.select("g.selected").empty()&& correctParenting(evt_trg,d3.select("g.selected"))){
+			}if((evt_trg.classed("attribute") || evt_trg.classed("flag") || evt_trg.classed("region") || evt_trg.classed("key_res")) && !svg_content.select("g.selected").empty()&& correctParenting(evt_trg,svg_content.select("g.selected"))){
 				menu.push({
 					title: "Change Parent",
 					action: function(elm,d,i){
 						if(d.father)
 							self.rmParent(d.id);
-						self.addParent(d.id,d3.select("g.selected").datum().id);
+						self.addParent(d.id,svg_content.select("g.selected").datum().id);
 					}
 				});
 			}
@@ -841,7 +834,7 @@ function dragended(d) {
 				}
 			});
 		}if(edition || lcg_view){
-			var tmp_select = d3.selectAll("g.selected").filter(function(d){
+			var tmp_select = svg_content.selectAll("g.selected").filter(function(d){
 														for(var i=0;i<d.classes.length;i++){
 															if(!evt_trg.classed(d.classes[i]))
 																return false;
@@ -852,7 +845,7 @@ function dragended(d) {
 				{
 					title: "Merge with selected nodes",
 					action:function(elm,d,i){
-						var tmp_select = d3.selectAll("g.selected").filter(function(d){
+						var tmp_select = svg_content.selectAll("g.selected").filter(function(d){
 														for(var i=0;i<d.classes.length;i++){
 															if(!evt_trg.classed(d.classes[i]))
 																return false;
@@ -882,13 +875,13 @@ function dragended(d) {
 			window.alert("Please fill all forms");
 			return [];
 		}
-		if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
+		if((edition || nugget_add) && !svg_content.selectAll("g.selected").empty()){
 			menu=[
 			{
 				title: "link to all selected",
 				action: function(elm,d,i){
 					d3.event.stopPropagation();
-					var selected=d3.selectAll("g.selected");
+					var selected=svg_content.selectAll("g.selected");
 					selected.each(function(d2){
 						if(layerG.nodes[layerG.nodesHash[d.father]].classes[1]!="mod"){
 							if((layerG.nodes[layerG.nodesHash[d.father]].classes[1]=="bnd"|| layerG.nodes[layerG.nodesHash[d.father]].classes[1]=="brk") &&(d2.classes[0]=="attribute" ||  d2.classes[0]=="flag")){
@@ -915,7 +908,7 @@ function dragended(d) {
 												}
 												self.addCtx(d.father,[d2.id],tmp_obj);
 												self.addEdge(d.id,d2.id);
-												if(svg.selectAll("input").empty())ctx_mode=false;
+												if(svg_content.selectAll("input").empty())ctx_mode=false;
 								}
 							},d2);
 
@@ -984,16 +977,16 @@ function dragended(d) {
 				title: "Select context",
 				action: function(elm,d,i){
 					for(var i=0;i<d.context.length;i++)
-						svg.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
+						svg_content.selectAll("g").filter(function(e){return e.id==d.context[i];}).classed("selected",layerG.nodes[layerG.nodesHash[d.context[i]]].selected=true);
 				}
 			});
 		}
-		if(nugget_add && !d3.selectAll("g.selected").filter(function(dd){return d3.select(d3.event.target.parentNode).datum().context.indexOf(dd.id)!=-1;}).empty()){//edition of the element special context
+		if(nugget_add && !svg_content.selectAll("g.selected").filter(function(dd){return d3.select(d3.event.target.parentNode).datum().context.indexOf(dd.id)!=-1;}).empty()){//edition of the element special context
 			menu.push(
 			{
 				title: "specify element application",
 				action:function(elm,d,i){
-					var selected=d3.selectAll("g.selected").filter(function(dd){return d.context.indexOf(dd.id)!=-1;});
+					var selected=svg_content.selectAll("g.selected").filter(function(dd){return d.context.indexOf(dd.id)!=-1;});
 					var ret={};
 					selected.each(function(d2){
 						ctx_mode=true;
@@ -1012,14 +1005,14 @@ function dragended(d) {
 				}
 			});
 		}
-		if(nugget_add && !d3.selectAll("g.selected").empty()){//in nugget mode, allow to link elements to the action
+		if(nugget_add && !svg_content.selectAll("g.selected").empty()){//in nugget mode, allow to link elements to the action
 			var selected_elt=d3.select(d3.event.target.parentNode);
 			var tmp_child=null;
 			if(selected_elt.classed("bnd") || selected_elt.classed("brk")){ //for bnd & break : link is on both binders, the elemet is also added to the context. we only can link agent, region and key_res
 				tmp_child=[{
 					title: "link right",
 					action:function(elm,d,i){
-						var selected=d3.selectAll("g.selected");
+						var selected=svg_content.selectAll("g.selected");
 						d3.event.stopPropagation();
 						for(var i=0;i<d.sons.length;i++){
 							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
@@ -1036,7 +1029,7 @@ function dragended(d) {
 				},{
 					title: "link left",
 					action:function(elm,d,i){
-						var selected=d3.selectAll("g.selected");
+						var selected=svg_content.selectAll("g.selected");
 						d3.event.stopPropagation();
 						for(var i=0;i<d.sons.length;i++){
 							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="left"){
@@ -1057,7 +1050,7 @@ function dragended(d) {
 					title: "link",
 					action:function(elm,d,i){
 						d3.event.stopPropagation();
-						var selected=d3.selectAll("g.selected");
+						var selected=svg_content.selectAll("g.selected");
 						var binder_id;
 						for(var i=0;i<d.sons.length;i++){
 							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
@@ -1079,7 +1072,7 @@ function dragended(d) {
 										}
 										self.addCtx(d.id,[d2.id],tmp_obj);
 										self.addEdge(binder_id,d2.id);
-										if(svg.selectAll("input").empty())ctx_mode=false;
+										if(svg_content.selectAll("input").empty())ctx_mode=false;
 									}
 								},d2);
 									}
@@ -1094,7 +1087,7 @@ function dragended(d) {
 				tmp_child=[{
 					title: "link",
 					action:function(elm,d,i){
-						var selected=d3.selectAll("g.selected");
+						var selected=svg_content.selectAll("g.selected");
 						d3.event.stopPropagation();
 						for(var i=0;i<d.sons.length;i++){
 							if(layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[1] == "binder" && layerG.nodes[layerG.nodesHash[d.sons[i]]].classes[2]=="right"){
@@ -1116,7 +1109,7 @@ function dragended(d) {
 			},{
 				title: "Add Selection to context",
 				action:function(elm,d,i){
-					var selected=d3.selectAll("g.selected");
+					var selected=svg_content.selectAll("g.selected");
 					d3.event.stopPropagation();
 					selected.each(function(d2){
 						if(d.id!=d2.id){
@@ -1127,7 +1120,6 @@ function dragended(d) {
 								var el = d3.select(this);
 								var tab=d2.context;
 								var t2=null;
-								
 								var ret = inputMenu("values of : "+d2.id,null,null,tab,true,false,'center',function(cb){
 									if(cb.check){
 										var tmp_obj={};
@@ -1137,48 +1129,9 @@ function dragended(d) {
 												self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
 										}
 										self.addCtx(d.id,[d2.id],tmp_obj);
-										if(svg.selectAll("input").empty())ctx_mode=false;
+										if(svg_content.selectAll("input").empty())ctx_mode=false;
 									}
-								},d2);
-								//casablah !!!
-								/*el.classed("hilighted",true);
-								var frm = svg.append("foreignObject");
-								var inp = frm.attr("x", getNodeX(d2)-50)
-											.attr("y", getNodeY(d2)-12)
-											.attr("width", 100)
-											.attr("height", 25)
-											.append("xhtml:form")
-											.append("label")
-												.classed("hilighted",true)
-												.attr("for",function(){return "i_"+d2.id;})
-												.text(function(){if(d2.label!=null && d2.label.length>0)return "value for "+d2.label[0]; else return "value for "+d2.id})
-											.append("input")
-												.attr("id",function(){return "i_"+d2.id;})
-												.attr("value", function() {if(d2.context!=null) return d2.context.join(","); else return "";})
-												.attr("style", "width: 294px;")
-												.on("focus",function(){
-													d3.select(this).on("keypress",function(){
-														d3.event.stopPropagation();
-														d3.event.preventDefault();
-														var txt = inp.node().value;
-														if(d3.event.keyCode == 13 && typeof(txt)!= 'undefined' && txt!=null && txt!=""){
-															var tmp_obj={};
-															tmp_obj[d2.id]=txt.split(",");
-															for(var i=0;i<tmp_obj[d2.id].length;i++){
-																if(d2.context.indexOf(tmp_obj[d2.id][i])==-1)
-																	self.addCtx(d2.id,[tmp_obj[d2.id][i]],null);
-															}
-															self.addCtx(d.id,[d2.id],tmp_obj);
-															d3.select(this.parentNode.parentNode).remove();
-															el.classed("hilighted",false);
-															if(svg.selectAll("input").empty())ctx_mode=false;
-														}else if(d3.event.keyCode == 13 && (typeof(txt)== 'undefined' || txt==null || txt=="")){
-															d3.event.preventDefault();
-														}
-													});
-												})
-												.on("blur",function() {d3.select(this).on("keypress",null);});*/
-											
+								},d2);											
 							}
 					} });
 					selected.classed("selected",function(d){return d.selected=false;});
@@ -1186,10 +1139,10 @@ function dragended(d) {
 			},{
 				title: "remove Selection from context",
 				action:function(elm,d,i){
-					var selected=d3.selectAll("g.selected");
+					var selected=svg_content.selectAll("g.selected");
 					d3.event.stopPropagation();
 					selected.each(function(d2){
-						var from_to=d3.selectAll(".link").filter(function(fd){
+						var from_to=svg_content.selectAll(".link").filter(function(fd){
 							if(fd.sourceID == d2.id)
 								return fd.target.classes[0]=="action" && fd.target.father!=null && fd.target.father==d.id;
 							else if(fd.targetID == d2.id)
@@ -1205,7 +1158,7 @@ function dragended(d) {
 				}
 			});
 		}
-		var tmp_select = d3.selectAll("g.selected").filter(function(d){
+		var tmp_select = svg_content.selectAll("g.selected").filter(function(d){
 														for(var i=0;i<d.classes.length;i++){
 															var evt_load=d3.select(d3.event.target.parentNode);
 															if(!evt_load.classed(d.classes[i])){
@@ -1219,13 +1172,13 @@ function dragended(d) {
 			{
 				title: "Merge with selected Actions",
 				action:function(elm,d,i){
-					var selected=d3.selectAll("g.selected").filter(function(d){return d.classes[0]=="action"});
+					var selected=svg_content.selectAll("g.selected").filter(function(d){return d.classes[0]=="action"});
 					selected.each(function(d2){
 						self.mergeNode(d.id,d2.id);
 					});
 				}
 			});
-		}if(edition && d3.selectAll("g.selected").size()==1 && d3.select("g.selected").classed("action")){//allow to add influence between action
+		}if(edition && svg_content.selectAll("g.selected").size()==1 && svg_content.select("g.selected").classed("action")){//allow to add influence between action
 				menu.push(
 				{
 					title: "Add influence from Selected action",
@@ -1233,12 +1186,12 @@ function dragended(d) {
 					{
 						title:"Positive",
 						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
+							var select=svg_content.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
 						}
 					},{
 						title:"Negative",
 						action: function(elm,d,i){
-							var select=d3.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
+							var select=svg_content.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
 						}
 					}]
 				});
@@ -1255,19 +1208,19 @@ function dragended(d) {
 			{
 				title: "Unlock all",
 				action: function(elm,d,i){
-					svg.selectAll("g").classed("fixed",function(d){return d.fixed=false;});
+					svg_content.selectAll("g").classed("fixed",function(d){return d.fixed=false;});
 					update();
 				}
 			},{
 				title: "Select all",
 				action: function(elm,d,i){
-					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=true;});
+					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=true;});
 					update();
 				}
 			},{
 				title: "Unselect all",
 				action: function(elm,d,i){
-					svg.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
+					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 					update();
 				}
 			}];
@@ -1282,12 +1235,12 @@ function dragended(d) {
 					else self.addNode(["agent"],lbl.split(","),[],mousepos[0],mousepos[1]);
 				}	
 			});
-		}if((edition || nugget_add) && !d3.selectAll("g.selected").empty()){
+		}if((edition || nugget_add) && !svg_content.selectAll("g.selected").empty()){
 				menu.push(
 				{
 					title: "Remove selected",
 					action: function(elm,d,i){
-						var select=d3.selectAll("g.selected");
+						var select=svg_content.selectAll("g.selected");
 						if(confirm('Are you sure you want to delete '+select[0].length+' nodes ?'))
 							select.each(function(d2){self.removeNodeR(d2.id);});
 					}
@@ -1557,7 +1510,7 @@ function dragended(d) {
 		// notice that formal name of a node is : id _ label list if any, separeted by _
 		var kappa_code="#### Signatures\n\n";
 		var ag_name_var_l={};
-		svg.selectAll("g").filter(".agent").each(function(d){
+		svg_content.selectAll("g").filter(".agent").each(function(d){
 			var ag_def="%agent: "+d.id+"_"+d.label.join("_")+"(";
 			ag_name_var_l[d.id]=[];
 			ag_name_var_l[d.id].push(d.id+"_"+d.label.join("_")+"(");
@@ -1591,7 +1544,7 @@ function dragended(d) {
 		/************************************************************/
 		/*************************** adding rules *******************/
 		var rule_list={};
-		svg.selectAll("g").filter(".action").each(function(d){
+		svg_content.selectAll("g").filter(".action").each(function(d){
 			genAction(d,rule_list);
 		});
 		kappa_code+="#### rules\n\n";
@@ -1604,8 +1557,8 @@ function dragended(d) {
 		//var
 		var initial_val="";
 		var observer="";
-		var select_act=svg.selectAll("g").filter(".selected").filter(".action").data();
-		var select_ag=svg.selectAll("g").filter(".selected").filter(".agent").data();
+		var select_act=svg_content.selectAll("g").filter(".selected").filter(".action").data();
+		var select_ag=svg_content.selectAll("g").filter(".selected").filter(".agent").data();
 		for(var i=0;i<select_act.length;i++){
 			for(var j=0;j<rule_list[select_act[i].id].length;j++){
 			observer+="%obs: '"+select_act[i].id+"_"+j+"' |";
@@ -1897,7 +1850,6 @@ function dragended(d) {
 		return [ag_n[0],site_n[0]];
 	}
 	var fullName = function(id){
-		console.log("the id "+id);
 		if(id==null || typeof layerG.nodesHash[id]=='undefined' ||  layerG.nodesHash[id]==null) return "";
 		var tmp_node=layerG.nodes[layerG.nodesHash[id]];
 		return tmp_node.id+"_"+tmp_node.label.join("_");
@@ -1951,20 +1903,18 @@ function dragended(d) {
 		var left_side=null;
 		var right_side=null;
 		var ret={left:[],right:[],ctx:[]};
-		var l_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="left" && d1.father==d.id});//getting left and right edges link to the action.
-		if(!l_bind.empty()) left_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==l_bind.datum().id || d1.targetID==l_bind.datum().id}).data();
-		var r_bind=svg.selectAll(".binder").filter(function(d1){return d1.classes[2]=="right" && d1.father==d.id});
-		if(!r_bind.empty()) right_side=svg.selectAll(".links").filter(function(d1){return d1.sourceID==r_bind.datum().id || d1.targetID==r_bind.datum().id}).data();
+		var l_bind=svg_content.selectAll(".binder").filter(function(d1){return d1.classes[2]=="left" && d1.father==d.id});//getting left and right edges link to the action.
+		if(!l_bind.empty()) left_side=svg_content.selectAll(".links").filter(function(d1){return d1.sourceID==l_bind.datum().id || d1.targetID==l_bind.datum().id}).data();
+		var r_bind=svg_content.selectAll(".binder").filter(function(d1){return d1.classes[2]=="right" && d1.father==d.id});
+		if(!r_bind.empty()) right_side=svg_content.selectAll(".links").filter(function(d1){return d1.sourceID==r_bind.datum().id || d1.targetID==r_bind.datum().id}).data();
 		for(var c=0;c<d.context.length;c++){
 			var nop=false;
 			if(left_side!=null){
 				for(var i=0;i<left_side.length;i++){
 					if(left_side[i].sourceID==d.context[c] || left_side[i].targetID==d.context[c] ){
 						nop=true;
-						
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.left.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else  ret.left.push({e:d.context[c],v:null});
-
 					}
 				}
 			}
@@ -1972,15 +1922,12 @@ function dragended(d) {
 				for(var i=0;i<right_side.length;i++){
 					if(right_side[i].sourceID==d.context[c] || right_side[i].targetID==d.context[c]){
 						nop=true;
-						
 						if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.right.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 						else ret.right.push({e:d.context[c],v:null});
-
 					}
 				}
 			}
 			if(!nop){
-			
 				if(d.valued_context!=null && checkExist(d.valued_context[d.context[c]])) ret.ctx.push({e:d.context[c],v:d.valued_context[d.context[c]]});
 				else ret.ctx.push({e:d.context[c],v:null});
 			}
@@ -1992,7 +1939,7 @@ function dragended(d) {
 var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d){
 	//d3.event.stopPropagation();
 	//d3.event.preventDefault();
-		var fo=svg.append("foreignObject")
+		var fo=svg_content.append("foreignObject")
 							.attr("width", 100);
     var form=fo.append("xhtml:form")
     					 .attr("width",100)
