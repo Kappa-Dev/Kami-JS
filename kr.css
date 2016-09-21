@@ -228,12 +228,12 @@ svg {
 	font-family: Capriola, Helvetica, sans-serif;
 }
 #kr{
-	margin-left:4%;
+	margin-left:1%;
 }
 #replay{
 	top:0;
 	float:right;
-	margin-right:0.3%;
+	margin-right:0.1%;
 	height:90%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
@@ -246,9 +246,7 @@ svg {
 }
 #import{
 	float:left;
-	margin-top:3%;
-	margin-bottom:3%;
-	height:90%;
+	height:80%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
 	text-align:center;
@@ -260,9 +258,7 @@ svg {
 }
 #export{
 	float:right;
-	margin-top:3%;
-	margin-bottom:3%;
-	height:90%;
+	height:80%;
 	margin-right:50px;
 	border:2px solid #0f71ba;
 	border-radius:5px;
@@ -275,7 +271,7 @@ svg {
 }
 #import_f{
 	float:left;
-	margin-left:15px;
+	margin-left:0.1%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
 	color:rgb(251, 249, 200);
@@ -286,8 +282,6 @@ svg {
 }
 #kappa{
 	float:left;
-	margin-top:5%;
-	margin-bottom:5%;
 	height:82%;
 	margin-left:5%x;
 	border:2px solid rgba(214,128,138,1);
