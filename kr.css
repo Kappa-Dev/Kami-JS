@@ -1,3 +1,26 @@
+@media all and (min-width: 50px)   {  body  { font-size:0.33em;  } }
+@media all and (min-width: 100px)  {  body  { font-size:0.36em;  } }
+@media all and (min-width: 200px)  {  body  { font-size:0.40em;  } }
+@media all and (min-width: 300px)  {  body  { font-size:0.43em;  } }
+@media all and (min-width: 400px)  {  body  { font-size:0.46em;  } }
+@media all and (min-width: 500px)  {  body  { font-size:0.5em;  } }
+@media all and (min-width: 600px)  {  body  { font-size:0.53em;  } }
+@media all and (min-width: 700px)  {  body  { font-size:0.56em;  } }
+@media all and (min-width: 800px)  {  body  { font-size:0.60em;  } }
+@media all and (min-width: 900px)  {  body  { font-size:0.63em;  } }
+@media all and (min-width: 1000px) {  body  { font-size:0.66em;  } }
+@media all and (min-width: 1100px) {  body  { font-size:0.70em;  } }
+@media all and (min-width: 1200px) {  body  { font-size:0.73em;  } }
+@media all and (min-width: 1300px) {  body  { font-size:0.76em;  } }
+@media all and (min-width: 1400px) {  body  { font-size:0.80em;  } }
+@media all and (min-width: 1500px) {  body  { font-size:0.83em;  } }
+@media all and (min-width: 1500px) {  body  { font-size:0.86em;  } }
+@media all and (min-width: 1600px) {  body  { font-size:0.90em;  } }
+@media all and (min-width: 1700px) {  body  { font-size:0.93em;  } }
+@media all and (min-width: 1800px) {  body  { font-size:0.96em;  } }
+@media all and (min-width: 1900px) {  body  { font-size:1em;  } }
+@media all and (min-width: 2000px) {  body  { font-size:1.03em;  } }
+
  body{
 	display:flex;
 	padding:0px;
