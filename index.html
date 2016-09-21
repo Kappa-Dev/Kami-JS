@@ -106,16 +106,16 @@ function handleDragOver(evt) {
 	  <input type="file" id="import_f" value="data.json">
 	  <input type="button" id="import" value="Import Data" onclick="loadJson()">
 	  <input type="button" id="export" value="Export Data" onclick="jsonformater.outputJs()">
-	  <input type="button" id="kr" value="view KR"  onclick="gGraph.setState('kr_view')">
-	  <input type="button" id="edit" value="Edit KR" onclick="gGraph.setState('kr_edit')">
-	  <input type="button" id="nugget" value="Add Nugget" onclick="gGraph.setState('nugget_view')">
-	  <input type="button" id="update" value="Update" onclick="gGraph.save()">
-	  <input type="button" id="lcg" value="LCG" onclick="gGraph.setState('lcg_view')">
-	  <input type="button" id="kappa" value="To Kappa" onclick="gGraph.setState('kappa_view')">
-	  <input type="button" id="undo" value="Undo" onclick="gGraph.unStack()">
+	  <input type="button" id="kr" value="view KR"  onclick="gGraph.setState('kr_view')" class="tab_el">
+	  <input type="button" id="edit" value="Edit KR" onclick="gGraph.setState('kr_edit')" class="tab_el">
+	  <input type="button" id="nugget" value="Add Nugget" onclick="gGraph.setState('nugget_view')" class="tab_el">
+	  <input type="button" id="lcg" value="LCG" onclick="gGraph.setState('lcg_view')" class="tab_el">
+	  <input type="button" id="kappa" value="To Kappa" onclick="gGraph.setState('kappa_view')" class="tab_el">
 	  <input type="button" id="replay" value="Reset Graph position" onclick="gGraph.wakeUp()">
 	</form>
       </div>
+	  <div id="bottom_top_chart">
+	  </div>
       <div id="graph">
       </div>
     </div>
