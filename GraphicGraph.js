@@ -1513,7 +1513,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		kappa_code+=observer;
 		kappa_code+="#### Initial conditions\n";
 		kappa_code+=quantities;
-		var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
+		var url = "http://dev.executableknowledge.org/try/index.html?host=http://localhost:8080/&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
 		window.open(url, '_blank');
 		window.focus();
 		
