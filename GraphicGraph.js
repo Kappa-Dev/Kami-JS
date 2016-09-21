@@ -175,7 +175,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.attr("x", 0)
 			.attr("dy", ".35em")
 			.attr("text-anchor", "middle")
-			.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
+			.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_node.exit().remove();
@@ -204,7 +204,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.attr("x", function(d){return d.toInt()/2;})
 			.attr("dy", function(d){return d.toInt()/4;})
 			.attr("text-anchor", "middle")
-			.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id})
+			.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_action.exit().remove();
@@ -1266,7 +1266,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			if(cb.line){
 				layerG.rmLabel(d.id,[]);
 				layerG.addLabel(d.id,cb.line);
-				el.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id});
+				el.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id});
 			}
 		},d);
 		
