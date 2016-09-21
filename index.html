@@ -103,14 +103,13 @@ function handleDragOver(evt) {
 <div id="main-container">
       <div id="menu">
 	<Form id="menu_f">
-	  <input type="file" id="import_f" value="data.json">
-	  <input type="button" id="import" value="Import Data" onclick="loadJson()">
+	  <input type="file" id="import_f" value="data.json" class="removable_tab">
+	  <input type="button" id="import" value="Import Data" onclick="loadJson()" class="removable_tab">
 	  <input type="button" id="export" value="Export Data" onclick="jsonformater.outputJs()">
 	  <input type="button" id="kr" value="view KR"  onclick="gGraph.setState('kr_view')" class="tab_el">
 	  <input type="button" id="edit" value="Edit KR" onclick="gGraph.setState('kr_edit')" class="tab_el">
-	  <input type="button" id="nugget" value="Add Nugget" onclick="gGraph.setState('nugget_view')" class="tab_el">
 	  <input type="button" id="lcg" value="LCG" onclick="gGraph.setState('lcg_view')" class="tab_el">
-	  <input type="button" id="kappa" value="To Kappa" onclick="gGraph.setState('kappa_view')" class="tab_el">
+	  <input type="button" id="kappa" value="To Kappa" onclick="gGraph.setState('kappa_view')" class="removable_tab">
 	  <input type="button" id="replay" value="Reset Graph position" onclick="gGraph.wakeUp()">
 	</form>
       </div>

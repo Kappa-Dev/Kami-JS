@@ -129,7 +129,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		
 	};
 	function zoomed() {
-		if(!d3.event.sourceEvent.ctrlKey)return;
+		if(d3.event.sourceEvent==null || !d3.event.sourceEvent.ctrlKey)return;
 		//d3.event.stopPropagation;
 		svg_content.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 	}
@@ -150,7 +150,6 @@ function dragended(d) {
 	var update = function(){
 		//links svg representation
 		dynG.init();
-		
 		s_link = svg_content.selectAll(".link")
 			.data(layerG.links, function(d) { return d.source.id + "-" + d.target.id; });
         s_link.enter().insert("line","g")
@@ -187,7 +186,7 @@ function dragended(d) {
 			.attr("x", 0)
 			.attr("dy", ".35em")
 			.attr("text-anchor", "middle")
-			.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id})
+			.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_node.exit().remove();
@@ -458,19 +457,6 @@ function dragended(d) {
 							.style("display","initial");*/
 	};
 	this.unStack = function unStack(){//remove element from the undo stack and apply it !
-		/*
-		if(rewriter.length==0){
-			console.log("stack empty");
-			d3.select("#undo").property("disabled",true)
-							 .style("display","none");
-			return;
-		}
-		fun=rewriter.pop();
-		fun.f.apply(fun.o,fun.p);
-		if(fun.f == layerG.addLabel){
-			d3.select(fun.p[0]).select("text").text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
-		}
-		update();*/
 	};
 	this.unStackAll = function unStackAll(){//undo all the stack
 		/*
@@ -492,25 +478,6 @@ function dragended(d) {
 	};
 	this.setState = function setState(state){//set the graphical interface state : "nugget_view", "kr_view", "kr_edit", "lcg_view", "kappa_view"
 		switch(state){
-			case "nugget_view":
-				d3.select("#menu_f").selectAll("input").property("disabled",true)
-					.style("display","none");
-				d3.select("#kr").property("disabled",false)
-					.style("display","initial");
-				d3.select("#update").property("disabled",false)
-					.style("display","initial");
-				d3.select("#replay").property("disabled",false)
-					.style("display","initial");
-				if(!nugget_add){
-					this.clearStack();
-					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
-				}
-				nugget_add=true;
-				edition=false;
-				kr_show=false;
-				lcg_view=false;
-				kappa_view=false;
-				break;
 			case "kr_view":
 				if(!first_init){
 					rewriter=nuggS;
@@ -518,35 +485,16 @@ function dragended(d) {
 					dynG=nuggDynG;
 					drag=nuggDrag;
 				}
-				if(!lcg_view && rewriter.length>0 && !confirm('Are you sure you want to quit without saving your nuggets ?'))//if in nugget view, check if changes have been saved
-					return;
-				else if(rewriter.length >0 && (nugget_add || edition)){
-					this.unStackAll();
-					modified=false;
-				}
 				nugget_add=false;
 				edition=false;
 				kr_show=true;
 				lcg_view=false;
 				kappa_view=false;
 				svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
-				d3.select("#menu_f").selectAll("input").property("disabled",true)
-					.style("display","none");
-				d3.select("#import_f").property("disabled",false)
-					.style("display","initial");									   
-				d3.select("#import").property("disabled",false)
-					.style("display","initial");
-				d3.select("#export").property("disabled",false)
-					.style("display","initial");
-				d3.select("#lcg").property("disabled",false)
-					.style("display","initial");
-				d3.select("#nugget").property("disabled",false)
-					.style("display","initial");
-				d3.select("#edit").property("disabled",false)
-					.style("display","initial");
-				d3.select("#replay").property("disabled",false)
-					.style("display","initial");
-				this.clearStack();
+				d3.select("#menu_f").selectAll(".tab_el").style("background","none");
+				d3.select("#menu_f").select("#kr").style("background","linear-gradient(to bottom, #3fa4f0 0%, #0f71ba 100%)");
+				d3.select("#menu_f").selectAll(".removable_tab").property("disabled",false).style("display","initial");
+				d3.select("#menu_f").select("#kappa").property("disabled",true).style("display","none");
 				if(layerG===lcgG){
 					layerG=nuggG;
 					rewriter=nuggS;
@@ -559,19 +507,15 @@ function dragended(d) {
 				}
 				break;
 			case "kr_edit":
-				d3.select("#menu_f").selectAll("input").property("disabled",true)
-					.style("display","none");
-				d3.select("#kr").property("disabled",false)
-					.style("display","initial");
-				d3.select("#update").property("disabled",false)
-					.style("display","initial");
-				d3.select("#replay").property("disabled",false)
-					.style("display","initial");
+				this.setState("kr_view");
+				d3.select("#menu_f").selectAll(".tab_el").style("background","none");
+				d3.select("#menu_f").select("#edit").style("background","linear-gradient(to bottom, #3fa4f0 0%, #0f71ba 100%)");
+				d3.select("#menu_f").selectAll(".removable_tab").property("disabled",false).style("display","initial");
+				d3.select("#menu_f").select("#kappa").property("disabled",true).style("display","none");
 				if(!edition){
-					this.clearStack();
 					svg_content.selectAll("g").filter(function(d){return d.classes[0]!="action" || d.classes[1]!="binder"}).classed("selected",function(d){return d.selected=false;});
 				}
-				nugget_add=false;
+				nugget_add=true;
 				edition=true;
 				kr_show=false;
 				lcg_view=false;
@@ -581,21 +525,13 @@ function dragended(d) {
 				var selected_l=[];
 				svg_content.selectAll("g").filter(".selected").filter(".action").each(function(d){selected_l.push(d.id)});
 				if(selected_l==null || selected_l.length==0){
-					alert("Select at least one action");
-					return;
+					svg_content.selectAll("g").filter(".action").each(function(d){selected_l.push(d.id)});
 				}
-				d3.select("#menu_f").selectAll("input").property("disabled",true)
-				   .style("display","none");
-				d3.select("#kr").property("disabled",false)
-					.style("display","initial");
-				d3.select("#kappa").property("disabled",false)
-				   .style("display","initial");
-				d3.select("#update").property("disabled",false)
-					.style("display","initial");
-				d3.select("#export").property("disabled",false)
-					.style("display","initial");
-				d3.select("#replay").property("disabled",false)
-					.style("display","initial");
+				
+				d3.select("#menu_f").selectAll(".tab_el").style("background","none");
+				d3.select("#menu_f").select("#lcg").style("background","linear-gradient(to bottom, #3fa4f0 0%, #0f71ba 100%)");
+				d3.select("#menu_f").selectAll(".removable_tab").property("disabled",true).style("display","none");
+				d3.select("#menu_f").select("#kappa").property("disabled",false).style("display","initial");
 				nugget_add=false;
 				edition=false;
 				kr_show=false;
@@ -1341,7 +1277,7 @@ function dragended(d) {
 			if(cb.line){
 				layerG.rmLabel(d.id,[]);
 				layerG.addLabel(d.id,cb.line);
-				el.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id});
+				el.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id});
 			}
 		},d);
 		
@@ -1717,11 +1653,6 @@ function dragended(d) {
 		}else return r;
 	}
 	var rToText = function(node,rule,ctx){ 
-	console.log("rto toext");
-	console.log(node);
-	console.log(rule);
-	console.log(ctx);
-	console.log("-------------");
 		var tmp_l_ctx;
 		var tmp_r_ctx;
 		if(node.classes[1]=="syn"){
@@ -1940,9 +1871,9 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
 	//d3.event.stopPropagation();
 	//d3.event.preventDefault();
 		var fo=svg_content.append("foreignObject")
-							.attr("width", 100);
+							.attr("width", 200);
     var form=fo.append("xhtml:form")
-    					 .attr("width",100)
+    					 .attr("width",200)
                .attr("id","_inputform")
     form.classed("inputMenu",true);
 		if(label!=null && label!=""){
