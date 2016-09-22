@@ -60,7 +60,7 @@ var loadFile = function(data){
 		if(gGraph!=null)
 			yep=confirm("confirm the removal of the old graph ?");
 		if(yep){
-			d3.select("#graph").select(".svg_zoom_content").selectAll('*').remove();
+			d3.select("#graph").selectAll("*").remove();
 			delete(gGraph);
 			gGraph = new GraphicGraph('graph');
 			gGraph.init();	
@@ -103,7 +103,7 @@ function handleDragOver(evt) {
 <div id="main-container">
       <div id="menu">
 	<Form id="menu_f">
-	  <input type="file" id="import_f" value="data.json" class="removable_tab">
+	  <input type="file" id="import_f" value="data.json" class="removable_tab" multiple>
 	  <input type="button" id="import" value="Import Data" onclick="loadJson()" class="removable_tab">
 	  <input type="button" id="export" value="Export Data" onclick="jsonformater.outputJs()">
 	  <input type="button" id="kr" value="view KR"  onclick="gGraph.setState('kr_view')" class="tab_el">

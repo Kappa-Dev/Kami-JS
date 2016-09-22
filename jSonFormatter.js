@@ -70,7 +70,7 @@ function jSonFormatter(jGraph){
 		var actions={};
 		output+="{\"version\":2.0,\n \"agents\":[\n";
 		var i=0;
-		d3.selectAll("g").filter(".agent").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".agent").each(function(d){
 			var txt=toText(d);
 			if(txt!=""){
 				output+=txt;
@@ -82,7 +82,7 @@ function jSonFormatter(jGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"regions\":[\n";
 		i=0;
-		d3.selectAll("g").filter(".region").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".region").each(function(d){
 			var txt=toText(d);
 			if(txt!="") {
 				output += txt;
@@ -93,7 +93,7 @@ function jSonFormatter(jGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"key_rs\":[\n";
 		i=0;
-		d3.selectAll("g").filter(".key_res").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".key_res").each(function(d){
 			var txt=toText(d);
 			if(txt!="") {
 				output += txt;
@@ -104,7 +104,7 @@ function jSonFormatter(jGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"attributes\":[\n";
 		i=0;
-		d3.selectAll("g").filter(".attribute").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".attribute").each(function(d){
 			var txt=toText(d);
 			if(txt!="") {
 				output += txt;
@@ -115,7 +115,7 @@ function jSonFormatter(jGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"flags\":[\n";
 		i=0;
-		d3.selectAll("g").filter(".flag").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".flag").each(function(d){
 			var txt=toText(d);
 			if(txt!="") {
 				output += txt;
@@ -126,7 +126,7 @@ function jSonFormatter(jGraph){
 		output=output.replace(/,([^,]*)$/,'$1');//remove the last comma
 		output+="],\n \"actions\":[\n";
 		count=0;
-		d3.selectAll("g").filter(".action").each(function(d){
+		d3.select("#graph").select(".svg_zoom_content").selectAll("g").filter(".action").each(function(d){
 			if(typeof(actions[d.id])=='undefined'){
 				output+=toTextAct(d,agents,regions,key_rs,attributes,flags,actions,"");
 			}

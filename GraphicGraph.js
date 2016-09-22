@@ -134,18 +134,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		svg_content.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 	}
 
-/*function dragstarted(d) {
-  d3.event.sourceEvent.stopPropagation();
-  d3.select(this).classed("dragging", true);
-}
 
-function dragged(d) {
-  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-}
-
-function dragended(d) {
-  d3.select(this).classed("dragging", false);
-}*/
 	//update all the SVG elements
 	var update = function(){
 		//links svg representation
@@ -186,7 +175,7 @@ function dragended(d) {
 			.attr("x", 0)
 			.attr("dy", ".35em")
 			.attr("text-anchor", "middle")
-			.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
+			.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_node.exit().remove();
@@ -215,7 +204,7 @@ function dragended(d) {
 			.attr("x", function(d){return d.toInt()/2;})
 			.attr("dy", function(d){return d.toInt()/4;})
 			.attr("text-anchor", "middle")
-			.text(function(d) {if(d.label.length>0) return d.label[0]; else return d.id})
+			.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id})
 			.attr("font-size", function(d){if(d.classes[0]!="action")return (d.toInt()/2)+"px"; else (d.toInt()/3)+"px";})
 			.on("dblclick",clickText);
 		s_action.exit().remove();
@@ -1277,7 +1266,7 @@ function dragended(d) {
 			if(cb.line){
 				layerG.rmLabel(d.id,[]);
 				layerG.addLabel(d.id,cb.line);
-				el.text(function(d) {if(d.label.length>0) {return d.label[0].length>8?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id});
+				el.text(function(d) {if(d.label.length>0) {return d.label[0].length>7?d.label[0].substring(0,5).concat("..."):d.label[0];} else return d.id});
 			}
 		},d);
 		
@@ -1524,7 +1513,7 @@ function dragended(d) {
 		kappa_code+=observer;
 		kappa_code+="#### Initial conditions\n";
 		kappa_code+=quantities;
-		var url = "http://dev.executableknowledge.org/try/index.html?&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
+		var url = "http://dev.executableknowledge.org/try/index.html?host=http://localhost:8080/&nb_events=1000&plot_points=1000&time_limit=2.0&model_text=" + encodeURIComponent(kappa_code);
 		window.open(url, '_blank');
 		window.focus();
 		

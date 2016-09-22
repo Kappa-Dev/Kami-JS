@@ -1,3 +1,26 @@
+@media all and (min-width: 50px)   {  body  { font-size:0.33em;  } }
+@media all and (min-width: 100px)  {  body  { font-size:0.36em;  } }
+@media all and (min-width: 200px)  {  body  { font-size:0.40em;  } }
+@media all and (min-width: 300px)  {  body  { font-size:0.43em;  } }
+@media all and (min-width: 400px)  {  body  { font-size:0.46em;  } }
+@media all and (min-width: 500px)  {  body  { font-size:0.5em;  } }
+@media all and (min-width: 600px)  {  body  { font-size:0.53em;  } }
+@media all and (min-width: 700px)  {  body  { font-size:0.56em;  } }
+@media all and (min-width: 800px)  {  body  { font-size:0.60em;  } }
+@media all and (min-width: 900px)  {  body  { font-size:0.63em;  } }
+@media all and (min-width: 1000px) {  body  { font-size:0.66em;  } }
+@media all and (min-width: 1100px) {  body  { font-size:0.70em;  } }
+@media all and (min-width: 1200px) {  body  { font-size:0.73em;  } }
+@media all and (min-width: 1300px) {  body  { font-size:0.76em;  } }
+@media all and (min-width: 1400px) {  body  { font-size:0.80em;  } }
+@media all and (min-width: 1500px) {  body  { font-size:0.83em;  } }
+@media all and (min-width: 1500px) {  body  { font-size:0.86em;  } }
+@media all and (min-width: 1600px) {  body  { font-size:0.90em;  } }
+@media all and (min-width: 1700px) {  body  { font-size:0.93em;  } }
+@media all and (min-width: 1800px) {  body  { font-size:0.96em;  } }
+@media all and (min-width: 1900px) {  body  { font-size:1em;  } }
+@media all and (min-width: 2000px) {  body  { font-size:1.03em;  } }
+
  body{
 	display:flex;
 	padding:0px;
@@ -189,7 +212,6 @@ svg {
 #menu{
   height:4.5%;
 	max-height:40px;
-	min-height:37px;
 	width:100%;
 	border-top-right-radius:10px;
 	background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(76,76,76,1) 2%, rgba(102,102,102,1) 16%, rgba(71,71,71,1) 31%, rgba(19,19,19,1) 86%, rgba(19,19,19,1) 100%);
@@ -217,7 +239,7 @@ svg {
 .tab_el{
 	bottom:0px;
 	float:left;
-	width:150px;
+	width:7.8%;
 	height:100%;
 	font-size:100%;
 	border:none;
@@ -228,10 +250,14 @@ svg {
 	color:rgb(251, 249, 200);
 	font-family: Capriola, Helvetica, sans-serif;
 }
+#kr{
+	margin-left:1%;
+}
 #replay{
+	top:0;
 	float:right;
-	margin-top:7px;
-	margin-right:30px;
+	margin-right:0.1%;
+	height:90%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
 	text-align:center;
@@ -243,7 +269,7 @@ svg {
 }
 #import{
 	float:left;
-	margin-top:7px;
+	height:80%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
 	text-align:center;
@@ -254,8 +280,8 @@ svg {
 	background:linear-gradient(to bottom, #3fa4f0 0%, #0f71ba 100%);
 }
 #export{
-	float:left;
-	margin-top:7px;
+	float:right;
+	height:80%;
 	margin-right:50px;
 	border:2px solid #0f71ba;
 	border-radius:5px;
@@ -268,19 +294,19 @@ svg {
 }
 #import_f{
 	float:left;
-	margin-left:15px;
+	margin-left:0.1%;
 	border:2px solid #0f71ba;
 	border-radius:5px;
 	color:rgb(251, 249, 200);
 	font-family: Capriola, Helvetica, sans-serif;
 	font-size:100%;
-	height:30px;
+	height:80%;
 	margin-top:3px;
 }
 #kappa{
 	float:left;
-	margin-top:7px;
-	margin-left:30px;
+	height:82%;
+	margin-left:5%x;
 	border:2px solid rgba(214,128,138,1);
 	border-radius:5px;
 	text-align:center;
