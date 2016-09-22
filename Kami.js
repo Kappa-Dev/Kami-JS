@@ -1,1022 +1,77 @@
-var union = function(s1,s2){//union of two sets view as lists : O(n) where n = max list size
-	if(!fullListCheck(s1) && !fullListCheck(s2)) return [];
-	//else if(!fullListCheck(s1)) return s2.concat();
-	//else if(!fullListCheck(s2)) return s1.concat();
-	var obj1={};
-	if(fullListCheck(s1)){
-		for(var i=0;i<s1.length;i++)
-			obj1[s1[i]]=1;
-	}if(fullListCheck(s2)){
-		for(var i=0;i<s2.length;i++)
-			obj1[s2[i]]=1;
-	}
-	return Object.keys(obj1);
-};
-var multiUnion = function(s_l){//union over multi sets : O(n²) where n = max list size
-	if(!fullListCheck(s_l))
-		return [];
-	var obj1={};
-	for(var i=0;i<s_l.length;i++){
-		if(fullListCheck(s_l[i])){
-			for(var j=0;j<s_l[i].length;j++)
-				obj1[s_l[i][j]]=1;
-		}
-	}
-	return Object.keys(obj1);
-};
-var intersection = function(s1,s2){//intersection of two sets see as lists : O(n) where n = max list size
-	var obj1={};
-	if(!fullListCheck(s1) || !fullListCheck(s2)) return [];
-	for(var i=0;i<s1.length;i++)
-		obj1[s1[i]]=0;
-	for(var i=0;i<s2.length;i++){
-		if(typeof obj1[s2[i]]!='undefined' && obj1[s2[i]]==0)
-			obj1[s2[i]]=1;
-	}
-	var keys=Object.keys(obj1);
-	var ret=[];
-	for(var i=0;i<keys.length;i++){
-		if(obj1[keys[i]]==1)
-			ret.push(keys[i]);
-	}
-	return ret;
-};
-var multiIntersection = function(s_l){//intersection over multi sets : O(n²) where n = max list size
-	var obj1={};
-	if(!fullListCheck(s_l)) return [];
-	var sll=s_l.length;
-	for(var i=0;i<sll;i++){
-		if(!fullListCheck(s_l[i])) return [];
-		var obj2={};
-		for(var j=0;j<s_l[i].length;j++){
-			if(typeof obj1[s_l[i][j]] =='undefined') obj1[s_l[i][j]]=0;
-			if(typeof obj2[s_l[i][j]]=='undefined'){
-				obj1[s_l[i][j]]++;
-				obj2[s_l[i][j]]=0;
-			}
-		}
-	}
-	var keys=Object.keys(obj1);
-	var ret=[];
-	for(var i=0;i<keys.length;i++){
-		if(obj1[keys[i]]==sll)
-			ret.push(keys[i]);
-	}
-	return ret;
-};
-var rmElements = function(s1,s2){//remove all element from the intersection of s2/s1 in s1 : O(n) where n = max list size
-	var obj_1={};
-	if(!fullListCheck(s1))return [];
-	if(!fullListCheck(s2))return union(s1,null);
-	for(var i=0;i<s1.length;i++)
-		obj_1[s1[i]]=1;
-	for(var i=0;i<s2.length;i++){
-		if(typeof obj_1[s2[i]] != 'undefined')
-		obj_1[s2[i]]=0;
-	}
-	var obj_k=Object.keys(obj_1);
-	var ret=[];
-	for(var i=0;i<obj_k.length;i++){
-		if(obj_1[obj_k[i]]==1)
-			ret.push(obj_k[i]);
-	}
-	return ret;
-};
-var fullListCheck = function(l){//verify if a list is defined and not empty : O(1)
-	return typeof l!='undefined' && l!=null && l.length>0;
-};
-var idV = function(id){//get the numerical value of an id : O(1) : size of an id is constant
-	return parseInt(id.split('_')[1]);
-}
-var idT = function(id){//get the header of an id : O(1) : size of an id is constant
-	return id.split('_')[0];
-}
-var min = function(a,b){//-1 code for infiny, [null,null] code for empty set
-	if(a==-1 || b==-1)return a+b+1;
-	if(a==null || b==null) return null;
-	return a < b ? a : b;
-};
-var max = function(a,b){
-	if(a==-1 || b==-1) return -1;
-	if(a==null || b==null) return a+b;
-	return a > b ? a : b;
-};
-function Node(i,t,n,l,v,u){//generic definition of a node in a clustered graph
-	if(typeof i=='undefined' || i==null) throw new Error("undefined id : "+i);
-	var id=i;//unique identifier of a node
-	if(!fullListCheck(t)) throw new Error("unknown type : "+t);
-	var type=t;//this node type : component(1)/action(2)/super(3)/attribute (1):agent/region/keyres/flag (2):mod/modPos/modNeg/syn/deg/bnd/brk/input/output (3):family/set/process
-	var labels=l || [];
-	var values=v || [];
-	if(typeof u=='undefined' || u==null) throw new Error("undefined uid : "+u);
-	var uid=u;
-	var father=null;
-	if(typeof n=='undefined' || n==null) throw new Error("undefined nugget : "+n);
-	var nugget=n;
-	var sons=[];
-	this.getId = function getId(){// return the node id O(1)
-		return id;
-	};
-	this.getType = function getType(){//return the node type (new array) : O(t) : t=type size : constant
-		return type.concat();
-	}
-	this.getLabels = function getLabels(){//return the node labels (new array) : O(l) : l= label size : constant??
-		return labels.concat();
-	};
-	this.getValues = function getValues(){//return the node values (new array) : O(v) : v= values size : constant??
-		return values.concat();
-	};
-	this.getUid = function getUid(){//return the node Uid : O(1)
-		return uid;
-	};
-	this.getFather = function getFather(){//return the node father id : O(1)
-		return father;
-	};
-	this.getNugget = function getNugget(){//return the node nugget : O(1)
-		return nugget;
-	};
-	this.getSons = function getSons(){//return the node sons id list (new array) : O(s) : s : max node arity
-		return sons.concat();
-	};
-	this.addLabels = function addLabels(l){//add all new labels from l to the node labels : O(l) : max labels size
-		labels=union(labels,l);
-	};
-	this.rmLabels = function rmLabels(l){//remove the specified label from the node node labels (only the element of l in the node label are removed) : O(l) : max list size
-		labels=rmElements(labels,l);
-	};
-	this.deleteLabels = function deleteLabels(){//remove all labels : O(1)
-		labels=[];
-	};
-	this.addValues = function addValues(v){//add all new values from v to the node values : o(v) : max values size
-		values=union(values,v);
-	};
-	this.rmValues = function rmValues(v){//remove the specified values from the node values (only element of v in the node values are removed) :  O(v) : max list size
-		values=rmElements(values,v);
-	};
-	this.deleteValues = function deleteValues(){//remove all values : O(1)
-		values=[];
-	};
-	this.setUid = function setUid(u){//change the node Uid : O(1)
-		if(typeof u=='undefined' || u==null) throw new Error("undefined uid : "+u);
-		uid=u;
-	};
-	this.setFather = function setFather(f){//change the node father
-		father=f;
-	};
-	this.setNugget = function setNugget(n){//change the node nuggets : o(1)
-		if(typeof n=='undefined' || n==null) throw new Error("undefined nugget : "+n);
-		nugget=n;
-	};
-	this.addSons = function addSons(s_l){//add all new sons from s_l to the node sons : O(s) : s = max node arity
-		sons=union(sons,s_l);
-	};
-	this.rmSons = function rmSons(s_l){//remove the specified sons from the node sons : O(s) : s = max node arity
-		sons=rmElements(sons,s_l);
-	};
-	this.deleteSons = function deleteSons(){//remove all sons : O(1)
-		sons=[];
-	};
-	this.hasType = function hasType(t){//verify if a node has a specific type : O(t) t=type size : constant
-		return type.indexOf(t)!=-1;
-	};
-	this.hasLabel = function hasLabel(l){//verify if a node has a specified label : O(l) l= label size
-		return labels.indexOf(l)!=-1;
-	};
-	this.hasValue =function hasValue(v){//verify if a node has a specific value : O(v) v=value size 
-		return values.indexOf(v)!=-1;
-	};
-	this.hasSons = function hasSons(s){//verify if a node has a specific son : O(s) s=max node arity
-		return sons.indexOf(s)!=-1;
-	};
-	this.log = function log(){//log the whole node information O(k) : k=max size(l,v,s)
-		console.log('==== ' + id + ' ====');
-		console.log('type : '+type);
-		console.log('nugget : '+nugget);
-		console.log('uid : '+uid);
-		console.log('labels : '+labels);
-		console.log('values : '+values);
-		console.log('father : '+father);
-		console.log('sons : '+sons);
-		console.log('______________')
-	};
-	this.clone = function clone(){//create a new ode witch is a copy of this node : O(k) : k=max size(l,v,s)
-		return new Node(id,type.concat(),nugget,labels.concat(),values.concat(),uid);
-	};
-	this.copy = function copy(i){//create a new node witch is a copy of this node with a different id : O(k) : k=max size(l,v,s)
-		if(!i) throw new Error("id isn't defined");
-		if(i==id) throw new Error("this copy has the same id as the original node, use clone insteed : "+id);
-		return new Node(i,type.concat(),nugget,labels.concat(),values.concat(),uid);
-	};
-}
-function Edge(ii,t,n,i,o){//generic definition of an adge in a clustered graph
-	if(typeof ii=='undefined' || ii==null) throw new Error("undefined id : "+ii);
-	var id=ii;
-	if(!fullListCheck(t)) throw new Error("unknown type : "+t);
-	var type=t;//type can be 'link','parent','posinfl','neginfl','rw_rule'
-	var source=i;//for parenting : source is the son
-	var target=o;
-	if(typeof n=='undefined' || n==null) throw new Error("undefined nugget : "+n);
-	var nugget=n;
-	this.getId = function getId(){//return the edge id O(1)
-		return id;
-	};
-	this.getNugget = function getNugget(){//return the edge nugget O(1)
-		return nugget;
-	};
-	this.getType = function getType(){//return the edge type (new array) : O(t) : t=type size : constant
-		return type.concat();
-	};
-	this.getSource = function getSource(){//return the edge source : O(1)
-		return source;
-	};
-	this.getTarget = function getTarget(){//return the edge target : O(1)
-		return target;
-	};
-	this.setSource = function setSource(i) {//change the edge source : O(1)
-		if(!i) throw new Error("id isn't defined");
-		source=i;
-	};
-	this.setTarget = function setTarget(o){//change the edge target : O(1)
-		if(!0) throw new Error("id isn't defined");
-		target=o;
-	};
-	this.setNugget = function setNugget(n){//change the edge nugget : O(1)
-		if(typeof n=='undefined' || n==null) throw new Error("undefined nugget : "+n);
-		nugget=n;
-	};
-	this.log = function log(){//log the whole edge informations O(1)
-		console.log('==== ' + id + ' ====');
-		console.log('type : '+type);
-		console.log('nugget : '+nugget);
-		console.log('source : '+source);
-		console.log('target : '+target);
-		console.log('______________');
-	};
-	this.clone = function clone(){//create a exact copy of the edge : O(1)
-		return new Edge(id,type,nugget,source,target);
-	};
-	this.copy = function copy(i){//create a copy of the edge with a new id : O(1)
-		if(i==id) throw new Error("this copy has the same id as the original edge, use clone insteed : "+id);
-		return new Edge(i,type,nugget,source,target);
-	};
-}
-function UndoRedoStack(){//generic implementation of undo redo as graph rw rules
-    var undo_stack =[];//a stack of undo
-    var redo_stack =[];//a stack of redo
-    var sub_stack = {};//list of nuggets stacks and position {stack:list,pos:int}
-    this.stack = function stack(el){//el is a delta object and its position : {ng:nugget id,left{nodes:[node list],edges:[edges list]},right{nodes:[nodes list],edges:[edges list]}}
-        if(typeof el=='undefined' || el==null)
-            throw new Error("please use stack with an element");
-        if(typeof sub_stack[el.ng]=='undefined' || sub_stack[el.ng]==null)//if this nugget have no stack, create one
-            sub_stack[el.ng]={"idx":-1,"stack":[]};
-        if(sub_stack[el.ng].idx<sub_stack[el.ng].stack.length-1){//if we add an element in the middle of the stack, redo are lost
-            var removed=sub_stack[el.ng].stack.length-1-sub_stack[el.ng].idx;
-            sub_stack[el.ng].stack.splice(sub_stack[el.ng].idx+1);
-            for(var i=redo_stack.length-1,j=1;i>=0 && j<=removed;i--){
-                if(redo_stack[i].ng==el.ng && redo_stack[i].idx==sub_stack[el.ng].idx+j){
-                    redo_stack.splice(i,1);
-                    j++;
-                }
-            }
-        }
-        sub_stack[el.ng].stack.push(el);//add the new item
-        sub_stack[el.ng].idx=sub_stack[el.ng].stack.length-1;//update index
-        undo_stack.push({'ng':el.ng,'idx':sub_stack[el.ng].idx});//update global index
-    };
-    this.undo = function undo(){//undo the last delta operation and return it
-        return this.localUndo(undo_stack[undo_stack.length-1].ng);
-    };
-    this.redo = function redo(){//redo the last undoed delta action and return it
-        return this.localRedo(redo_stack[redo_stack.length-1].ng);
-    };
-    this.localUndo = function localUndo(s_id){//undo the last delta operation for the s_id cluster and return it
-        if(typeof sub_stack[s_id]=='undefined' || sub_stack[s_id]==null || sub_stack[s_id].stack.length==0 || sub_stack[s_id].idx==-1)
-            return null;
-        for(var i=undo_stack.length-1;i>=0;i--){
-            if(undo_stack[i].ng==s_id && undo_stack[i].idx==sub_stack[s_id].idx){
-                var remove=undo_stack.splice(i,1);
-                redo_stack.push(remove[0]);
-                break;
-            }
-        }
-        return sub_stack[s_id].stack[sub_stack[s_id].idx--];
-    };
-    this.localRedo = function localRedo(s_id){//redo the last undoed delta action for the s_id cluster and return it
-        if(typeof sub_stack[s_id]=='undefined' || sub_stack[s_id]==null || sub_stack[s_id].stack.length==0 || sub_stack[s_id].idx==sub_stack[s_id].stack.length-1) {
-            return null;
-        }
-        for(var i=redo_stack.length-1;i>=0;i--){
-            if(redo_stack[i].ng==s_id && redo_stack[i].idx==sub_stack[s_id].idx+1){
-                var remove=redo_stack.splice(i,1);
-                undo_stack.push(remove[0]);
-                break;
-            }
-        }
-        var ret=sub_stack[s_id].stack[++sub_stack[s_id].idx];
-        //console.log(ret);
-        return ret;
-    };
-    this.clear = function clear(){//clear the whole undoredo object
-        undo_stack =[];
-        redo_stack =[];
-        sub_stack = {};
-    };
-    this.clearLocal = function clearLocal(s_id){//clear a the undo redo object for a specified cluster
-        for(var i=redo_stack.length-1;i>=0;i--){
-            if(redo_stack[i].ng==s_id){
-                redo_stack.splice(i,1);
-            }
-        }
-        for(var i=undo_stack.length-1;i>=0;i--){
-            if(undo_stack[i].ng==s_id){
-                undo_stack.splice(i,1);
-            }
-        }
-        sub_stack[s_id]=null;
-    };
-    this.log = function log(){//log the whole undo redo object
-        console.log("==== undoRedo logs: ====");
-        console.log("undo stack");
-        console.log(undo_stack);
-        console.log("redo stack");
-        console.log(redo_stack);
-        console.log("local stack");
-        console.log(sub_stack);
-    }
-}
-function LayerGraph(){//An autonomous multi layer graph with optimized modification actions (all in O(1)) except removal/merge in O(Max(node arity)) and undo redo stack with similar time optimizations
-	var NODE_ID = 0;//unique id for nodes (actions/components)
-	var EDGE_ID = 0;//unique id for edges (linking edges and structure edges)
-	var nodes = {};//hashtable of nodes objects, key:id, value:node
-	var edges = {};//hashtable of edges objects, key:id, value:edge
-	/* !!!! ==== those Hashtable may contain redondent ids ==== !!!! */
-	var edgesByHash = {};//hashtable of edges, key:source_target_type, value : edge id list
-	var nodesByLabel = {};//hashtable of nodes, key:label, value :nodes id list
-	var nodesByUid = {};//hashtable of nodes, key:uid, value: nodes id list
-	var nodesByNuggets = {};//hashtable of nodes, key: nugget id, value:nodes id list
-	var nodesByTypes = {};//hashtable of nodes, key: nodes types, values: nodes id list
-	var edgesByNuggets = {};//hashtable of edges, key: nugget id, value:edges id list
-	var edgesBySource={};//hashtable of edges, key:node input id, values: edges id list
-	var edgesByTarget={};//hashtable of edges, key:node output id, values:edges id list
-	var edgesByType={}//hashable of edges, key:edge type, values: edges id list
-	var undoRedo=new UndoRedoStack();//undo redo stack for this layer graph.
-	this.nodeExist = function nodeExist(id){
-		return typeof nodes[id]!='undefined' && nodes[id]!=null;
-	}
-	var getNode = function(id){//return a specific node for a specific id
-		if(typeof(nodes[id])!=undefined && nodes[id]!=null)
-			return nodes[id];
-		else return null;
-	};
-	this.getNodes = function getNodes(){//return the whole nodes as a list of id
-		return Object.keys(nodes);
-	};
-	var getEdge = function(id){//return a specific edge for an id
-		if(typeof(edges[id])!=undefined && edges[id]!=null)
-			return edges[id];
-		else return null;
-	};
-	this.getEdges = function getEdges(){//return the whole edges as a list of id
-		return Object.keys(edges);
-	};
-	var putNode = function(n){//UNSAFE add a node to the LG, be carefull, this node must have a none existing ID !
-		if(typeof n=='undefined' || n==null) throw new Error("this node is undefined");
-		nodes[n.getId()]=n;
-		var tmp_lb=n.getLabels();//add this node to the label hashtable
-		for(var i=0;i<tmp_lb.length;i++){
-			if(fullListCheck(nodesByLabel[tmp_lb[i]]))
-				nodesByLabel[tmp_lb[i]].push(n.getId());
-			else nodesByLabel[tmp_lb[i]]=[n.getId()];
-		}
-		var tmp_uid=n.getUid();//add the node to the Uid hashtable
-		if(!fullListCheck(nodesByUid[tmp_uid]))
-			nodesByUid[tmp_uid]=[];
-		nodesByUid[tmp_uid].push(n.getId());
-		var tmp_ng=n.getNugget();//add the node to the Nuggets hashtable
-		if(!fullListCheck(nodesByNuggets[tmp_ng]))
-			nodesByNuggets[tmp_ng]=[];
-		nodesByNuggets[tmp_ng].push(n.getId());
-		var tmp_t=n.getType();//add the node to the type hashtable
-		for(var i=0;i<tmp_t.length;i++){
-			if(!fullListCheck(nodesByTypes[tmp_t[i]]))
-				nodesByTypes[tmp_t[i]]=[];
-			nodesByTypes[tmp_t[i]].push(n.getId());
-		}
-		return {'ng':n.getNugget(),'left':null,'right':{'nodes':[n.clone()],'edges':[]}};//return the delta with the new node !
-	};
-	this.addNode = function addNode(t,ng,l,v,u){//add a NEW node return an enter/exit object
-		var n=new Node('n_'+NODE_ID++,t,ng,union(l,null),union(v,null),u);//remove possible redundance in label and values.
-		var delta = putNode(n);
-		undoRedo.stack(delta);
-		return deltaToId(delta);
-	};
-	var clNode = function(id){//internal removing function : return a delta object
-		var n=nodes[id];
-		if(!n) throw new Error("this node isn't defined : "+id);
-		var ret={'ng':n.getNugget(),'right':null,'left':{'nodes':[n.clone()],'edges':[]}};//add this node to the delta
-		edgesBySource[id]=union(edgesBySource[id],null);
-		var source_edges = edgesBySource[id];//get all edges going from this node
-		if(fullListCheck(source_edges)){//remove all edges going from this node
-			for(var i=0;i<source_edges.length;i++){
-				ret.left.edges.push(clEdge(source_edges[i]).left.edges[0]);
-			}
-		}
-		delete edgesBySource[id];//remove information from hashtable
-		edgesByTarget[id] = union(edgesByTarget[id],null);
-		var target_edges = edgesByTarget[id];//get all edges going to this node
-		if(fullListCheck(target_edges)){//remove all edges going to this node
-			for(var i=0;i<target_edges.length;i++)
-				ret.left.edges.push(clEdge(target_edges[i]).left.edges[0]);
-		}
-		delete edgesByTarget[id];//remove information from hashtable
-		var tmp_lb=nodes[id].getLabels();//remove this node from the label hashtable
-		for(var i=0;i<tmp_lb.length;i++){
-			nodesByLabel[tmp_lb[i]]=union(nodesByLabel[tmp_lb[i]],nodesByLabel[tmp_lb[i]]);
-			nodesByLabel[tmp_lb[i]].splice(nodesByLabel[tmp_lb[i]].indexOf(id),1);
-		}
-		var tmp_ui=n.getUid();//remove the node from the Uid hashtable
-        if(typeof tmp_ui!='undefined' && tmp_ui!=null){
-			nodesByUid[tmp_ui]=union(nodesByUid[tmp_ui],nodesByUid[tmp_ui]);
-		    nodesByUid[tmp_ui].splice(nodesByUid[tmp_ui].indexOf(id),1);
-		}
-		var tmp_ng=n.getNugget();//remove the node from the Nuggets hashtable
-		nodesByNuggets[tmp_ng]=union(nodesByNuggets[tmp_ng],nodesByNuggets[tmp_ng]);
-		nodesByNuggets[tmp_ng].splice(nodesByNuggets[tmp_ng].indexOf(id),1);
-		var tmp_t=n.getType();//remove the node from the Type hashtable
-		for(var i=0;i<tmp_t.length;i++){
-			nodesByTypes[tmp_t[i]]=union(nodesByTypes[tmp_t[i]],nodesByTypes[tmp_t[i]]);
-			nodesByTypes[tmp_t[i]].splice(nodesByTypes[tmp_t[i]].indexOf(id),1);
-		}
-		delete nodes[id];//remove the node object
-		return ret;
-	};
-	this.rmNode = function rmNode(id){//remove a specific node and return an enter/exit object
-		var delta=clNode(id);
-		undoRedo.stack(delta);//return Delta
-		return deltaToId(delta);
-	};
-	this.mergeNode = function mergeNode(id1,id2){//merge two node in a third one and return an enter/exit object
-		if(id1==id2) return emptyDelta();
-		if(nodes[id1].getNugget()!=nodes[id2].getNugget())
-			throw new Error("We can't merge nodes of different clusters!");
-		if(nodes[id1].getUid()!=nodes[id2].getUid() && idT(nodes[id1].getUid())=="up" && idT(nodes[id2].getUid())=="up")
-			throw new Error("We can't merge nodes of different uniprot ID !");
-		var uid=nodes[id1].getUid();//by default the new uid is the first node uid or Upid
-		if(idT(nodes[id2].getUid())=="up")
-			uid=nodes[id2].getUid();//if id2 has an uniprot id, we prefere it to the basic uid of id1 (or id1 has the same Upid)
-		var delta={'ng':nodes[id1].getNugget()[0],'right':{'nodes':[],'edges':[]},'left':{'nodes':[],'edges':[]}};
-		var added_node=putNode(new Node(
-                                'n_'+NODE_ID++,
-                                union(nodes[id1].getType(),nodes[id2].getType()),
-                                nodes[id1].getNugget(),
-                                union(nodes[id1].getLabels(),nodes[id2].getLabels()),
-                                union(nodes[id1].getValues(),nodes[id2].getValues()),
-                                uid
-        ));//add the resulting node
-		delta.right.nodes=added_node.right.nodes.concat();
-		var source_edges=union(edgesBySource[id1],edgesBySource[id2]);//get all the edges from id1 or id2
-		var target_edges=rmElements(union(edgesByTarget[id1],edgesByTarget[id2]),source_edges);//get all the edges to id1 or id2, less the edges already in source !
-		var edges_delta=[];
-		for(var i=0;i<source_edges.length;i++) {
-            edges_delta.push(putEdge(new Edge(
-                                        'e_'+EDGE_ID++,
-                                        edges[source_edges[i]].getType(),
-                                        edges[source_edges[i]].getNugget(),
-                                        delta.right.nodes[0].getId(),
-                                        edges[source_edges[i]].getTarget()
-            )));//add a new edge from the merge node to the old target
-        }
-        for(var i=0;i<target_edges.length;i++) {
-            edges_delta.push(putEdge(new Edge(
-                                        'e_'+EDGE_ID++,
-                                        edges[source_edges[i]].getType(),
-                                        edges[source_edges[i]].getNugget(),
-                                        edges[source_edges[i]].getSource(),
-                                        delta.right.nodes[0].getId()
-            )));//add a new edge from the merge node to the old target
-        }
-        for(var i=0;i<edges_delta.length;i++)
-			delta.right.edges.push(edges_delta[i].right.edges[0]);//add all the created edges to the delta
-		var n1_rm = this.clNode(id1);
-		var n2_rm = this.clNode(id2);
-		delta.left.nodes=n1_rm.left.nodes.concat(n2_rm.left.nodes);//add old node to delta.
-		delta.left.edges=n1_rm.left.edges.concat(n2_rm.left.edges);//add old edges to delta.
-		undoRedo.stack(delta);
-		return deltaToId(delta);
-	}
-	var deltaToId = function(delta){//return an enter/exit object with the id of all elements added/removed for an action.
-		var ret ={'enter':[],'exit':[]};
-		if(!delta) return ret;
-		for(var i=0;delta.right!=null && i<delta.right.nodes.length;i++)
-			ret.enter.push(delta.right.nodes[i].getId());
-		for(var i=0;delta.right!=null && i<delta.right.edges.length;i++)
-			ret.enter.push(delta.right.edges[i].getId());
-		for(var i=0;delta.left!=null && i<delta.left.nodes.length;i++)
-			ret.exit.push(delta.left.nodes[i].getId());
-		for(var i=0;delta.left!=null && i<delta.left.edges.length;i++)
-			ret.exit.push(delta.left.edges[i].getId());
-		return ret;
-	}
-	var emptyDelta = function(){//return an empty enter/exit object
-		return {"enter":[],"exit":[]};
-	}
-	this.addNodeLabels = function addNodeLabels(id,l){//add some labels to a node, return an enter/exit object
-		if(intersection(l,nodes[id].getLabels()).length==l.length) return emptyDelta();
-		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
-		nodes[id].addLabels(l);
-		for(var i=0;i<l.length;i++){//add the node id to the nodebylabel hashtable
-			if(!fullListCheck(nodesByLabel[l[i]]))
-				nodesByLabel[l[i]]=[];
-			nodesByLabel[l[i]].push(id);
-		}
-		ret.right.nodes.push(nodes[id].clone());
-		undoRedo.stack(ret);
-		return deltaToId(ret);
-	};
-	this.rmNodeLabels = function rmNodeLabels(id,l){//remove labels from a node if l is null or [], remove all the labels, return an enter/exit object
-		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
-		if(!fullListCheck(nodes[id].getLabels())) return emptyDelta();
-		var origLsize=nodes[id].getLabels().length;
-		if(fullListCheck(l)){//remove the node id from the node by labels hashtable
-			
-			for(var i=0;i<l.length;i++){
-				nodesByLabel[l[i]]=union(nodesByLabel[l[i]],null);
-				nodesByLabel[l[i]].splice(nodesByLabel[l[i]].indexOf(id),1);	
-			}
-		}else{
-			var lb=nodes[id].getLabels();
-			for(var i=0;i<lb.length;i++){
-				nodesByLabel[lb[i]]=union(nodesByLabel[lb[i]],null);
-				nodesByLabel[lb[i]].splice(nodesByLabel[lb[i]].indexOf(id),1);
-			}				
-		}
-		if(fullListCheck(l))//rm the node labels
-			nodes[id].rmLabels(l);
-		else nodes[id].deleteLabels();
-		if (nodes[id].getLabels().length()==origLsize) return emptyDelta();
-		ret.right.nodes.push(nodes[id].clone());
-		undoRedo.stack(ret);
-		return deltaToId(ret);
-	};
-	this.chNodeUid = function chNodeUid(id,uid){//change Node Uid and return an enter/exit object
-		if(nodes[id].getUid()==uid) return emptyDelta();
-		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
-		nodesByUid[nodes[id].getUid()]=union(nodesByUid[nodes[id].getUid()],nodesByUid[nodes[id].getUid()]);
-		nodesByUid[nodes[id].getUid()].splice(nodesByUid[nodes[id].getUid()].indexOf(id),1);//remove the node id from its all uid hashtable
-		nodes[id].setUid(uid);//change node uid
-		if(uid!=null){
-			if(!fullListCheck(nodesByUid[uid]))//add the node id to its new uid hashtable
-				nodesByUid[uid]=[];
-			nodesByUid[uid].push(id);
-		}
-		ret.right.nodes.push(nodes[id].clone());
-		undoRedo.stack(ret);
-		return deltaToId(ret);
-	};
-	this.addNodeValues = function addNodeValues(id,l){//add some values to a node , return an enter/exit object
-		if(intersection(l,nodes[id].getValues()).length==l.length) return emptyDelta();
-		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
-		nodes[id].addValues(l);
-		ret.right.nodes.push(nodes[id].clone());
-		undoRedo.stack(ret);
-		return deltaToId(ret);
-	};
-	this.rmNodeValues = function rmNodeValues(id,l){//remove values from a node if l is null or [], remove all the Values, return an enter/exit object
-		var ret={'ng':nodes[id].getNugget()[0],'left':{'nodes':[nodes[id].clone()],'edges':[]},'right':{'nodes':[],'edges':[]}};
-		if(!fullListCheck(nodes[id].getValues()))return emptyDelta();
-		var origsz=nodes[id].getValues().length;
-		if(fullListCheck(l))
-			nodes[id].rmValues(l);
-		else nodes[id].deleteValues();
-		if(nodes[id].getValues().length==origsz) return emptyDelta();
-		ret.right.nodes.push(nodes[id].clone());
-		undoRedo.stack(ret);
-		return deltaToId(ret);
-	};
-	var putEdge = function(e){//UNSAFE add an edge to the LG, be carefull, this edge must have a none existing ID !
-		edges[e.getId()]=e;
-        //e.log();
-		if(e.getType()=='parent'){//if parenting, add information in the corresponding node
-			nodes[e.getSource()].setFather(e.getTarget());
-			nodes[e.getTarget()].addSons([e.getSource()]);
-		}
-		if(!fullListCheck(edgesBySource[e.getSource()])) edgesBySource[e.getSource()]=[];//add the edge to edgesBySource hashtable
-		edgesBySource[e.getSource()].push(e.getId());
-		if(!fullListCheck(edgesByTarget[e.getTarget()])) edgesByTarget[e.getTarget()]=[];//add the edge to edgesByTarget hashtable
-		edgesByTarget[e.getTarget()].push(e.getId());
-		if(!fullListCheck(edgesByNuggets[e.getNugget()])) edgesByNuggets[e.getNugget()]=[];//add the edge to edgesByNuggets hashtable
-		edgesByNuggets[e.getNugget()].push(e.getId());
-		if(!fullListCheck(edgesByType[e.getType()])) edgesByType[e.getType()]=[];//add the edge to edgesByType hashtable
-		edgesByType[e.getType()].push(e.getId());
-		//if(!fullListCheck(edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()])) edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()]=[];//add the edge to edgesByType hashtable
-		//edgesByHash[e.getSource()+"_"+e.getTarget()+"_"+e.getType()].push(e.getId());
-		return {'ng':e.getNugget(),'left':null,'right':{'nodes':[],'edges':[e.clone()]}};
-	};
-	this.addEdge = function addEdge(t,ng,i,o){//add a NEW edge, return an enter/exit object
-		var e=new Edge('e_'+EDGE_ID++,t,ng,i,o);
-		var delta=putEdge(e);
-		undoRedo.stack(delta);
-		return deltaToId(delta);
-	};
-	var clEdge = function(id){//remove an edge (internal function, return an delta object) calling this function will also clean all redundancy in the edges hashtable
-        var e=edges[id];
-		if(typeof e=='undefined' || e==null){
-			console.log("unExisting edge "+id);
-			return null;
-		}
-		var ret={'ng':e.getNugget()[0],'left':{'nodes':[],'edges':[e.clone()]},'right':null};
-		edgesBySource[e.getSource()]=union(edgesBySource[e.getSource()],null);
-		edgesBySource[e.getSource()].splice(edgesBySource[e.getSource()].indexOf(id),1);//remove the edge from its source hashtable
-		edgesByTarget[e.getTarget()]=union(edgesByTarget[e.getTarget()],null);
-		edgesByTarget[e.getTarget()].splice(edgesByTarget[e.getTarget()].indexOf(id),1);//remove the edge from its target hashtable
-		edgesByNuggets[e.getNugget()]=union(edgesByNuggets[e.getNugget()],null);
-		edgesByNuggets[e.getNugget()].splice(edgesByNuggets[e.getNugget()].indexOf(id),1);//remove the edge from its nugget hashtable
-		edgesByType[e.getType()]=union(edgesByType[e.getType()],null);
-		edgesByType[e.getType()].splice(edgesByType[e.getType()].indexOf(id),1);//remove the edge from its type hashtable
-		delete edges[id];//remove the edge object
-		if(e.getType()=='parent'){//remove parenting information if needed
-			nodes[e.getSource()].setFather(null);
-			nodes[e.getTarget()].rmSons([e.getSource()]);
-		}
-		return ret;
-	};
-	this.rmEdge = function rmEdge(id){//remove an edge, return an enter/exit object
-		var delta=clEdge(id);
-		undoRedo.stack(delta);
-		return deltaToId(delta);
-	};
-	this.getNodeByLabels = function getNodeByLabels(labels){//return a nodes id list corresponding to the specific labels
-		var nodes_lists =[];
-		for(var i=0;i<labels.length;i++){
-			var tmp_l=nodesByLabel[labels[i]];
-			if(fullListCheck(tmp_l))
-				nodes_lists.push(tmp_l);
-		}
-		return multiIntersection(nodes_lists);
-	};
-	this.getNodeByUid = function getNodeByUid(uid){//return the node id corresponding to a specific uid
-		var ret=[];
-		if(fullListCheck(nodesByUid[uid]))
-			ret=nodesByUid[uid].concat();
-		return ret;
-	};
-	this.getNodeByNugget = function getNodeByNugget(n_id){//return all nodes in a specific nugget
-		var ret=[];
-		if(fullListCheck(nodesByNuggets[n_id]))
-			ret=nodesByNuggets[n_id].concat();
-		return ret;
-	}
-	this.getNodeByType = function getNodeByType(t){//return all nodes of a specific type
-		var ret=[];
-		if(fullListCheck(nodesByTypes[t]))
-			ret=nodesByTypes[t].concat();
-		return ret;
-	}
-	this.getEdgeByType = function getEdgeByType(t){//return all edges of a specific type
-		var ret=[];
-		if(fullListCheck(edgesByType[t]))
-			ret=edgesByType[t].concat();
-		return ret;
-	}
-	this.getEdgeBySource = function getEdgeBySource(iid){//return all the edges corresponding to a specific input (id list)
-		var ret=[];
-		if(fullListCheck(edgesBySource[iid]))
-			ret=edgesBySource[iid].concat();
-		return ret;
-	};
-	this.getEdgeByTarget = function getEdgeByTarget(oid){//return all the edges corresponding to a specific output (id list)
-		var ret=[];
-		if(fullListCheck(edgesByTarget[oid]))
-			ret=edgesByTarget[oid].concat()
-		return ret;
-	};
-	this.getEdgeByNugget = function getEdgeByNugget(n_id){//return all edges in a specific nugget
-		var ret=[];
-		if(fullListCheck(edgesByNuggets[n_id]))
-			ret=edgesByNuggets[n_id].concat();
-		return ret;
-	};
-	this.log = function log() {//log the whole layer graph object
-		var n_keys = Object.keys(nodes);
-		var e_keys = Object.keys(edges);
-		console.log("NODES : ===================>");
-		for (var i = 0; i < n_keys.length; i++)
-			nodes[n_keys[i]].log();
-		console.log("EDGES : ===================>");
-		for (var i = 0; i < e_keys.length; i++)
-			edges[e_keys[i]].log();
-		console.log("nodesByTypes : ===================>");
-		console.log(nodesByTypes);
-		console.log("nodesByLabel : ===================>");
-		console.log(nodesByLabel);
-		console.log("nodesByUid : ===================>");
-		console.log(nodesByUid);
-		console.log("nodesByNuggets : ===================>");
-		console.log(nodesByNuggets);
-		console.log("edgesByType : ===================>");
-		console.log(edgesByType);
-		console.log("edgesByNuggets : ===================>");
-		console.log(edgesByNuggets);
-		console.log("edgesBySource : ===================>");
-		console.log(edgesBySource);
-		console.log("edgesByTarget : ===================>");
-		console.log(edgesByTarget);
-		
-	};
-	this.logStack = function logStack(){//log the stack of the layer graph
-		undoRedo.log();
-	};
-	this.undo = function undo(){//Undo the last action and return an exit/enter object
-		delta=undoRedo.undo();
-		deltaLeft(delta);
-		return deltaToId(delta);
-	};
-	this.redo = function redo(){//redo the last action undowed and return an exit/enter object
-		var delta=undoRedo.redo();
-		deltaRight(delta);
-		return deltaToId(delta);
-	};
-	this.localUndo = function localUndo(s_id){//undo the last action in a specific nugget and return an exit/enter object
-		var delta=undoRedo.localUndo(s_id);
-		deltaLeft(delta);
-		return deltaToId(delta);
-	};
-	this.localRedo = function localRedo(s_id){//redo the last undowed action in a specific nugget and return an exit/enter object
-		var delta=undoRedo.localRedo(s_id);
-		deltaRight(delta);
-		return deltaToId(delta);
-	};
-	this.stackClear = function stackClear(){//clear the whole undo/redo stack
-		undoRedo.clear();
-	};
-	this.stackLocClear = function stackLocClear(s_id){//clear a local stack for the s_id nugget
-		undoRedo.clearLocal(s_id);
-	};
-	this.undoNugget = function undoNugget(s_id){//undo a whole nugget and return an enter/exit object.
-		var delta=undoRedo.localUndo(s_id);
-		var ret=deltaToId(delta);
-		while(delta!=null){
-			deltaLeft(delta);
-			delta=undoRedo.localUndo(s_id);
-			var tmp=deltaToId(delta);
-			ret.enter=union(ret.enter,tmp.enter);//acumulator for enter
-			ret.exit=union(ret.exit,tmp.exit);//acumulator for exit
-		}
-		return ret;
-	};
-	this.redoNugget = function redoNugget(s_id){//redo a whole nugget undowed and return an exit/enter object
-		var delta=undoRedo.localRedo(s_id);
-		var ret=deltaToId(delta);
-		while(delta!=null){
-			deltaRight(delta);
-			delta=undoRedo.localRedo(s_id);
-			var tmp=deltaToId(delta);
-			ret.enter=union(ret.enter,tmp.enter);//acumulator for enter
-			ret.exit=union(ret.exit,tmp.exit);//acumulator for exit
-		}
-		return ret;
-	};
-	var deltaLeft = function(delta){//internal function for the left side of a delta
-        if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.edges)) {
-            for (var i = 0; i < delta.right.edges.length; i++) {
-                clEdge(delta.right.edges[i].getId());
-            }
-        }
-        if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.nodes)) {
-			for (var i = 0; i < delta.right.nodes.length; i++)
-				clNode(delta.right.nodes[i].getId());
-		}
-		if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.nodes)) {
-			for (var i = 0; i < delta.left.nodes.length; i++)
-				putNode(delta.left.nodes[i]);
-		}
-		if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.edges)) {
-			for (var i = 0; i < delta.left.edges.length; i++)
-				putEdge(delta.left.edges[i]);
-		}
-	};
-	var deltaRight = function(delta){//internal function for the right side of the delta
-		var ret={'enter':[],'exit':[]};
-        if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.edges)) {
-            for (var i = 0; i < delta.left.edges.length; i++)
-                ret.exit.push(clEdge(delta.left.edges[i].getId()));
-        }
-        if(typeof delta.left!='undefined' && delta.left!=null && fullListCheck(delta.left.nodes)) {
-			for (var i = 0; i < delta.left.nodes.length; i++)
-				ret.exit.push(clNode(delta.left.nodes[i].getId()));
-		}
-		if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.nodes)) {
-			for (var i = 0; i < delta.right.nodes.length; i++)
-				ret.enter.push(putNode(delta.right.nodes[i]));
-		}
-		if(typeof delta.right!='undefined' && delta.right!=null && fullListCheck(delta.right.edges)) {
-			for (var i = 0; i < delta.right.edges.length; i++)
-				ret.enter.push(putEdge(delta.right.edges[i]));
-		}
-	};
-    this.getLabels = function getLabels(id){//return the labels of a node
-        return getNode(id).getLabels();
-    };
-    this.getType = function getType(id){//return the type of a node or an edge
-        if(idT(id)=='e')
-            return getEdge(id).getType();
-        else
-            return getNode(id).getType();
-    };
-    this.getFth = function getFth(id){//return the father of a node
-        return getNode(id).getFather();
-    };
-    this.getSons = function getSons(id){//return all the sons of a node
-        return getNode(id).getSons();
-    };
-    this.getNugget = function getNugget(id){//return the nugget of a son or an edge
-        if(idT(id)=='e')
-            return getEdge(id).getNugget();
-        else
-            return getNode(id).getNugget();
-    };
-    this.getValues = function getValues(id){//return the value of a node
-        return getNode(id).getValues();
-    };
-    this.getUid = function getUid(id){//return the uid of a node or an edge
-        return getNode(id).getUid();
-    };
-    /*this.copy = function copy(id){//unsafe ?
-    	if(idT(id)=='e') {
-			var e=getEdge(id).copy('e_'+EDGE_ID++);
-		}	
-		else if (idT(id)=='n') return getNode(id).copy('n_'+NODE_ID++);
-			else console.error("undefined id type : "+idT(id));
-	}*/
-    this.getSource = function getSource(id){//return the source of an edge
-        return getEdge(id).getSource();
-    };
-    this.getTarget = function getTarget(id){//return the target of an edge
-        return getEdge(id).getTarget();
-    };
-    this.getLastNodeId = function getLastNodeId(){//return the id of the last node created
-        return 'n_'+(NODE_ID-1);
-    };
-    this.getLastEdgeId = function getLastEdgeId(){//return the id of the last edge created
-        return 'e_'+(EDGE_ID-1);
-    };
-}
-function Relation(){//definition of a relation : sets of antecedent assiociated with sets of images
-    var antecedent_to_image={};//hashtable : key : antecedent, values : images
-    var image_from_antecedent={};//hashtable : key : image, values : antecedents
-    this.merge = function merge(im1,im2,res){
-		var ant1=union(this.getAnt(im1),this.getAnt(im2));
-		this.rmIm(im1);
-		this.rmIm(im2);
-		this.addR(ant1,[res]);
-	}
-	this.addR = function addR(ant_l,img_l){//add a relation between a list of antecedents and a list of images
-        for(var i=0;i<ant_l.length;i++) {
-            if(!fullListCheck(antecedent_to_image[ant_l[i]]))
-                antecedent_to_image[ant_l[i]]=[];
-            antecedent_to_image[ant_l[i]] = union(antecedent_to_image[ant_l[i]], img_l);
-        }
-        for(var i=0;i<img_l.length;i++) {
-            if(!fullListCheck(image_from_antecedent[img_l[i]]))
-                image_from_antecedent[img_l[i]]=[];
-            image_from_antecedent[img_l[i]] = union(image_from_antecedent[img_l[i]], ant_l);
-        }
-    };
-    this.getImg = function getImg(ant){//get all the images of a specific antecedent
-        if(fullListCheck(antecedent_to_image[ant]))
-            return antecedent_to_image[ant].concat();
-        else return null;
-    };
-    this.getAnt = function getAnt(img){//get all the antecedents of a specific image
-        if(fullListCheck(image_from_antecedent[img]))
-            return image_from_antecedent[img].concat();
-        else return null;
-    };
-    this.clR = function clR(){//clear the whole relation
-        antecedent_to_image={};
-        image_from_antecedent={};
-    };
-    this.rmIm = function rmIm(img){//remove a specific image
-        if(fullListCheck(image_from_antecedent[img])) {
-            for(var i=0;i<image_from_antecedent[img].length;i++){
-				
-                var idx=antecedent_to_image[image_from_antecedent[img][i]].indexOf(img);
-                if(idx>=0)
-                    antecedent_to_image[image_from_antecedent[img][i]].splice(idx,1);
-                else
-                    console.log("unable to find the image "+img+" in the antecedent hashtable");
-            }
-            image_from_antecedent[img] = [];
-        }
-    };
-    this.rmAnt = function rmAnt(ant){//remove a specific antecedent
-        if(fullListCheck(antecedent_to_image[ant])) {
-            for(var i=0;i<antecedent_to_image[ant].length;i++){
-                var idx=image_from_antecedent[antecedent_to_image[ant][i]].indexOf(ant);
-                if(idx>=0)
-                    image_from_antecedent[antecedent_to_image[ant][i]].splice(idx,1);
-                else
-                    console.log("unable to find the antecedent "+ant+" in the image hashtable");
-            }
-
-            antecedent_to_image[ant] = [];
-        }
-    };
-    this.rmR = function rmR(ant_l,img_l){//remove all relations between a list of antecedent and a list of images
-        for(var i=0;i<ant_l.length;i++){
-            for(var j=0;j<img_l.length;j++){
-                var idx=antecedent_to_image[ant_l[i]].indexOf(img_l[j]);
-                if(idx>=0)
-                    antecedent_to_image[ant_l[i]].splice(idx,1);
-                idx=image_from_antecedent[img_l[j]].indexOf(ant_l[i]);
-                if(idx>=0)
-                    image_from_antecedent[img_l[j]].splice(idx,1);
-            }
-        }
-    };
-    this.log = function log(){//log a whole relation
-        console.log("relations : ===================>");
-        console.log("antecedents->images : ===================>");
-        var an_to_im=Object.keys(antecedent_to_image);
-        for(var i=0;i<an_to_im.length;i++){
-            console.log(an_to_im[i]+ " : ");
-            console.log(antecedent_to_image[an_to_im[i]].concat());
-        }
-        console.log("images->antecedents : ===================>");
-        var im_to_an=Object.keys(image_from_antecedent);
-        for(var i=0;i<im_to_an.length;i++){
-            console.log(im_to_an[i]+ " : ");
-            console.log(image_from_antecedent[im_to_an[i]].concat());
-        }
-    };
-}
-function Tree(label,fth){//simple tree structure
-    this.label=label;
-    this.sons=[];
-    this.fth=fth;
-    this.addSon = function addSon(label){
-        this.sons.push(new Tree(label,this));
-    };
-}
-function Nugget(i,n,c){//define a nugget structure
-	var name = n || i;
-	var id = i;
-	var comments= c || "";
-	var visible = true;
-	var main_node = [];
-	var references ={"doi":"","publication":"","url":"","meta":""};
-	this.setMnode = function setMnode(id_l){//set the main node of a nugget 
-		main_node=id_l.concat();
-	};
-	this.getMnode = function getMnode(){//get the list of the main nodes of the nugget
-		return main_node.concat();
-	};
-	this.getName = function getName(){ return name;};//get the nugget name
-	this.getId = function getId(){ return id;};//get the nugget id
-	this.getComment = function getComment(){ return comments;};//get the nugget detail as comment
-	this.isVisible = function isVisible(){ return visible;};//set the nugget visible or not (for kami purpose)
-	this.setName = function setName(n){ name=n;};//change the nugget name
-	this.setComment = function setComment(c){comments = c;};//change the nugget comment
-	this.show = function show(){ visible=true;};//show the nugget
-	this.hide = function hide(){visible=false;};//hide the nugget
-	this.log = function log(){//log all nugget informations
-		console.log("Nugget "+id);
-		console.log("name : "+name);
-		console.log("comment : "+comments);
-		console.log("visible : "+visible);
-		console.log("main nodes : "+main_node.join());
-		console.log("---------------");
-	};
-	this.getRefs = function getRefs(){
-		return {"doi":references.doi,"publication":references.publication,"url":references.url,"meta":references.meta};
-	};
-	this.setDoi = function setDoi(d){
-		references.doi=d;
-	};
-	this.setPubli = function setPubli(d){
-		references.publication=d;
-	};
-	this.setUrl = function setUrl(d){
-		references.url=d;
-	};
-	this.setMeta = function setMeta(d){
-		references.meta=d;
-	};
-}
-function Kami(){//define the full workflow object, all the modification functions return an enter/exit object for all the graph (ngg, acg, lcg). Allow to do all updates localy !
+/*
+Kami contain a list of nuggets and there projection on a type graph called action graph.
+Kami is also able to transform those generic graph into site graph
+compatible with simulation using a predefined set of rewriting rules.
+The result of those rules is what we call the LCG and Kappa graph.
+Kami also take as "semantic constraints" a set of rules to apply to the whole nugget/action graph!
+define the full workflow object, all the modification functions return an enter/exit
+object for all the graph (ngg, acg, lcg,kag). Allow to do all updates localy !
+*/
+	/* add a new node to Kami
+	 * if it is part of a nugget, this node is added to the nugget graph
+	 * if this node is a new "type", create a new node in the act graph and create a new 'virtual' nugget generating it
+	 * this node is projected (typed) by the action graph.
+	 * it take a list of type, a nugget number, a label list (or null), a value list(or null) and a uid (or null)
+	 * the uid must exist, if it isn't defined a new one is generated 
+ */
+	/* add a new edge to Kami
+	 * edges are oriented !
+	 * if it is part of a nugget, this node is added to the nugget graph
+	 * if this edge is a new one, create a new edge in the act graph and create a new 'virtual' nugget generating it
+	 * this edge is projected (typed) by the action graph.
+	 * it take a list of type, a nugget number, a source and a target.
+	 * an edge doesn't have is own uid. it will be projected according to its node and target uid
+ */
+function Kami(){
 	var NUGGET_ID = 0;//id of nuggets for the nugget graph
 	//var UID = 0;//uid for projection
 	var nugg_graph = new LayerGraph();//nuggets graph
 	var ngg_R_acg = new Relation();//projection of nuggets into actions : contains nodes and edges (maybe edges are useless !)
 	var act_graph = new LayerGraph();//actions graph
 	var acg_R_lcg = new Relation();//projection of actions into LCG : only contains nodes
+	var kag_R_lcg = new Relation();//prejection of kappa nuggets into the LCG
 	var lcg = new LayerGraph();//Logical contact graph
+	var kag = new LayerGraph();//kappa nuggets derivied from LCG
 	var nuggets ={};//hashtable of all nuggets objects.
 	var viewable_nuggets={};
 	var always_conflict=false;
+	var semantic_check={"local":[],"global":[]};
+	var convert_rules={};
+	this.globalSemanticCheck = function globalSemanticCheck(){
+		
+	};
+	this.setSemanticConstraints = function setSemanticCOnstraints(sem_ct){//set all the semantic constraints rules
+		if(!sem_ct){
+			console;log("Semantic constraints cleanup");
+			semantic_check={"local":[],"global":[]};
+		}
+		semantic_check.local=sem_ct.local;
+		semantic_check.global=sem_ct.global;
+		/*var correctNodeType = function(t){//semantic check for node type
+		var MAINTYPE=["component","action","super","attribute"];
+		var SUBTYPE=[["agent","region","keyres","flag"],["mod","modpos","modneg","syn","deg","bnd","brk","input","output"],["family","set","process"]];
+		return fullListCheck(t) && (t[0]=="attribute" || (t.length==2 && MAINTYPE.indexOf(t[0])!=-1 && SUBTYPE[MAINTYPE.indexOf(t[0])].indexOf(t[1])!=-1));
+	}
+	var correctEdgeType = function(t){//semantic check for edge type
+		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule","depend"];
+		return fullListCheck(t) && MAINTYPE.indexOf(t[0])!=-1;
+	}*/
+	}
+	var localSemanticCheck = function (delta){//this fonction is called using the user defined semantic checks.
+		return delta;
+	}
+	this.setConvertRules = function setConvertRules(rules){//set the LCG covnersion rules.
+		if(!rules){
+			console.log("No convertion rules : LCG set to identity");
+			convert_rules={};
+		}
+		convert_rules=rules;
+	}
 	this.cleanLCG = function cleanLCG(){
 		lcg=new LayerGraph();
+		kag=new LayerGraph();
 		acg_R_lcg = new Relation();
+		kag_R_lcg = new Relation();
 	}
 	this.setDefaultConflictRule = function setDefaultConflictRule(val){
 		always_conflict=val;
@@ -1030,6 +85,8 @@ function Kami(){//define the full workflow object, all the modification function
                 return nugg_graph;
             case "LCG":
                 return lcg;
+			case "KAG":
+				return kag;
 			default:
 				throw new Error("unknown value : "+lg_name);
         }
@@ -1043,22 +100,6 @@ function Kami(){//define the full workflow object, all the modification function
 	this.getEdges = function getEdges(lg_name){//return the whole edges as a list of id (e_X)
 		return getLg(lg_name).getEdges();
 	};
-	var correctNodeType = function(t){//semantic check for node type
-		var MAINTYPE=["component","action","super","attribute"];
-		var SUBTYPE=[["agent","region","keyres","flag"],["mod","modpos","modneg","syn","deg","bnd","brk","input","output"],["family","set","process"]];
-		return fullListCheck(t) && (t[0]=="attribute" || (t.length==2 && MAINTYPE.indexOf(t[0])!=-1 && SUBTYPE[MAINTYPE.indexOf(t[0])].indexOf(t[1])!=-1));
-	}
-	var correctEdgeType = function(t){//semantic check for edge type
-		var MAINTYPE=["link","parent","posinfl","neginfl","rw_rule","depend"];
-		return fullListCheck(t) && MAINTYPE.indexOf(t[0])!=-1;
-	}
-	/* add a new node to Kami
-	 * if it is part of a nugget, this node is added to the nugget graph
-	 * if this node is a new type, create a new node in the act graph and create a new 'virtual' nugget generating it
-	 * this node is projected (typed) by the action graph.
-	 * it take a list of type, a nugget number, a label list (or null), a value list(or null) and a uid (or null)
-	 * the uid must exist, if it isn't defined a new one is generated 
-	 * this function return a delta object containing the enter and exit set for each three layer graph */
 	var newInstanceOf = function(id,ng){//create a new instance of an existing node in the action graph
 		if(!act_graph.nodeExist(id)) throw new Error("unexisting node in action graph : "+id);
 		return nugg_graph.addNode(act_graph.getType(id),ng,act_graph.getLabels(id),act_graph.getValues(id),act_graph.getUid(id));
@@ -1067,8 +108,6 @@ function Kami(){//define the full workflow object, all the modification function
 		var delta={"NGG":null,"ACG":null,"LCG":null};
 		if(idT(u)!="up" && (idT(u)!="u"))
 			throw new Error("bad uid definition : "+u);
-		if(!correctNodeType(t))
-			throw new Error("bad type definition : "+t);
 		if(lg_name=="NGG" && (idT(ng)!= "ng" || idV(ng)>=NUGGET_ID))
 			throw new Error("This nugget isn't defined ! "+ng);
 		if(lg_name=="ACG" && fullListCheck(act_graph.getNodeByUid(idV(u))))
@@ -1080,7 +119,7 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		delta.NGG=nugg_graph.addNode(t,[tmp_ng],l,v,u);
 		if(nuggets[tmp_ng].isVisible())
-			delta.ACG=updateNRA(semantick_checker(delta.NGG));
+			delta.ACG=updateNRA(localSemantickCheck(delta.NGG));
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.setMainNode = function setMainNode(n_id,n_list){//set a list of nodes as the mains nodes of a nugget, they must be part of this nugget!
@@ -1105,7 +144,7 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		return exit_update;
 	}
-	var enterNNRA = function(delta,i){
+	var enterNNRA = function(delta,i){//add all the new edge of the enter segment
 		var tmp_uid=nugg_graph.getUid(delta.enter[i]);
 		var pr_id=act_graph.getNodeByUid(tmp_uid);//if the added node image doesn't exit yet, create it. add it to the antecedent of the image node : image node have the same uid !
 		var tmp_delta={'exit':[],'enter':[]};
@@ -1129,22 +168,22 @@ function Kami(){//define the full workflow object, all the modification function
 		ngg_R_acg.addR([delta.enter[i]],[pr_id]);//add the projection relation between this node and the ACG node.
 		return tmp_delta;
 	}
-	var enterENRA = function(delta,i){//add needed edges this delta contains only the needed edges (no enter/exit structure)
-		var s_id=nugg_graph.getSource(delta[i]);
-		var t_id=nugg_graph.getTarget(delta[i]);
+	var enterENRA = function(e_list,i){//add needed edges the e_list contains only the needed edges (no enter/exit structure)
+		var s_id=nugg_graph.getSource(e_list[i]);
+		var t_id=nugg_graph.getTarget(e_list[i]);
 		var pr_s=ngg_R_acg.getImg(s_id)[0];//flatten this one element list
 		var pr_t=ngg_R_acg.getImg(t_id)[0];//flatten this one element list
-		var tmp_delta={"enter":[],"exit":[]};
-		var pr_e=multiIntersection([act_graph.getEdgeBySource(pr_s),act_graph.getEdgeByTarget(pr_t),act_graph.getEdgeByType(nugg_graph.getType(delta[i]))]);//get all existing edges i the ACG connecting the same source and id
-		if (pr_e.length==0){//if there is no edges in the ACG, create an edge and update the delta!
-			var tmp_delta=act_graph.addEdge(nugg_graph.getType(delta[i]),"ng_0",pr_s,pr_t);
+		var tmp_e_list={"enter":[],"exit":[]};
+		var pr_e=multiIntersection([act_graph.getEdgeBySource(pr_s),act_graph.getEdgeByTarget(pr_t),act_graph.getEdgeByType(nugg_graph.getType(e_list[i]))]);//get all existing edges i the ACG connecting the same source and id
+		if (pr_e.length==0){//if there is no edges in the ACG, create an edge and update the e_list!
+			var tmp_e_list=act_graph.addEdge(nugg_graph.getType(e_list[i]),"ng_0",pr_s,pr_t);
 			pr_e=act_graph.getLastEdgeId();
 		} 
 		else if(pr_e.length==1)
 			pr_e=pr_e[0];//flatten the one element list
-		else throw new Error("more images than excepted for : "+delta[i]);//if there is more than one edge, it is a mistake in the whole code !
-		ngg_R_acg.addR([delta[i]],[pr_e]);
-		return tmp_delta;
+		else throw new Error("more images than excepted for : "+e_list[i]);//if there is more than one edge, it is a mistake in the whole code !
+		ngg_R_acg.addR([e_list[i]],[pr_e]);
+		return tmp_e_list;
 	}
 	var updateNRA = function(delta){//update the nugget to acg relation. take the enter/exit object from the nugget graph and return the enter/exit object for the Action graph !
 		var ret={'exit':[],'enter':[]};
@@ -1191,7 +230,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNode(id);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}
 		if(lg_name=="ACG"){
 			var dl=ngg_R_acg.getAnt(id);
@@ -1216,7 +255,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id1);
 			delta.NGG=nugg_graph.mergeNode(id1,id2);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var uid1=nugg_graph.getNodeByUid(act_graph.getUid(id1));
 			var uid2=nugg_graph.getNodeByUid(act_graph.getUid(id2));
@@ -1251,7 +290,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG=nugg_graph.addNodeLabels(id,l);
 			var ng=nugg_graph.getNugget(id)[0];
 			if(nuggets[ng].isVisible()){
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 				
 			}
 		}
@@ -1263,7 +302,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNodeLabels(id,l);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var lbNode=[];
 			if(!fullListCheck(l)) l=act_graph.getLabels(id);
@@ -1292,7 +331,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.chNodeUid(id,uid);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}else if(lg_name=="ACG"){
 			if(fullListCheck(act_graph.getNodeByUid(uid)))
 				throw new Error("This UID : "+uid+" already exists in the contact map, please use merge instead !");
@@ -1320,7 +359,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG=nugg_graph.addNodeValues(id,l);
 			var ng=nugg_graph.getNugget(id)[0];
 			if(nuggets[ng].isVisible()){
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 				
 			}
 		}
@@ -1332,7 +371,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmNodeValues(id,l);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}else if(lg_name=="ACG"){
 			var lbNode=[];
 			if(!fullListCheck(l)) l=act_graph.getValues(id);
@@ -1378,7 +417,7 @@ function Kami(){//define the full workflow object, all the modification function
 			delta.NGG.enter=union(delta.NGG.enter,tmp_delta.enter);
 			delta.NGG.exit=union(delta.NGG.exit,tmp_delta.exit);
 		if(nuggets[tmp_ng].isVisible())
-			delta.ACG=updateNRA(semantick_checker(delta.NGG));
+			delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		return delta;//delta is the enter/exit structure for each graph of kami
 	};
 	this.rmEdge = function rmEdge(id,lg_name){//remove an edge
@@ -1387,7 +426,7 @@ function Kami(){//define the full workflow object, all the modification function
 			var ng=nugg_graph.getNugget(id);
 			delta.NGG=nugg_graph.rmEdge(id);
 			if(nuggets[ng].isVisible())
-				delta.ACG=updateNRA(semantick_checker(delta.NGG));
+				delta.ACG=updateNRA(localSemanticCheck(delta.NGG));
 		}
 		if(lg_name=="ACG"){
 			var dl=ngg_R_acg.getAnt(id);
@@ -1629,10 +668,6 @@ function Kami(){//define the full workflow object, all the modification function
 		}
 		return tmp_id;
 	}
-	var semantick_checker = function(delta){//here is the dynamic semantic checker : for each modification of the nugget graph, it check that the knowledge stay coherent.
-		//semantic checker take a delta of modified node, do some modifications according to the type graph properties or the user answers and then it return a new delta corresponding to the nodes which are really modified !
-		return delta;
-	};
 	this.createLcg = function createLcg(conflict_b){//create a LCG showing only viewable nuggets. This section is modifiable according to semantics constraints.
 		this.cleanLCG();
 		var graph_cmp=["action","agent","region","keyres","flag","attribute"];//put here all new node type !

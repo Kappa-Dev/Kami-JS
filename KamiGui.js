@@ -11,16 +11,16 @@ function KamiGui(k){
 	var side_st;
 	var openclose = function(){//open/close switch for side menu bar
 		d3.event.stopPropagation();
-		var size=side.style("width")=="300px"?"0px":"300px";
+		var size=side.style("width")!="0px"?"0px":"15.6%";
 		side.style("min-width",size);
 		graph_frame.style("margin-left",size);
 		side.style("width",size);
 	}
 	var openSide=function(){//open the side menu
 		d3.event.stopPropagation();
-		side.style("min-width","300px");
-		graph_frame.style("margin-left","300px");
-		side.style("width","300px");
+		side.style("min-width","15.6%");
+		graph_frame.style("margin-left","15.6%");
+		side.style("width","15.6%");
 	}
 	var closeSide=function(){//close the side menu
 		d3.event.stopPropagation();
@@ -31,12 +31,19 @@ function KamiGui(k){
 	var closeNugget = function(){//close the nugget creation div
 		d3.select("#nugg_editor").property("disabled",true).style("display","none");
 	}
+	var extractNugget(selection){//extract all the object from a selection and considere them as a new nugget
+		
+	}
+	var svgPanFactory(container){//create a generic svg pan with zoom and dgra behavior allowing to show a graph and listen to events.
+		d3.select(container).append("svg:svg").
+	}
 	var openNugget = function(){//open the nugget creation div
 		openSide();
 		d3.select("#nugg_editor").property("disabled",false).style("display","initial");
 	}
 	var saveNugget = function(){//push the whole nugget designed in the nugget editor into the nugget graph
 		closeNugget();
+		//Parser.pushNugget(extractNugget(nugg_editor.select(".svg_pan"))); !!!!! implement this !
 		nugg_editor.select(".svg_pan").selectAll("*").remove();
 		console.log("nugget saved");
 		modified=true;
@@ -51,9 +58,9 @@ function KamiGui(k){
 		var tabs=[{"id":"NGG","txt":"My nuggets"},{"id":"ACG","txt":"Big mechanism"},{"id":"LCG","txt":"Contact map"},{"id":"KAG","txt":"Kappa nuggets"},{"id":"KAC","txt":"Kappa program"}];
 		menu.selectAll(".tab_menu_el").data(tabs).enter().append("div").classed("tab_menu_el",true)
 																		.classed("unselectable",true)
-																		.text(function(d){return d.txt})
 																		.attr("id",function(d){return d.id})
-																		.on("click",function(d){return tabChange(d.id)});
+																		.on("click",function(d){return tabChange(d.id)})
+																		.text(function(d){return d.txt});
 	}
 	var tabChange = function(id){//change the view according to the current tab.
 		if(current_tab!=id){
@@ -69,7 +76,7 @@ function KamiGui(k){
 		current_tab=id;
 		update();
 	}
-	var update = function(){
+	var update = function(){//update the whole SVG Graph if needed.
 		console.log("updated");
 	}
 	var showHideNugget = function(ng_l){//show all the node of the selected nugget, grayse the other.
@@ -78,6 +85,8 @@ function KamiGui(k){
 	var updateSideList = function(ng_l){//show a list of information in the side list.
 		
 	}
+	//create an div button for the specified container, using the specified data
+	//data is of form ["name","id","value"]
 	var createInputDiv = function(container,data){
 		var tmp_ct = d3.select(container).append("div").classed("content_list",true);
 		tmp_ct.append("div").text(data[0]).classed("inline_title",true);
@@ -207,7 +216,7 @@ function KamiGui(k){
 		side_st=state;
 	}
 	var initSide = function(){
-		d3.select("#side_content").append("div").classed("side_el",true).html("<br /><br />Kami :<br /> Knowledge aggregation & model isntanciator<br /> To start using it :<br /><br /> import a file <br /><br /> or click on the button bellow<br /> to start creating nuggets<br /><br /><br /><br />").classed("unselectable",true)
+		d3.select("#side_content").append("div").classed("side_el",true).html("<br /><br />Kami :<br /> Knowledge aggregation & model instantiator<br /> To start using it :<br /><br /> import a file <br /><br /> or click on the button bellow<br /> to start creating nuggets<br /><br /><br /><br />").classed("unselectable",true)
 		d3.select("#side_content").append("div").classed("side_el",true).classed("side_button",true).on("click",openNugget).html("Create a new nugget").classed("unselectable",true);
 		
 	};
@@ -227,9 +236,9 @@ function KamiGui(k){
 			d.x=d.x<0?0:d.x;
 			var parent_bbox=main_container.node().getBoundingClientRect();
 			var bbox=d3.select(this).node().getBoundingClientRect();
-			d.x=d.x+bbox.width>parent_bbox.width-5?parent_bbox.width-bbox.width-5:d.x;
+			d.x=d.x+bbox.width>parent_bbox.width-(parent_bbox.width*2)/100?parent_bbox.width-bbox.width-(parent_bbox.width*2)/100:d.x;
 			d.y=d.y>0?0:d.y;
-			d.y=d.y-bbox.height<-parent_bbox.height+50?-parent_bbox.height+bbox.height+50:d.y;
+			d.y=d.y-bbox.height<-parent_bbox.height+(parent_bbox.height*5.1)/100?-parent_bbox.height+bbox.height+(parent_bbox.height*5.1)/100:d.y;
             d3.select(this).style("transform", function(d,i){
                 return "translate("+d.x+"px,"+d.y+"px)";
             });
@@ -261,9 +270,10 @@ function KamiGui(k){
 		var mod_menu=top_chart.append("div").attr("id","mod_menu").classed("mod_menu",true);
 		mod_menu.append("div").classed("mod_el",true).classed("undoredo",true).on("click",undo).html("&#x21a9;").classed("unselectable",true);
 		mod_menu.append("div").classed("mod_el",true).classed("undoredo",true).on("click",redo).html("&#x21aa;").classed("unselectable",true);
+		mod_menu.append("div").attr("id","export").classed("mod_el",true).classed("mod_div",true).on("click",exportFile).html("Export").classed("unselectable",true);
 		mod_menu.append("input").classed("mod_el",true).attr("type","file").attr("id","import_f").classed("NGG",true);
 		mod_menu.append("div").classed("mod_el",true).classed("mod_div",true).on("click",importFile).html("Import").classed("unselectable",true).classed("NGG",true);
-		mod_menu.append("div").classed("mod_el",true).classed("mod_div",true).on("click",exportFile).html("Export").classed("unselectable",true);
+		
 		//initialize the top search bar
 		top_chart.append("input").attr("type","text").attr("id","search").attr("placeholder","Search..").on("focus",validable_text(searchFor)).on("blur",unvalid_text);
 		//add all the svg tabs
