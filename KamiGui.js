@@ -29,19 +29,22 @@ function KamiGui(k){
 		side.style("width","0px");
 	}
 	var closeNugget = function(){//close the nugget creation div
-		d3.select("#nugg_editor").property("disabled",true).style("display","none");
+		d3.select("#nugg_editor").property("disabled",true)
+								.style("display","none");
 	}
-	var extractNugget(selection){//extract all the object from a selection and considere them as a new nugget
+	var extractNugget = function(selection){//extract all the object from a selection and considere them as a new nugget
 		
 	}
-	var svgPanFactory(container){//create a generic svg pan with zoom and dgra behavior allowing to show a graph and listen to events.
-		d3.select(container).append("svg:svg").
+	var svgPanFactory = function(container){//create a generic svg pan with zoom and dgra behavior allowing to show a graph and listen to events.
+		d3.select(container).append("svg:svg");
 	}
 	var openNugget = function(){//open the nugget creation div
 		openSide();
 		d3.select("#nugg_editor").property("disabled",false).style("display","initial");
 	}
 	var saveNugget = function(){//push the whole nugget designed in the nugget editor into the nugget graph
+		d3.select("#nugg_editor").style("width",function(d){d.width=0;return "27%";})
+								.style("height",function(d){d.height=0;return "37%";});
 		closeNugget();
 		//Parser.pushNugget(extractNugget(nugg_editor.select(".svg_pan"))); !!!!! implement this !
 		nugg_editor.select(".svg_pan").selectAll("*").remove();
@@ -51,6 +54,8 @@ function KamiGui(k){
 	var discardNugget = function(){//clear the nugget editor pan
 		var ret=window.confirm("Are you sure you want to discard this work ?");
 		if (!ret) return;
+		d3.select("#nugg_editor").style("width",function(d){d.width=0;return "27%";})
+								.style("height",function(d){d.height=0;return "37%";});
 		nugg_editor.select(".svg_pan").selectAll("*").remove();
 		console.log("nugget discarded");
 	}
@@ -229,19 +234,36 @@ function KamiGui(k){
 		var container=main_container.append("div").attr("id","container");
 		//add the floating div for nugget edition
 		nugg_editor=main_container.append("div").attr("id","nugg_editor");
-		nugg_editor.datum({"x":10,"y":10});
+		nugg_editor.datum({"x":0,"y":0,"height":0,"width":0});
 		var nuggetDrag = d3.drag().on("drag", function(d,i) {
-            d.x += d3.event.dx;
-            d.y += d3.event.dy;
-			d.x=d.x<0?0:d.x;
+			console.log(d);
+			if(d.width==0){
+				var bbox=d3.select(this).node().getBoundingClientRect();
+				d.width=bbox.width;
+				d.height=bbox.height;
+				console.log("d_up");
+				console.log(d);
+			}
 			var parent_bbox=main_container.node().getBoundingClientRect();
-			var bbox=d3.select(this).node().getBoundingClientRect();
-			d.x=d.x+bbox.width>parent_bbox.width-(parent_bbox.width*2)/100?parent_bbox.width-bbox.width-(parent_bbox.width*2)/100:d.x;
-			d.y=d.y>0?0:d.y;
-			d.y=d.y-bbox.height<-parent_bbox.height+(parent_bbox.height*5.1)/100?-parent_bbox.height+bbox.height+(parent_bbox.height*5.1)/100:d.y;
-            d3.select(this).style("transform", function(d,i){
+			var n_x=d3.event.dx;
+			var n_y=d3.event.dy;
+            if(d3.event.sourceEvent!=null && d3.event.sourceEvent.ctrlKey){
+				d.width += n_x;
+				d.height -= n_y;
+				d.width = Math.min(Math.max(50,d.width),parent_bbox.width);
+				d.height = Math.min(Math.max(50, d.height),parent_bbox.height);
+				console.log(d);
+				console.log("--------------");
+				nugg_editor.style('width', d.width + 'px').style('height',d.height + 'px');
+		}else{
+			d.x += n_x;
+            d.y += n_y;
+			d.x=Math.min(Math.max(d.x,0),parent_bbox.width-(parent_bbox.width*2)/100-d.width);
+			d.y=Math.max(Math.min(d.y,0),-parent_bbox.height+(parent_bbox.height*5.1)/100+d.height);
+			d3.select(this).style("transform", function(d,i){
                 return "translate("+d.x+"px,"+d.y+"px)";
             });
+		}
 		})
 		.on("end",function(d){
 			d3.select(this).style("cursor","default");
@@ -254,6 +276,7 @@ function KamiGui(k){
 		nugg_editor.append("div").classed("close_side_menu",true).on("click",closeNugget).html("&#x274c;").classed("unselectable",true);//add a close button
 		nugg_editor.append("div").classed("save",true).on("click",saveNugget).html("&#x1f4be;").classed("unselectable",true);//add a save
 		nugg_editor.append("div").classed("discard",true).on("click",discardNugget).html("&#x1f5d1;").classed("unselectable",true);//add a discard
+		//nugg_editor.append("div").classed("close_side_menu",true).call(drag_ng_pan).html("&#9701;").classed("unselectable",true);
 		//add the side menu div
 		side=container.append("div").attr("id","side_menu");//main div of side menu
 		side.append("div").attr("id","side_title");

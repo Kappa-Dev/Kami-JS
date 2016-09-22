@@ -62,8 +62,8 @@ body{
 	border-radius:10px;
 	width:27%;
 	height:37%;
-	max-width:518px;
-	max-height:400px; 
+	max-width:100%;
+	max-height:94.9%; 
 	box-shadow: 5px 5px 5px #888888;
 	z-index: 100;
 	display: block;
@@ -83,8 +83,8 @@ body{
 .close_side_menu{
 	position:absolute;
 	float:right;
-	top:0.7%;
-	right:2%;
+	top:5px;
+	right:3px;
 	color:#0f71ba;
 	font-size:200%;
 }
@@ -92,7 +92,7 @@ body{
 	position:absolute;
 	float:left;
 	top:0px;
-	left:1%;
+	left:5px;
 	color:#0f71ba;
 	font-size:200%;
 	text-align:center;
@@ -100,7 +100,7 @@ body{
 .discard{
 	position:absolute;
 	float:right;
-	bottom:1%;
+	bottom:5px;
 	right:0.1%;
 	color:rgb(204, 0, 0);
 	font-size:250%;
