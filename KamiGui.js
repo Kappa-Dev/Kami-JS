@@ -32,12 +32,6 @@ function KamiGui(k){
 		d3.select("#nugg_editor").property("disabled",true)
 								.style("display","none");
 	}
-	var extractNugget = function(selection){//extract all the object from a selection and considere them as a new nugget
-		
-	}
-	var svgPanFactory = function(container){//create a generic svg pan with zoom and dgra behavior allowing to show a graph and listen to events.
-		d3.select(container).append("svg:svg");
-	}
 	var openNugget = function(){//open the nugget creation div
 		openSide();
 		d3.select("#nugg_editor").property("disabled",false).style("display","initial");
@@ -84,25 +78,6 @@ function KamiGui(k){
 	var update = function(){//update the whole SVG Graph if needed.
 		console.log("updated");
 	}
-	var showHideNugget = function(ng_l){//show all the node of the selected nugget, grayse the other.
-		
-	}
-	var updateSideList = function(ng_l){//show a list of information in the side list.
-		
-	}
-	//create an div button for the specified container, using the specified data
-	//data is of form ["name","id","value"]
-	var createInputDiv = function(container,data){
-		var tmp_ct = d3.select(container).append("div").classed("content_list",true).style("inline","block");
-		tmp_ct.append("div").text(data[0]).classed("inline_title",true);
-		tmp_ct.append("input").classed("inline_text",true).attr("type","text").attr("id",data[1]).attr("value",data[2]);
-	}
-	var updateSideNode = function(n){
-		var content=d3.select("#side_content");
-		var attr_def=["labels","nid","type","father","sons","values"];
-		var attr_txt=["Labels :", "Nugget id :","Type :", "Father :", "Sons :", "values :"];
-		attr_def.map(function(e,i){createInputDiv(content,[attr_txt[i],e,n[i]])});
-	}
 	var undo=function(){//call undo on the current tab
 		console.log("undo");
 	}
@@ -117,7 +92,6 @@ function KamiGui(k){
 	}
 	var validable_text = function(fun){//create a validable text for the search bar
 		d3.select(d3.event.target).on("keydown",function(){if (d3.event.keyCode==13) fun(d3.select(d3.event.target).node().value)});
-		
 	}
 	var unvalid_text = function(){//remove key listener for search bar
 		d3.select(d3.event.target).on("keydown",null);
@@ -165,7 +139,7 @@ function KamiGui(k){
 					console.error("unknown header. Headers are : n,ng,u,up");
 					return;
 			}
-			updateSideListNode(nodes.map(function(e){return {"id":e,"name"+kami.getLabels(e),"visible":kami.isNgVisible(kami.getNugget(e)),"popup":{"comment":kami.getNgComment(e),"main_node":kami.getNgMnode(e),"references":kami.getNgRefs(e)}};}));
+			//updateSideListNode(nodes.map(function(e){return {"id":e,"name"+kami.getLabels(e),"visible":kami.isNgVisible(kami.getNugget(e)),"popup":{"comment":kami.getNgComment(e),"main_node":kami.getNgMnode(e),"references":kami.getNgRefs(e)}};}));
 			showHideNodes(nodes);
 			return;
 		}
@@ -294,7 +268,7 @@ function KamiGui(k){
 		mod_menu.append("div").classed("mod_el",true).classed("undoredo",true).on("click",undo).html("&#x21a9;").classed("unselectable",true);
 		mod_menu.append("div").classed("mod_el",true).classed("undoredo",true).on("click",redo).html("&#x21aa;").classed("unselectable",true);
 		mod_menu.append("div").attr("id","export").classed("mod_el",true).classed("mod_div",true).on("click",exportFile).html("Export").classed("unselectable",true);
-		mod_menu.append("input").classed("mod_el",true).attr("type","file").attr("id","import_f").classed("NGG",true);
+		mod_menu.append("input").classed("mod_el",true).attr("type","file").attr("id","import_f").property("multiple",true).classed("NGG",true);
 		mod_menu.append("div").classed("mod_el",true).classed("mod_div",true).on("click",importFile).html("Import").classed("unselectable",true).classed("NGG",true);
 		
 		//initialize the top search bar
