@@ -93,7 +93,7 @@ function KamiGui(k){
 	//create an div button for the specified container, using the specified data
 	//data is of form ["name","id","value"]
 	var createInputDiv = function(container,data){
-		var tmp_ct = d3.select(container).append("div").classed("content_list",true);
+		var tmp_ct = d3.select(container).append("div").classed("content_list",true).style("inline","block");
 		tmp_ct.append("div").text(data[0]).classed("inline_title",true);
 		tmp_ct.append("input").classed("inline_text",true).attr("type","text").attr("id",data[1]).attr("value",data[2]);
 	}
@@ -116,10 +116,11 @@ function KamiGui(k){
 		console.log("exporting");
 	}
 	var validable_text = function(fun){//create a validable text for the search bar
-		d3.select(this).on("keydown",function(){if (d3.event.keyCode==13) fun(d3.select(this).node().value)});
+		d3.select(d3.event.target).on("keydown",function(){if (d3.event.keyCode==13) fun(d3.select(d3.event.target).node().value)});
+		
 	}
 	var unvalid_text = function(){//remove key listener for search bar
-		d3.select(this).on("keydown",null);
+		d3.select(d3.event.target).on("keydown",null);
 	}
 	var searchFor=function(val){//search a specific element in the current tab.
 		var res=val.split(":");
@@ -164,7 +165,7 @@ function KamiGui(k){
 					console.error("unknown header. Headers are : n,ng,u,up");
 					return;
 			}
-			//updateSideListNode(nodes.map(function(e){return {"id":e,"name"+kami.getLabels(e),"visible":kami.isNgVisible(kami.getNugget(e)),"popup":{"comment":kami.getNgComment(e),"main_node":kami.getNgMnode(e),"references":kami.getNgRefs(e)}};}));
+			updateSideListNode(nodes.map(function(e){return {"id":e,"name"+kami.getLabels(e),"visible":kami.isNgVisible(kami.getNugget(e)),"popup":{"comment":kami.getNgComment(e),"main_node":kami.getNgMnode(e),"references":kami.getNgRefs(e)}};}));
 			showHideNodes(nodes);
 			return;
 		}
@@ -276,7 +277,6 @@ function KamiGui(k){
 		nugg_editor.append("div").classed("close_side_menu",true).on("click",closeNugget).html("&#x274c;").classed("unselectable",true);//add a close button
 		nugg_editor.append("div").classed("save",true).on("click",saveNugget).html("&#x1f4be;").classed("unselectable",true);//add a save
 		nugg_editor.append("div").classed("discard",true).on("click",discardNugget).html("&#x1f5d1;").classed("unselectable",true);//add a discard
-		//nugg_editor.append("div").classed("close_side_menu",true).call(drag_ng_pan).html("&#9701;").classed("unselectable",true);
 		//add the side menu div
 		side=container.append("div").attr("id","side_menu");//main div of side menu
 		side.append("div").attr("id","side_title");
@@ -298,7 +298,7 @@ function KamiGui(k){
 		mod_menu.append("div").classed("mod_el",true).classed("mod_div",true).on("click",importFile).html("Import").classed("unselectable",true).classed("NGG",true);
 		
 		//initialize the top search bar
-		top_chart.append("input").attr("type","text").attr("id","search").attr("placeholder","Search..").on("focus",validable_text(searchFor)).on("blur",unvalid_text);
+		top_chart.append("input").attr("type","text").attr("id","search").attr("placeholder","Search..").on("focus",function(){ return validable_text(searchFor)}).on("blur",unvalid_text);
 		//add all the svg tabs
 		var tabs=["NGG","ACG","LCG","KAG","KAC"];
 		tab_frame=graph_frame.append("div").attr("id","tab_frame");//add all tabl to frame
