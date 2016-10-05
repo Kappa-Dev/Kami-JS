@@ -28,6 +28,9 @@ function LayerGraph(i){
 	this.nodeExist = function nodeExist(id){
 		return typeof nodes[id]!='undefined' && nodes[id]!=null;
 	};
+	this.edgeExist = function edgeExist(id){
+		return typeof edges[id]!='undefined' && edges[id]!=null;
+	};
 	var getNode = function(id){//return a specific node for a specific id
 		if(typeof(nodes[id])!=undefined && nodes[id]!=null)
 			return nodes[id];
@@ -193,24 +196,29 @@ function LayerGraph(i){
 		var nodes_lists = [];
 		if(!labels)return nodes_lists;
 		labels.reduce(function(accu,e){
-			accu.push(Object.keys(nodesByLabel[e]));
+			var tmp_lb=nodesByLabel[e]?Object.keys(nodesByLabel[e]):[];
+			accu.push(tmp_lb);
 		},nodes_lists);
 		return multiIntersection(nodes_lists);
 	};
 	this.getNodeByType = function getNodeByType(t){//return all nodes of a specific type
 		if(!t) return this.getNodes();
+		if(!nodesByType[t]) return [];
 		return Object.keys(nodesByType[t]);
 	}
 	this.getEdgeByType = function getEdgeByType(t){//return all edges of a specific type
+		if(!edgesByType[t]) return [];
 		if(!t) return this.getEdges();
 		return Object.keys(edgesByType[t]);
 	}
 	this.getEdgeBySource = function getEdgeBySource(i_id){//return all the edges corresponding to a specific input (id list)
-		if(!i_id) return [];
+		if(!i_id) return this.getEdges();
+		if(!edgesBySource[i_id]) return [];
 		return Object.keys(edgesBySource[i_id]);
 	};
 	this.getEdgeByTarget = function getEdgeByTarget(o_id){//return all the edges corresponding to a specific output (id list)
-		if(!o_id) return [];
+		if(!o_id) return this.getEdges();
+		if(!edgesByTarget[o_id]) return [];
 		return Object.keys(edgesByTarget[o_id]);
 	};
 	this.log = function log() {//log the whole layer graph object
@@ -234,25 +242,33 @@ function LayerGraph(i){
 		console.log(edgesByTarget);
 	};
 	this.getLabels = function getLabels(id){//return the labels of a node
-        return getNode(id).getLabels();
+        if(!getNode(id)) throw new Error("unexisting node : "+id);
+		return getNode(id).getLabels();
     };
     this.getType = function getType(id){//return the type of a node or an edge
-        if(idT(id)=='e')
+        if(idT(id)=='e'){
+			if(!getEdge(id)) throw new Error("unexisting node : "+id);
             return getEdge(id).getType();
-        else
+        }else{
+			if(!getNode(id)) throw new Error("unexisting node : "+id);
             return getNode(id).getType();
+		}
     };
     this.getOutputNodes = function getOutputNodes(id,e_t){//return al the nodes from an input edge (or a specific type of edges)
-        return getNode(id).getOutputNodes(e_t);
+        if(!getNode(id)) throw new Error("unexisting node : "+id);
+		return getNode(id).getOutputNodes(e_t);
     };
     this.getInputNodes = function getInputNodes(id,e_t){//return al the nodes from an output edge (or a specific type of edges)
-        return getNode(id).getInputNodes(e_t);
+        if(!getNode(id)) throw new Error("unexisting node : "+id);
+		return getNode(id).getInputNodes(e_t);
     };
     this.getSource = function getSource(id){//return the source of an edge
-        return getEdge(id).getSource();
+        if(!getEdge(id)) throw new Error("unexisting node : "+id);
+		return getEdge(id).getSource();
     };
     this.getTarget = function getTarget(id){//return the target of an edge
-        return getEdge(id).getTarget();
+        if(!getEdge(id)) throw new Error("unexisting node : "+id);
+		return getEdge(id).getTarget();
     };
     this.getLastNodeId = function getLastNodeId(){//return the id of the last node created
         return 'n_'+(NODE_ID-1);
@@ -261,12 +277,15 @@ function LayerGraph(i){
         return 'e_'+(EDGE_ID-1);
     };
 	this.hasLabel = function hasLabel(id,l){
+		if(!getNode(id)) throw new Error("unexisting node : "+id);
 		return getNode(id).hasLabel(l);
 	};
 	this.hasInputNode = function hasInputNode(id,n,e_t){
+		if(!getNode(id)) throw new Error("unexisting node : "+id);
 		return getNode(id).hasInputNode(n,e_t);
 	};
 	this.hasOutputNode = function hasOutputNode(id,n,e_t){
+		if(!getNode(id)) throw new Error("unexisting node : "+id);
 		return getNode(id).hasOutputNode(n,e_t);
 	};
 	this.saveState = function saveState(){
@@ -279,4 +298,7 @@ function LayerGraph(i){
 		});
 		return ret;
 	};
+	this.searchNReplace = function searchNReplace(patern,enter,exit){//search a specific patern in the graph and transform it using the enter and exit informations
+		
+	}
 }

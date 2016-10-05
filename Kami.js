@@ -23,7 +23,14 @@ object for all the graph (ngg, acg, lcg,kag). Allow to do all updates localy !
 	 * an edge doesn't have is own uid. it will be projected according to its node and target uid
  */
 function Kami(){
-	var nuggets ={};
+	var nuggets ={"g_0":(function(){
+		var tmp=new Nugget("g_0","Root","Graph definition");
+		tmp.getGraph().addNode("NODE",["Node"]);
+		tmp.getGraph().addEdge("EDGE","n_0","n_0");
+		console.log("root generated !");
+		return tmp;
+		})()
+	};
 	this.init = function init(){//add the root immuable graph defining the notion of graph
 		var tmp=new Nugget("g_0","Root","Graph definition");
 			tmp.getGraph().addNode("NODE",["Node"]);
@@ -60,21 +67,48 @@ function Kami(){
 			});
 		}	
 	};
-	this.addNode = function addNode(g,t,l,rec_force){//0 : nothing, 1 : rec, 2: force, 3 : rec & force
-		if(nuggets[nuggets[g].getFather()].getGraph().getNodeByType(t).length==0 &&( !rec_force || rec_force==0 || rec_force==1)){
-			console.error("the type graph of "+g+" doesn't contain the type "+t+" please use the force option");
+	this.addNode = function addNode(g,t,l,rec){
+		if(!nuggets[g]) throw new Error("this nugget doesn't exist : "+g);
+		console.log(nuggets[nuggets[g].getFather()].getGraph().nodeExist(t));
+		if(!t || !nuggets[nuggets[g].getFather()].getGraph().nodeExist(t)){//if the type doesn't exist, return an error
+			console.error("the type graph of "+g+" doesn't contain the type "+t);
 			return;
-		}else if
-		nuggets[g].getGraph.addNode(t,l);
+		}
+		var delta=nuggets[g].getGraph.addNode(t,l);
+		if(rec && nuggets[g].hasSon()){
+			nuggets[g].getSons().forEach(function(e){
+				this.addNode(e,delta.enter.nodes[0],l,rec);
+			});
+		}
 	}
-	var recLog = function(e){
+	this.addEdge = function addEdge(g,t,i,o){
+		if(!nuggets[g]) throw new Error("this nugget doesn't exist : "+g);
+		if(!nuggets[g].getGraph().nodeExist(i))
+			throw new Error("the input node doesn't exist : "+i);
+		if(!nuggets[g].getGraph().nodeExist(o))
+			throw new Error("the input node doesn't exist : "+o);
+		if(!t || !nuggets[nuggets[g].getFather()].getGraph().edgeExist(t)){//if the type doesn't exist, return an error
+			console.error("the type graph of "+g+" doesn't contain the type "+t);
+			return;
+		}
+		var delta=nuggets[g].getGraph.addEdge(t,i,o);
+	}
+	/*var recLog = function(e){
 		nuggets[e].log();
 		console.log("============>");
 		if(nuggets[e].hasSon())
 			nuggets[e].getSons().forEach(recLog);
-	}
+	}*/
 	this.log = function log(){
-		recLog("g_0");
+		(function recLog(e){
+			nuggets[e].log();
+			console.log("============>");
+			if(nuggets[e].hasSon())
+				nuggets[e].getSons().forEach(recLog);
+		})("g_0");
+	};
+	this.getNugget = function getNugget(n){
+		return nuggets[n];
 	}
 };
 
