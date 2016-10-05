@@ -312,17 +312,3 @@ function graphicGui(k,c){//a graphic Gui use a svg caneva, nodes and edges and l
 
 
 }*/
-/*
-TODO
-afficher graph
-gerer event
-switch de vue
-projection (from nugget to action graph)
-compilation (use only action graph) 
-traduction (use lcg+nugget)
-attention: un noeud de nugget peut au final correspondre a de multiple noeud dans le lcg !, il peut aussi avoir disparu, inversement un noeud du lcg peut correspondre a plusieur noeud dans les nuggets !
-regle Kappa : on prend les action du LCG et les noeuds du LCG et on regarde les nuggets qui les mentionnent.
-*/
-//notes : creer tout les flag en kappa avec un state default : ask user.
-//also ask for default rates.
-//penser que label des agent strictement differents ! si un label en commun alors c'est le meme agent !
