@@ -186,6 +186,9 @@ rect.action.fixed {
 .bnd{
 	fill: #aaf;
 }
+.revers{
+	fill:#6600ff;
+}
 .brk{fill: #aae;}
 .mod{fill:#aad;}
 .syn{fill:#aac;}

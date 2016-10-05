@@ -186,6 +186,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("action",true)
 			.classed("mod",function(d){return d.classes[1]=="mod"})
 			.classed("bnd",function(d){return d.classes[1]=="bnd"})
+			.classed("revers",function(d){return d.classes[1]=="bnd" && d.classes[2]=="revers"})
 			.classed("brk",function(d){return d.classes[1]=="brk"})
 			.classed("syn",function(d){return d.classes[1]=="syn"})
 			.classed("deg",function(d){return d.classes[1]=="deg"})
@@ -406,9 +407,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	this.getCtxV = function getCtxV(id){//get a specific node context values
 		return layerG.copyVCtx(layerG.nodes[layerG.nodesHash[id]].valued_context);
-	};
-	this.getCtxA = function getCtxA(id){//get a specific node context values
-		return layerG.copyACtx(layerG.nodes[layerG.nodesHash[id]].apply_context);
 	};
 	this.addLabel = function addLabel(id,lbl){//add a label to a specific node
 		dynG.getForce().stop();
@@ -1185,6 +1183,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					}
 				},
 				{
+					title:"Reverse Bind",
+					action: function(elm,d,i){
+					var mousepos=d3.mouse(svg[0][0]);
+					self.addNode(["action","bnd","revers"],["rev-bind"],[],mousepos[0],mousepos[1]);
+					var last_node=layerG.nodes[layerG.nodes.length-1].id
+					self.addNode(["action","binder","left"],[],[last_node]);
+					self.addNode(["action","binder","right"],[],[last_node]);						
+					}
+				},
+				{
 					title:"Break",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
@@ -1273,7 +1281,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var lcgConvert = function(id_list){//convert a list of action into a LCG
 		var convert_table={};
-		id_list.sort(function(a,b){ if(nuggG.nodes[nuggG.nodesHash[a]].classes[0]=="bnd") return 1; else return -1});
+		//id_list.sort(function(a,b){ if(nuggG.nodes[nuggG.nodesHash[a]].classes[1]=="bnd") return 1; else return -1});//COOOOOOOOOOOMMMMMMMMMMMMMMMMMMMMMMMMMBOOOOOOOOOOBREAKER!!!!!!!!!!!
 		for(var i=0;i<id_list.length;i++){//for eache action
 			var tmp_node=nuggG.nodes[nuggG.nodesHash[id_list[i]]];//add the action in the LCG
 			addLcgAction(tmp_node,convert_table);
@@ -1418,7 +1426,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		layerG.log();
 	}
-	var getRoot = function(node,lg){//get the root node of a slecific node "node" in a specific grap "lg"
+	var getRoot = function(node,lg){//get the root node of a specific node "node" in a specific graph "lg"
 		var tmp_node=node;
 		while(typeof tmp_node.father!= "undefined" && tmp_node.father!=null){
 			tmp_node=lg.nodes[lg.nodesHash[tmp_node.father]];
@@ -1659,7 +1667,10 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		
 		var ret="";
 		ret+=sToText(node,rule.l,tmp_l_ctx);
-		ret+=" -> ";
+		if(node.classes[1]=="bnd" && node.classes.length>2 && node.classes[2]=="revers")
+			ret+=" <-> ";
+		else	
+			ret+=" -> ";
 		ret+=sToText(node,rule.r,tmp_r_ctx);
 		var rate="";
 		for(var i=0;i<node.sons.length;i++){
@@ -1668,6 +1679,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		}
 		if(rate=="") rate=prompt("please define the rate for action "+node.id+":"+node.label.join(","),"1");
 		ret+=" @ "+rate;
+		if(node.classes[1]=="bnd" && node.classes.length>2 && node.classes[2]=="revers" && rate.split(",").length<2) 
+			ret+=","+prompt("please define the reverse rate for action "+node.id+":"+node.label.join(","),"1");
 		return ret;
 	}
 	var sToText = function(node,side,ctx){
