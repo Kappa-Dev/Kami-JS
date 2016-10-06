@@ -25,6 +25,10 @@ function LayerGraph(i){
 	var edgesBySource={};//hashtable of edges, key:node input id, values: edges id list
 	var edgesByTarget={};//hashtable of edges, key:node output id, values:edges id list
 	var edgesByType={}//hashable of edges, key:edge type, values: edges id list
+	var self=this;
+	this.isEmpty = function isEmpty(){
+		return NODE_ID == 0 || Object.keys(nodes)==0;
+	}
 	this.nodeExist = function nodeExist(id){
 		return typeof nodes[id]!='undefined' && nodes[id]!=null;
 	};
@@ -64,6 +68,8 @@ function LayerGraph(i){
 	};
 	this.addEdge = function addEdge(t,i,o){//add a new edge to the graph
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
+		if(!nodes[i]) throw new Error("this node doesn't exist : "+i);
+		if(!nodes[o]) throw new Error("this node doesn't exist : "+o);
 		edges["e_"+EDGE_ID] = new Edge("e_"+EDGE_ID,t,id,i,o);
 		if(!edgesByType[t]) edgesByType[t]={};//add it to the type hashtable
 		edgesByType[t]["e_"+EDGE_ID]=true;
@@ -81,14 +87,17 @@ function LayerGraph(i){
 		if(!nodes[n_id]) throw new Error("this node doesn't exist : "+n_id);
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
 		delta.exit.nodes[n_id]=getNode(n_id).saveState();//save the node for undo redo
-		var linked_edges = union(this.getEdgesBySource(n_id),this.getEdgesByTarget(n_id));//get all linked edges
+		var linked_edges = union(this.getEdgeBySource(n_id),this.getEdgeByTarget(n_id));//get all linked edges
 		linked_edges.reduce(function(accu,e){
-			accu[e]=this.rmEdge(e).exit.edges[e];	//remove all linked edges and save them
+			accu[e]=self.rmEdge(e).exit.edges[e];	//remove all linked edges and save them
 		},delta.exit.edges);
 		getNode(n_id).getLabels().forEach(function(e){//remove the node from the label hashtable
 			delete nodesByLabel[e][n_id];
+			if(Object.keys(nodesByLabel[e]).length==0) delete nodesByLabel[e];
 		});
 		delete nodesByType[getNode(n_id).getType()][n_id];//remove the node from the type hashtable
+		if(Object.keys(nodesByType[getNode(n_id).getType()]).length==0)//remove this type if there is no nodes left
+			delete nodesByType[getNode(n_id).getType()];
 		delete nodes[n_id];//finally remove the node
 		return delta;
 	};
@@ -97,12 +106,42 @@ function LayerGraph(i){
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
 		delta.exit.edges[e_id]=getEdge(e_id).saveState();//save the edge for undo redo
 		delete edgesByType[getEdge(e_id).getType()][e_id];//remove the edge from the type hashtable
+		if(Object.keys(edgesByType[getEdge(e_id).getType()]).length==0)
+			delete edgesByType[getEdge(e_id).getType()];
 		delete edgesBySource[getEdge(e_id).getSource()][e_id];//remove the edge from the source hashtable
+		if(Object.keys(edgesBySource[getEdge(e_id).getSource()]).length==0)
+			delete edgesBySource[getEdge(e_id).getSource()];
 		delete edgesByTarget[getEdge(e_id).getTarget()][e_id];//remove the edge from the target hashtable
-		getNodes(getEdge(e_id).getTarget()).rmInputNodes(getNodes(getEdge(e_id).getSource()),getEdge(e_id).getType());//update nodes input/output hashtable
-		getNodes(getEdge(e_id).getSource()).rmInputNodes(getNodes(getEdge(e_id).getTarget()),getEdge(e_id).getType());
+		if(Object.keys(edgesByTarget[getEdge(e_id).getTarget()]).length==0)
+			delete edgesByTarget[getEdge(e_id).getTarget()];
+		getNode(getEdge(e_id).getTarget()).rmInputNodes(getEdge(e_id).getSource(),getEdge(e_id).getType());//update nodes input/output hashtable
+		getNode(getEdge(e_id).getSource()).rmOutputNodes(getEdge(e_id).getTarget(),getEdge(e_id).getType());
 		delete edges[e_id];//finally remove the edge
 		return delta;
+	};
+	var setTarget =function(e_id,trg){
+		getNode(getEdge(e_id).getTarget()).rmInputNodes(getEdge(e_id).getSource(),getEdge(e_id).getType());
+		getNode(getEdge(e_id).getSource()).rmOutputNodes(getEdge(e_id).getTarget(),getEdge(e_id).getType());
+		getNode(getEdge(e_id).getSource()).addOutputNodes(trg,getEdge(e_id).getType());
+		getNode(trg).addInputNodes(getEdge(e_id).getSource(),getEdge(e_id).getType());
+		delete edgesByTarget[getEdge(e_id).getTarget()][e_id];
+		if(Object.keys(edgesByTarget[getEdge(e_id).getTarget()]).length==0)
+			delete edgesByTarget[getEdge(e_id).getTarget()];
+		if(!edgesByTarget[trg]) edgesByTarget[trg]={};
+			edgesByTarget[trg][e_id]=true;
+		getEdge(e_id).setTarget(trg);
+	};
+	var setSource =function(e_id,src){
+		getNode(getEdge(e_id).getSource()).rmOutputNodes(getEdge(e_id).getTarget(),getEdge(e_id).getType());
+		getNode(getEdge(e_id).getTarget()).rmInputNodes(getEdge(e_id).getSource(),getEdge(e_id).getType());
+		getNode(getEdge(e_id).getTarget()).addInputNodes(src,getEdge(e_id).getType());
+		getNode(src).addOutputNodes(getEdge(e_id).getTarget(),getEdge(e_id).getType());
+		delete edgesBySource[getEdge(e_id).getSource()][e_id];
+		if(Object.keys(edgesBySource[getEdge(e_id).getSource()]).length==0)
+			delete edgesBySource[getEdge(e_id).getSource()];
+		if(!edgesBySource[src]) edgesBySource[src]={};
+			edgesBySource[src][e_id]=true;
+		getEdge(e_id).setSource(src);
 	};
 	var mergeDelta = function(d1,d2){//accumulateur à gauche pour delta
 		Object.keys(d2.enter.nodes).forEach(function(e){//merge entering nodes
@@ -128,35 +167,38 @@ function LayerGraph(i){
 		if(getNode(n_id1).getType()!=getNode(n_id2).getType()) //nodes need to be of the same type
 			throw new Error("both nodes have not the same type : "+getNode(n_id1).getType()+" , "+getNode(n_id2).getType());
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
+		if(n_id1==n_id2) return delta;
 		delta.enter.nodes=this.addNode(getNode(n_id1).getType(),union(getNode(n_id1).getLabels(),getNode(n_id2).getLabels())).enter.nodes;
 		var new_id=Object.keys(delta.enter.nodes)[0]; //get the id of the new node
 		union(this.getEdgeBySource(n_id1),this.getEdgeBySource(n_id2)).reduce(function(accu,e){//change the target of all output edges
 			accu.exit.edges[e]=getEdge(e).saveState();
-			getEdge(e).setSource(new_id);
+			setSource(e,new_id);
 			accu.enter.edges[e]=getEdge(e).saveState();
 		},delta);
 		union(this.getEdgeByTarget(n_id1),this.getEdgeByTarget(n_id2)).reduce(function(accu,e){//change the source of all input edges
 			accu.exit.edges[e]=getEdge(e).saveState();
-			getEdge(e).setTarget(new_id);
+			setTarget(e,new_id);
 			accu.enter.edges[e]=getEdge(e).saveState();
 		},delta);
-		mergeDelta(delta,rmNode(n_id1));//remove both nodes
-		mergeDelta(delta,rmNode(n_id2));
+		mergeDelta(delta,this.rmNode(n_id1));//remove both nodes
+		mergeDelta(delta,this.rmNode(n_id2));
 		return delta;
 	}
 	this.cloneNode = function cloneNode(n_id){//clone a specific node.
+		if(!nodes[n_id]) throw new Error("this node doesn't exist : "+n_id);
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
 		delta=this.addNode(getNode(n_id).getType(),getNode(n_id).getLabels());//add a copy of the node
 		var new_id=Object.keys(delta.enter.nodes)[0]; //get the id of the new node
 		this.getEdgeBySource(n_id).reduce(function(accu,e){//add all entering edges to the clone
-			mergeDelta(accu,this.addEdge(this.getEdge(e).getType(),new_id,this.getEdge(e).getTarget()));
+			mergeDelta(accu,self.addEdge(getEdge(e).getType(),new_id,getEdge(e).getTarget()));
 		},delta);
 		this.getEdgeByTarget(n_id).reduce(function(accu,e){//add all output edges to the clone
-			mergeDelta(accu,this.addEdge(this.getEdge(e).getType(),this.getEdge(e).getSource(),new_id));
+			mergeDelta(accu,self.addEdge(getEdge(e).getType(),getEdge(e).getSource(),new_id));
 		},delta);
 		return delta;
 	};
 	this.addNodeLabels = function addNodeLabels(n_id,l){//add some labels to a node, return an enter/exit object
+		if(!nodes[n_id]) throw new Error("this node doesn't exist : "+n_id);
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
 		if(intersection(l,getNode(n_id).getLabels()).length==l.length) return delta;
 		delta.exit.nodes[n_id]=getNode(n_id).saveState();
@@ -170,6 +212,7 @@ function LayerGraph(i){
 		return delta;
 	};
 	this.rmNodeLabels = function rmNodeLabels(n_id,l){//remove labels from a node if l is null or [], remove all the labels, return an enter/exit object
+		if(!nodes[n_id]) throw new Error("this node doesn't exist : "+n_id);
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
 		delta.exit.nodes[n_id]=getNode(n_id).saveState();
 		if(l){
@@ -185,12 +228,19 @@ function LayerGraph(i){
 		delta.enter.nodes[n_id]=getNode(n_id).saveState();
 		return delta;
 	};
-	this.setNodeType = function setNodeType(n_id,t){
+	this.setType = function setType(n_id,t){
+		if(!nodes[n_id]) throw new Error("this node doesn't exist : "+n_id);
 		var delta={enter:{nodes:{},edges:{}},exit:{nodes:{},edges:{}}};
-		if(!t) throw new Error("calling setNodeType on "+n_id+" with undefined type");
-		delta.exit.nodes[n_id]=getNode(n_id).saveState();
-		getNode(n_id).setType(t);
-		delta.enter.nodes[n_id]=getNode(n_id).saveState();
+		if(!t) throw new Error("calling setType on "+n_id+" with undefined type");
+		if(idT(n_id)=="n"){
+			delta.exit.nodes[n_id]=getNode(n_id).saveState();
+			getNode(n_id).setType(t);
+			delta.enter.nodes[n_id]=getNode(n_id).saveState();
+		}else if(idT(n_id)=="e"){
+			delta.exit.edges[n_id]=getEdge(n_id).saveState();
+			getEdge(n_id).setType(t);
+			delta.enter.edges[n_id]=getEdge(n_id).saveState();
+		}else throw new Error("Unexpected id : "+n_id);
 	};
 	this.getNodeByLabels = function getNodeByLabels(labels){//return a nodes id list corresponding to the specific labels
 		var nodes_lists = [];
@@ -246,7 +296,9 @@ function LayerGraph(i){
 		return getNode(id).getLabels();
     };
     this.getType = function getType(id){//return the type of a node or an edge
-        if(idT(id)=='e'){
+        if(!id)
+			return {nodes:Object.keys(nodesByType),edges:Object.keys(edgesByType)};
+		if(idT(id)=='e'){
 			if(!getEdge(id)) throw new Error("unexisting node : "+id);
             return getEdge(id).getType();
         }else{
@@ -298,7 +350,15 @@ function LayerGraph(i){
 		});
 		return ret;
 	};
-	this.searchNReplace = function searchNReplace(patern,enter,exit){//search a specific patern in the graph and transform it using the enter and exit informations
+	this.searchPattern = function searchPattern(pattern){//search a specific patern in the graph
+		if(pattern.isEmpty()){
+			console.error("Empty pattern !");
+			return null;
+		}
+		var potential={};
+		var p_nodes=pattern.getNodes();
+		
+		this.getNodesByType(e).forEach(function(e){potential.push({nodes:{e:true},edges:{}})});
 		
 	}
 }

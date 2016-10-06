@@ -32,8 +32,10 @@ function Node(i,t,g,l){//generic definition of a node in a clustered graph
 			labels={};
 	};
 	this.getInputNodes = function getInputNodes(e_t){//return the input nodes for a specific edge type or all if e_t is undefined or null : O(1)
-		if(e_t)
+		if(e_t){
+			if(!input_nodes[e_t]) return [];
 			return Object.keys(input_nodes[e_t]);
+		}
 		else
 			return multiUnion(Object.keys(input_nodes).map(function(e){return Object.keys(input_nodes[e])}));
 	};
@@ -47,7 +49,11 @@ function Node(i,t,g,l){//generic definition of a node in a clustered graph
 		if(!e_t) throw new Error("undefined edge type : "+e_t);
 		if(!f) throw new Error("undefined node : "+f);
 		if(!f) delete input_nodes[e_t];
-		else delete input_nodes[e_t][f];
+		else{
+			delete input_nodes[e_t][f];
+			if(Object.keys(input_nodes[e_t]).length==0)
+				delete input_nodes[e_t];
+		}
 	};
 	this.getGraph = function getGraph(){//return the node graph : O(1)
 		return graph;
@@ -57,8 +63,10 @@ function Node(i,t,g,l){//generic definition of a node in a clustered graph
 		graph=g;
 	};
 	this.getOutputNodes = function getOutputNodes(e_t){//return the output nodes for a specific edge type or all if e_t is undefined or null : O(1)
-		if(e_t)
+		if(e_t){
+			if(!output_nodes[e_t]) return [];
 			return Object.keys(output_nodes[e_t]);
+		}
 		else
 			return multiUnion(Object.keys(output_nodes).map(function(e){return Object.keys(output_nodes[e])}));
 	};
@@ -71,7 +79,11 @@ function Node(i,t,g,l){//generic definition of a node in a clustered graph
 	this.rmOutputNodes = function rmOutputNodes(f,e_t){//add an Output node
 		if(!e_t) throw new Error("undefined edge type : "+e_t);
 		if(!f) delete output_nodes[e_t];
-		else delete output_nodes[e_t][f];
+		else{ 
+			delete output_nodes[e_t][f];
+			if(Object.keys(output_nodes[e_t]).length==0)
+				delete output_nodes[e_t];
+		}
 	};
 	this.hasLabel = function hasLabel(l){//verify if a node has a specified label : O(1) : double hashtable
 		return labels[l]==true;
@@ -90,9 +102,9 @@ function Node(i,t,g,l){//generic definition of a node in a clustered graph
 		console.log('graph : '+graph);
 		console.log('labels : '+Object.keys(labels).join(", "));
 		console.log('input nodes : ');
-		Object.keys(input_nodes).forEach(function(e){console.log(e+" "+Object.keys(input_nodes[e]).join(", "))});
+		Object.keys(input_nodes).forEach(function(e){console.log(e+" : "+Object.keys(input_nodes[e]).join(", "))});
 		console.log('output nodes : ');
-		Object.keys(output_nodes).forEach(function(e){console.log(e+" "+Object.keys(output_nodes[e]).join(", "))});
+		Object.keys(output_nodes).forEach(function(e){console.log(e+" : "+Object.keys(output_nodes[e]).join(", "))});
 		console.log('______________');
 	};
 	this.saveState = function saveState(){//create a new node witch is a copy of this node : O(k) : k=max size(l,v,s)

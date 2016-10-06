@@ -17,22 +17,29 @@ function Nugget(i,n,c){
 	this.getGraph = function getGraph(){
 		return graph;
 	};
-	this.getName = function getName(){ return name;};//get the nugget name
-	this.getId = function getId(){ return id;};//get the nugget id
-	this.getComment = function getComment(){ return comments;};//get the nugget detail as comment
-	this.isVisible = function isVisible(){ return visible;};//set the nugget visible or not (for kami purpose)
-	this.setName = function setName(n){ name=n;};//change the nugget name
-	this.setComment = function setComment(c){comments = c;};//change the nugget comment
-	this.show = function show(){ visible=true;};//show the nugget
-	this.hide = function hide(){visible=false;};//hide the nugget
-	this.log = function log(){//log all nugget informations
-		console.log("Nugget "+id);
-		console.log("name : "+name);
-		console.log("comment : "+comments);
-		console.log("visible : "+visible);
-		console.log("Graph : ");
-		graph.log();
-		console.log("---------------");
+	this.getName = function getName(){//get the nugget name
+		return name;
+	};
+	this.getId = function getId(){//get the nugget id
+		return id;
+	};
+	this.getComment = function getComment(){//get the nugget detail as comment
+		return comments;
+	};
+	this.isVisible = function isVisible(){//set the nugget visible or not (for kami purpose)
+		return visible;
+	};
+	this.setName = function setName(n){//change the nugget name
+		name=n;
+	};
+	this.setComment = function setComment(c){//change the nugget comment
+		comments = c;
+	};
+	this.show = function show(){//show the nugget
+		visible=true;
+	};
+	this.hide = function hide(){//hide the nugget
+		visible=false;
 	};
 	this.getRefs = function getRefs(){
 		return {"doi":references.doi,"publication":references.publication,"url":references.url,"meta":references.meta};

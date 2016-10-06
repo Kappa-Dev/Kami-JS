@@ -36,12 +36,13 @@
 		console.log("===============");
 		console.log(kami.addNode("g_1","n_0",["ag2"]));//agent ag2 : n_1
 		console.log("===============");
-		console.log(kami.addNode("g_1","n_1",["ag2"]));//region reg1 : n_2
+		console.log(kami.addNode("g_1","n_0",["ag2"]));//region reg1 : n_2
 		console.log("===============");
 		console.log(kami.addEdge("g_1","e_0","n_0","n_2"));//reg1 of ag1
 		console.log("===============");
 		kami.log();
-		kami.rmNugget("g_1");
+		kami.clone("g_1","n_0");
+		kami.merge("g_1","n_0","n_1");
 		console.log("================");
 		console.log("=**************=");
 		console.log("=**************=");

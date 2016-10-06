@@ -18,6 +18,10 @@ function Edge(ii,t,n,i,o){//generic definition of an edge in a clustered graph
 	this.getType = function getType(){//return the edge type (new array) : O(t) : t=type size : constant
 		return type.concat();
 	};
+	this.setType = function setType(t){//change the edge type
+		if(!t) throw new Error("Undefined type");
+		type=t;
+	}
 	this.getSource = function getSource(){//return the edge source : O(1)
 		return source;
 	};
