@@ -876,8 +876,6 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					var act_bind=d.sons.filter(function(e){
 						return layerG.nodes[layerG.nodesHash[e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[e]].classes[1]=="binder";
 					});
-					console.error("TEST");
-					console.error(act_bind);
 					act_bind.forEach(function(e){
 						layerG.nodes[layerG.nodesHash[e]].classes[2]=layerG.nodes[layerG.nodesHash[e]].classes[2]=="left"?"right":"left";
 					});
