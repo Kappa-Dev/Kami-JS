@@ -28,7 +28,7 @@ function LayerGraph(i){
 	var self=this;
 	this.isEmpty = function isEmpty(){
 		return NODE_ID == 0 || Object.keys(nodes)==0;
-	}
+	};
 	this.nodeExist = function nodeExist(id){
 		return typeof nodes[id]!='undefined' && nodes[id]!=null;
 	};
@@ -353,12 +353,19 @@ function LayerGraph(i){
 	this.searchPattern = function searchPattern(pattern){//search a specific patern in the graph
 		if(pattern.isEmpty()){
 			console.error("Empty pattern !");
-			return null;
+			return [];
 		}
-		var potential={};
+		var potential=[];
 		var p_nodes=pattern.getNodes();
-		
-		this.getNodesByType(e).forEach(function(e){potential.push({nodes:{e:true},edges:{}})});
-		
-	}
+		this.getNodesByType(p_nodes[0]).forEach(function(e){potential.push({nodes:{e:true},edges:{}})});
+		var t_node=p_nodes.splice(0,1);
+		while(p_nodes.length>0){
+			var srcs=pattern.getEdgeBySource(t_node);
+			var trgs=pattern.getEdgeByTarget(t_node);
+			for(var i=potential.lenght-1;i>=0;i--){
+				var correctEdges=
+			}
+		}
+		return potential;
+	};
 }
