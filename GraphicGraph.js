@@ -869,6 +869,22 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 				}
 			}
 		];
+		if((d3.select(d3.event.target.parentNode).classed("bnd") || d3.select(d3.event.target.parentNode).classed("brk"))){
+			menu.push({
+				title: "invert binders",
+				action: function(elm,d,i){
+					var act_bind=d.sons.filter(function(e){
+						return layerG.nodes[layerG.nodesHash[e]].classes[0]=="action" && layerG.nodes[layerG.nodesHash[e]].classes[1]=="binder";
+					});
+					console.error("TEST");
+					console.error(act_bind);
+					act_bind.forEach(function(e){
+						layerG.nodes[layerG.nodesHash[e]].classes[2]=layerG.nodes[layerG.nodesHash[e]].classes[2]=="left"?"right":"left";
+					});
+					update();
+				}
+			});
+		}
 		if(edition || nugget_add){//in case of edition or nugget mod : we can add attributes to an action or remove it or select its context
 			menu.push(
 			{
