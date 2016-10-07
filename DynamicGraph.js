@@ -10,9 +10,15 @@ function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can 
 		force
 		.nodes(layerG.nodes)
 		.links(layerG.links)
-		.linkDistance(function(d){if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder") || d.e_class=="positive" || d.e_class=="negative") return 100; else return (d.source.toInt()+d.target.toInt())/2})
+		.linkDistance(function(d){
+			if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder") || d.e_class=="positive" || d.e_class=="negative") 
+				return 100; 
+			else if((d.target.classes[0]=="action" && d.source.classes[0]=="attribute"))
+				return (d.source.toInt()+d.target.toInt()/2)/2;
+			else return (d.source.toInt()+d.target.toInt())/2;
+		})
 		.linkStrength(function(d){if((d.source.classes[0]=="action" && d.source.classes[1]=="binder") || (d.target.classes[0]=="action" && d.target.classes[1]=="binder")|| d.e_class=="positive"|| d.e_class=="negative") return 0.7; else return 5})
-		.charge(function(d){if(d.classes[0]=="action" && d.classes[1]=="binder")return -300; else return -600})
+		.charge(function(d){if((d.classes[0]=="action" && d.classes[1]=="binder" )||(d.classes[0]=="attribute" && (d.father==null || layerG.nodes[layerG.nodesHash[d.father]].classes[0]=="action")))return -300; else return -600})
 	};
 	this.getForce = function getForce(){
 		return force;
