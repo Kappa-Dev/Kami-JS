@@ -232,8 +232,16 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var tick = function(){
 		if(first_init || dynG.getForce().alpha()<=0.00501){
 			
-			s_node.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
-			s_action.attr("transform", function(d) {d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y)); return "translate(" + d.x + "," + d.y + ")"; });
+			s_node.attr("transform", function(d) {
+				d.x=Math.max(d.toInt(), Math.min(width - d.toInt(), d.x));
+				d.y=Math.max(d.toInt(), Math.min(height - d.toInt(), d.y));
+				return "translate(" + d.x + "," + d.y + ")"; 
+			});
+			s_action.attr("transform", function(d) {
+				d.x=Math.max(d.toInt()/4, Math.min(width - d.toInt(), d.x));
+				d.y=Math.max(d.toInt()/8, Math.min(height - d.toInt()/4, d.y));
+				return "translate(" + d.x + "," + d.y + ")"; 
+			});
 			s_binder.attr("cx",function(d) {return getNodeX(d);})
 				.attr("cy",function(d) {return getNodeY(d);});
 			s_link.attr("x1", function(d){return getNodeX(d.source);})
