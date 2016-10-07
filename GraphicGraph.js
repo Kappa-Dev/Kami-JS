@@ -24,6 +24,12 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var lcgG,nuggG,lcgDynG,lcgDrag;//layered graph for lcg and nuggets
 	var lcgS,nuggS,nuggDynG,nuggDrag;//stack for lcg and nuggets
 	var modified=true;
+	var bnd_cp =0;
+	var rev_cp =0;
+	var brk_cp =0;
+	var mod_cp =0;
+	var syn_cp =0;
+	var deg_cp =0;
 	this.findByName = function findByName(label,cls,fcls,path){//find a node by its name+path+class+father class
 		var cl_ok=false,lb_ok=false,p_ok=true;
 		for(var i=0;i<layerG.nodes.length;i++){
@@ -58,14 +64,17 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	}
 	this.wakeUp = function wakeUp(val){//speed up tick function
 		dynG.getForce().start();
-		if(!(typeof(val)!="undefined" && val!=null && !val))
+		var fixed_ids=svg_content.selectAll("g").filter(function(d){return d.fixed});
+		if(!(typeof(val)!="undefined" && val!=null && !val)){
 			svg_content.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=false;});
+		}
 		for(var i=0;i<300;i++){
 			dynG.getForce().tick();
 		}
 		if(first_init)
 				svg_content.selectAll("g").filter(function(d){return d.classes[0]=="agent" || d.classes[0]=="action"}).classed("fixed",function(d){return d.fixed=true;});
 		first_init=true;
+		fixed_ids.classed("fixed",function(d){return d.fixed=true;});
 	};
 	this.log = function log(){//output layerGraph data
 		layerG.log();
@@ -427,7 +436,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 	};
 	var dragstart = function(d) {//allow only to move agents and actions.
 		d3.event.sourceEvent.stopPropagation();
-		if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
+		//if(d3.select(this).classed("agent") || d3.select(this).classed("action"))
 			d3.select(this).classed("fixed", d.fixed = true);
 	};
 	this.getCoord = function getCoord(){//return all the node coordinates 
@@ -1176,7 +1185,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Bind",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","bnd"],["bind"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","bnd"],["bind"+(bnd_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);						
@@ -1186,7 +1195,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Reverse Bind",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","bnd","revers"],["rev-bind"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","bnd","revers"],["rev-bind"+(rev_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);						
@@ -1196,7 +1205,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Break",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","brk"],["break"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","brk"],["break"+(brk_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
@@ -1207,7 +1216,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Modify pos",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","mod","pos"],["mod+"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","mod","pos"],["mod+"+(mod_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
@@ -1217,7 +1226,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Modify neg",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","mod","neg"],["mod-"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","mod","neg"],["mod-"+(mod_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
@@ -1226,7 +1235,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Synthesis",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","syn"],["synth"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","syn"],["synth"+(syn_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
@@ -1236,7 +1245,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					title:"Degradation",
 					action: function(elm,d,i){
 					var mousepos=d3.mouse(svg[0][0]);
-					self.addNode(["action","deg"],["deg"],[],mousepos[0],mousepos[1]);
+					self.addNode(["action","deg"],["deg"+(deg_cp++)],[],mousepos[0],mousepos[1]);
 					var last_node=layerG.nodes[layerG.nodes.length-1].id
 					//self.addNode(["action","binder","left"],[],[last_node]);
 					self.addNode(["action","binder","right"],[],[last_node]);
