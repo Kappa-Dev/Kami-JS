@@ -789,6 +789,24 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			}
 
 		}
+		if(edition && svg_content.selectAll("g.selected").size()==1){//allow to add influence between action
+				menu.push(
+				{
+					title: "Add influence from Selected Node",
+					child:[
+					{
+						title:"Positive",
+						action: function(elm,d,i){
+							var select=svg_content.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"positive");});
+						}
+					},{
+						title:"Negative",
+						action: function(elm,d,i){
+							var select=svg_content.select("g.selected").each(function(d2){self.addInfluence(d2.id,d.id,"negative");});
+						}
+					}]
+				});
+		}
 		return menu;
 	}
 	var correctParenting = function(d3el_son,d3el_father){
@@ -1124,7 +1142,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 					});
 				}
 			});
-		}if(edition && svg_content.selectAll("g.selected").size()==1 && svg_content.select("g.selected").classed("action")){//allow to add influence between action
+		}if(edition && svg_content.selectAll("g.selected").size()==1){//allow to add influence between action
 				menu.push(
 				{
 					title: "Add influence from Selected action",
