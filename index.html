@@ -24,6 +24,8 @@
     window.onload = function () {
         kami = new Kami();
 		//kami.init();
+		var gui = new KamiGui(kami);
+		gui.init();
 		kami.log();
 		console.log("================");
 		console.log("=**************=");

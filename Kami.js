@@ -16,7 +16,7 @@ function Kami(){
 	}
 	this.addNugget = function addNugget(n,c,f){
 		fth=f||"g_0";
-		console.log(fth);
+		if(!nuggets[fth]) throw new Error("The graph father doesn't exist !!");
 		nuggets["g_"+NUGGET_ID]=new Nugget("g_"+NUGGET_ID,n,c);
 		nuggets["g_"+NUGGET_ID].setFather(fth);
 		nuggets[fth].addSon("g_"+NUGGET_ID);
@@ -45,11 +45,6 @@ function Kami(){
 		if(!g) throw new Error("Undefined graph");
 		if(!nuggets[g]) throw new Error("this nugget doesn't exist : "+g);
 		return nuggets[g].getName()
-	};
-	this.getNgId = function getNgId(g){
-		if(!g) throw new Error("Undefined graph");
-		if(!nuggets[g]) throw new Error("this nugget doesn't exist : "+g);
-		return nuggets[g].getId();
 	};
 	this.getNgComment = function getNgComment(g){
 		if(!g) throw new Error("Undefined graph");
@@ -290,6 +285,14 @@ function Kami(){
 				nuggets[e].getSons().forEach(recLog);
 		})("g_0");
 	};
-	
+	this.search = function search(pattern){
+		
+	};
+	this.replace = function replace(pattern,rule){
+		
+	};
+	this.replaceAll = function replaceAll(pattern,rule){
+		
+	};
 };
 

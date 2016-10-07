@@ -363,7 +363,7 @@ function LayerGraph(i){
 			var srcs=pattern.getEdgeBySource(t_node);
 			var trgs=pattern.getEdgeByTarget(t_node);
 			for(var i=potential.lenght-1;i>=0;i--){
-				var correctEdges=
+				var correctEdges=0;
 			}
 		}
 		return potential;
