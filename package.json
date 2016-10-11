@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-	"start": "node index.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/Kappa-Dev/Kami/issues"
   },
-  "homepage": "https://github.com/Kappa-Dev/Kami#readme"
+  "homepage": "https://github.com/Kappa-Dev/Kami#readme",
+  "dependencies": {
+    "amdrequire": "0.0.3",
+    "requirejs": "^2.3.2"
+  }
 }

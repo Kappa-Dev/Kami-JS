@@ -4,6 +4,7 @@
 //this file is part of the Executable Knowledge project
 //graphical graph version
 define(["d3/d3.min.js","d3/d3-context-menu.js","LayeredGraph.js","DynamicGraph.js"],function (d3,d3ContextMenu,LayeredGraph,DynamicGraph){ return function GraphicGraph(containerid){//define a graphical graph with svg objects
+	(function(){console.log("Graph G loaded")}())
 	var rewriter;//the current modification stack
 	var containerID=containerid;
 	var layerG;//the current layered graph data structure

@@ -1,4 +1,5 @@
 define(["d3/d3.min.js","GraphicGraph.js","jSonFormatter.js"],function(d3,GraphicGraph,jSonFormatter){
+	(function(){console.log("Main loaded")}())
 	var gGraph = null; 
 	var jsonformater= null;
 	d3.select("body").append("div").attr("id","main-container");
