@@ -1,0 +1,20 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "Testting Kami Json importer integrity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kappa-Dev/Kami.git"
+  },
+  "author": "Adrien Basso-Blandin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kappa-Dev/Kami/issues"
+  },
+  "homepage": "https://github.com/Kappa-Dev/Kami#readme"
+}
