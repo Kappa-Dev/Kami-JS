@@ -2,7 +2,7 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
-function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can be of differents classes : "action", "agent" "key_rs", "region", "flag", "attribute", action should have a second subclass : "mod", "bnd","brk","syn", "deg","r_link","l_link" other can have a subclass : "abstract", "set"
+define(["LayeredGraph.js","d3/d3.min.js"],function(LayeredGraph,d3){return function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can be of differents classes : "action", "agent" "key_rs", "region", "flag", "attribute", action should have a second subclass : "mod", "bnd","brk","syn", "deg","r_link","l_link" other can have a subclass : "abstract", "set"
 	var layerG=layerG;
 	var force=d3.layout.force()
 				.size([width, height]);
@@ -22,5 +22,5 @@ function DynamicGraph(layerG,height,width){//define a dynamic graph : nodes can 
 	};
 	this.getForce = function getForce(){
 		return force;
-	}
-};
+	};
+}})

@@ -1,5 +1,5 @@
-d3.contextMenu = function (menu, openCallback) {
 
+define(["d3/d3.min.js"], function(d3){return function d3ContextMenu(menu, openCallback){
 	// create the div element that will hold the context menu
 	d3.selectAll('.d3-context-menu').data([1])
 		.enter()
@@ -55,4 +55,5 @@ d3.contextMenu = function (menu, openCallback) {
 		d3.event.preventDefault();
 		d3.event.stopPropagation();
 	};
-};
+	
+}});

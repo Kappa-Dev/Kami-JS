@@ -2,41 +2,10 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
-//node definition
-function Node(classes,id,x,y,fixed){
-	this.classes=classes;//the node class
-	this.id=id;//the node id
-	this.sons=[];// the node sons
-	this.father=null;//the node father
-	this.context=[];//alternatively a context for an action or a value list for a flag or an attribute
-	this.label=[];
-	this.valued_context=null;//the value for flag or attributes of a context
-	if(typeof(x)!='undefined') this.x=x;//node coordinate
-	if(typeof(y)!='undefined') this.y=y;
-	if(typeof(fixed)!='undefined') this.fixed=fixed;//node position fixed
-	this.selected=false;
-	this.toInt = function(){
-		switch(classes[0]){
-			case "action" : if(classes[1]!="binder")return 80; else return 4;
-			case "key_res" : return 20;
-			case "region" : return 30;
-			case "agent" : return 40;
-			case "flag" : return 12;
-			case "attribute" : return 10;
-		}
-	};
-}; 
-//edge definition
-function Edge(node1,node2,e_class){
-	//node1 and node2 are objects
-	this.source=node1;
-	this.target=node2;
-	this.sourceID=node1.id;
-	this.targetID=node2.id;
-	this.e_class=e_class;
-};
+
+
 //layered graph definition
-function LayeredGraph(){
+define(["LGNode.js","LGEdge.js"],function(Node,Edge){return function LayeredGraph(){
 	this.nodesHash={};// the hashtable in order to get a node by his name
 	this.nodes=[];//liste des noeud
 	this.links=[];//liste des arcs
@@ -390,4 +359,4 @@ function LayeredGraph(){
 	this.joinEdges = function joinEdges(){
 		return this.links;
 	};
-};
+};});

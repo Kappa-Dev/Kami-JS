@@ -3,7 +3,7 @@
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
 //graphical graph version
-function GraphicGraph(containerid){//define a graphical graph with svg objects
+define(["d3/d3.min.js","d3/d3-context-menu.js","LayeredGraph.js","DynamicGraph.js"],function (d3,d3ContextMenu,LayeredGraph,DynamicGraph){ return function GraphicGraph(containerid){//define a graphical graph with svg objects
 	var rewriter;//the current modification stack
 	var containerID=containerid;
 	var layerG;//the current layered graph data structure
@@ -123,7 +123,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		.attr("markerUnits","strokeWidth")
 		.append("svg:path")
 		.attr("d", "M2,2 L2,13 L8,7 L2,2");
-		svg.on("contextmenu",d3.contextMenu(function(){return svgMenu();}));
+		svg.on("contextmenu",d3ContextMenu(function(){return svgMenu();}));
 		//svg=svg_pan.append("g").call(zoom).call(drg);
 		svg.call(zoom);
 		svg_content=svg.append("g").classed("svg_zoom_content",true);
@@ -157,8 +157,8 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.classed("influence",function(d){return d.e_class=="positive" || d.e_class=="negative"})
 			.classed("positive",function(d){return d.e_class=="positive"})
 			.classed("negative",function(d){return d.e_class=="negative"});
-		d3.selectAll(".links").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
-		d3.selectAll(".influence").on("contextmenu",d3.contextMenu(function(){return edgeCtMenu();}));
+		d3.selectAll(".links").on("contextmenu",d3ContextMenu(function(){return edgeCtMenu();}));
+		d3.selectAll(".influence").on("contextmenu",d3ContextMenu(function(){return edgeCtMenu();}));
 		d3.selectAll(".positive").attr("marker-end", "url(#pos_end)");
 		d3.selectAll(".negative").attr("marker-end", "url(#neg_end)");
         s_link.exit().remove();
@@ -176,7 +176,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.on("mouseover",mouseOver)
 			.on("mouseout",mouseOut)
 			.on("click",clickHandler)
-			.on("contextmenu",d3.contextMenu(function(){return nodeCtMenu();}));
+			.on("contextmenu",d3ContextMenu(function(){return nodeCtMenu();}));
 		nodeEnter.insert("circle")
 			.attr("r", function(d){return d.toInt()});
 		nodeEnter.insert("text")
@@ -205,7 +205,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 			.on("mouseover",mouseOver)
 			.on("mouseout",mouseOut)
 			.on("click",clickHandler)
-			.on("contextmenu",d3.contextMenu(function(){return actCtMenu();}));
+			.on("contextmenu",d3ContextMenu(function(){return actCtMenu();}));
 		actionEnter.insert("rect")
 			.attr("width", function(d){return d.toInt()})
 			.attr("height", function(d){return d.toInt()/2});
@@ -223,7 +223,7 @@ function GraphicGraph(containerid){//define a graphical graph with svg objects
 		var binderEnter = s_binder.enter().insert("circle")
 			.classed("binder",true)
 			.attr("r", function(d){return d.toInt()})
-			.on("contextmenu",d3.contextMenu(function(){return binderCtMenu();}));
+			.on("contextmenu",d3ContextMenu(function(){return binderCtMenu();}));
 		s_binder.exit().remove();
 		dynG.getForce().start();	
 		//layerG.log();
@@ -2040,4 +2040,4 @@ var inputMenu = function(label,input_l,radio_l,check_l,ok,cancel,pos,callback,d)
 
 
 	
-};
+}})

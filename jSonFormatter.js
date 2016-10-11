@@ -2,7 +2,7 @@
 //author : Adrien Basso Blandin, ENS Lyon / Harvard Medical School
 //this file is under Gnu LGPL licence
 //this file is part of the Executable Knowledge project
-function jSonFormatter(jGraph){
+define(["d3/d3.min.js","LayeredGraph.js","GraphicGraph.js"],function (d3,LayeredGraph,GraphicGraph){ return function jSonFormatter(jGraph){
 	var name=null;
 	var json=null;
 	var gGraph=jGraph;
@@ -402,4 +402,4 @@ function jSonFormatter(jGraph){
 		console.log("unable to find a class");		
 		return null;	
 	};
-}
+}});
